@@ -1,0 +1,34 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Prestamo extends Model
+{
+    use HasFactory;
+
+   protected $fillable = [
+    'user_id',
+    'numero_prestamo',
+    'monto',
+    'interes',
+    'interes_pagar',
+    'porcentaje_penalidad', 
+    'interes_penalidad',
+    'penalidades_acumuladas',
+    'total_pagar',
+    'fecha_inicio',
+    'fecha_fin',
+    'fecha_pago',
+    'estado',
+    'descripcion',
+];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+}
