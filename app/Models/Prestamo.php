@@ -26,6 +26,12 @@ class Prestamo extends Model
     'descripcion',
 ];
 
+ protected $casts = [
+        'fecha_inicio' => 'datetime',
+        'fecha_fin' => 'datetime',
+        'fecha_pago' => 'datetime',
+    ];
+    
     public function user()
     {
         return $this->belongsTo(User::class);

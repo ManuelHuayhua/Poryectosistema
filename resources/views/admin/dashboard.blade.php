@@ -12,7 +12,7 @@
 
                                 <div class="container mt-4">
  <div class="container mt-4">
-    <h2>Bienvenido Administrador</h2>
+    <h2>Bienvenido, {{ Auth::user()->name }}</h2>
 
     @if(session('success'))
         <div class="alert alert-success mt-3">
@@ -40,15 +40,24 @@
                     <td>S/. {{ number_format($prestamo->monto, 2) }}</td>
                     <td>{{ $prestamo->created_at->format('d/m/Y') }}</td>
                     <td>
-                        <form action="{{ route('prestamo.aprobar', ['id' => $prestamo->id, 'interes' => 10]) }}" method="POST" class="d-inline">
-                            @csrf
-                            <button type="submit" class="btn btn-success btn-sm">Aprobar 10%</button>
-                        </form>
+                       <form action="{{ route('prestamo.aprobar', ['id' => $prestamo->id]) }}" method="POST" class="d-inline">
+    @csrf
 
-                        <form action="{{ route('prestamo.aprobar', ['id' => $prestamo->id, 'interes' => 5]) }}" method="POST" class="d-inline">
-                            @csrf
-                            <button type="submit" class="btn btn-info btn-sm">Aprobar 5%</button>
-                        </form>
+    <label for="interes">Interés:</label>
+    <select name="interes" id="interes" class="form-control mb-2" required>
+        <option value="5">5%</option>
+        <option value="10">10%</option>
+        <option value="15">15%</option>
+    </select>
+
+    <label for="penalidad">Penalidad:</label>
+    <select name="penalidad" id="penalidad" class="form-control mb-2" required>
+        <option value="10">10%</option>
+        <option value="20">20%</option>
+    </select>
+
+    <button type="submit" class="btn btn-success btn-sm">Aprobar préstamo</button>
+</form>
 
                         <form action="{{ route('prestamo.rechazar', $prestamo->id) }}" method="POST" class="d-inline">
                             @csrf
@@ -86,8 +95,7 @@
             <th>Fecha de Pago</th>
             <th>Estado</th>
             <th>Descripción</th>
-            <th>Creado</th>
-            <th>Actualizado</th>
+            
             <th>Acciones</th>
         </tr>
     </thead>
@@ -114,14 +122,23 @@
                 <td>{{ optional($prestamo->fecha_pago)->format('d/m/Y') }}</td>
                 <td>{{ ucfirst($prestamo->estado) }}</td>
                 <td>{{ $prestamo->descripcion }}</td>
-                <td>{{ $prestamo->created_at->format('d/m/Y H:i') }}</td>
-                <td>{{ $prestamo->updated_at->format('d/m/Y H:i') }}</td>
+                
                 <td>
                     <form method="POST" action="{{ route('prestamos.renovar', $prestamo->id) }}">
-                        @csrf
-                        <button type="submit" class="btn btn-warning btn-sm">Renovar</button>
-                    </form>
+    @csrf
+    <button type="submit" class="btn btn-warning btn-sm">Renovar</button>
+</form>
                 </td>
+                <td>
+                    <form method="POST" action="{{ route('prestamos.diferencia', $prestamo->id) }}" class="mt-2">
+    @csrf
+    <div class="input-group">
+        <input type="number" name="diferencia" step="0.01" min="0" class="form-control form-control-sm" placeholder="Dif. pagada" required>
+        <button type="submit" class="btn btn-success btn-sm">Aplicar Diferencia</button>
+    </div>
+</form>
+                </td>
+                
             </tr>
         @empty
             <tr>

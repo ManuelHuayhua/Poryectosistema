@@ -31,8 +31,10 @@ Route::post('/solicitar-prestamo', [PrestamoController::class, 'store'])->name('
 
 // Ruta para que el ADMIN vea todos los préstamos (pendientes, aprobados, rechazados)
 Route::get('/admin', [PrestamoController::class, 'indexAdmin'])->middleware('auth');
+
 // Ruta para que el ADMIN apruebe un préstamo con un interés dado (5% o 10%)
-Route::post('/admin/prestamos/aprobar/{id}/{interes}', [PrestamoController::class, 'aprobar'])->name('prestamo.aprobar');
+Route::post('/admin/prestamos/aprobar/{id}', [PrestamoController::class, 'aprobar'])->name('prestamo.aprobar');
+
 
 // Ruta para que el ADMIN rechace un préstamo
 Route::post('/admin/prestamos/rechazar/{id}', [PrestamoController::class, 'rechazar'])->name('prestamo.rechazar');
@@ -40,3 +42,8 @@ Route::post('/admin/prestamos/rechazar/{id}', [PrestamoController::class, 'recha
 
 // Ruta para que el ADMIN pague un préstamo
 Route::post('/prestamos/{id}/renovar', [PrestamoController::class, 'renovar'])->name('prestamos.renovar');
+
+
+Route::post('/prestamos/{id}/diferencia', [PrestamoController::class, 'aplicarDiferencia'])->name('prestamos.diferencia');
+
+
