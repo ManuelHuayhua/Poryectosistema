@@ -5,7 +5,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\PrestamoController;
 use App\Http\Controllers\HomeController;
-
+use App\Http\Controllers\Admin\UserController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -32,12 +32,12 @@ Route::post('/solicitar-prestamo', [PrestamoController::class, 'store'])->name('
 // Ruta para que el ADMIN vea todos los préstamos (pendientes, aprobados, rechazados)
 Route::get('/admin', [PrestamoController::class, 'indexAdmin'])->middleware('auth');
 
-// Ruta para que el ADMIN apruebe un préstamo con un interés dado (5% o 10%)
-Route::post('/admin/prestamos/aprobar/{id}', [PrestamoController::class, 'aprobar'])->name('prestamo.aprobar');
 
+ 
+Route::middleware('auth')->group(function () {
+    Route::post('/prestamos/aprobar', [PrestamoController::class, 'aprobar']);
+});
 
-// Ruta para que el ADMIN rechace un préstamo
-Route::post('/admin/prestamos/rechazar/{id}', [PrestamoController::class, 'rechazar'])->name('prestamo.rechazar');
 
 
 // Ruta para que el ADMIN pague un préstamo
@@ -46,4 +46,13 @@ Route::post('/prestamos/{id}/renovar', [PrestamoController::class, 'renovar'])->
 
 Route::post('/prestamos/{id}/diferencia', [PrestamoController::class, 'aplicarDiferencia'])->name('prestamos.diferencia');
 
+
+Route::middleware(['auth', 'is_admin'])->group(function () {
+     Route::get('/admin', [PrestamoController::class, 'indexAdmin']);
+    Route::post('/admin/prestamos/aprobar/{id}', [PrestamoController::class, 'aprobar'])->name('prestamo.aprobar');
+    Route::post('/admin/prestamos/rechazar/{id}', [PrestamoController::class, 'rechazar'])->name('prestamo.rechazar');
+
+    Route::get('/admin/createuser', [UserController::class, 'create'])->name('admin.createuser');
+    Route::post('/admin/createuser', [UserController::class, 'store'])->name('admin.storeuser');
+});
 

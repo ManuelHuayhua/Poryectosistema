@@ -18,6 +18,7 @@ class Prestamo extends Model
     'porcentaje_penalidad', 
     'interes_penalidad',
     'penalidades_acumuladas',
+    'interes_acumulado',
     'total_pagar',
     'fecha_inicio',
     'fecha_fin',
@@ -36,5 +37,11 @@ class Prestamo extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+
+    public function penalidades()
+{
+    return $this->hasMany(Penalidad::class);
+}
 
 }

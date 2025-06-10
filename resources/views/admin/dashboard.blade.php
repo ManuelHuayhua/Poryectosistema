@@ -19,7 +19,9 @@
             {{ session('success') }}
         </div>
     @endif
-
+<a href="{{ route('admin.createuser') }}" class="btn btn-primary">
+    Crear nuevo usuario
+</a>
     {{-- Préstamos pendientes --}}
     <h4 class="mt-5">Solicitudes de Préstamos Pendientes</h4>
     <table class="table table-bordered mt-3">
@@ -40,23 +42,30 @@
                     <td>S/. {{ number_format($prestamo->monto, 2) }}</td>
                     <td>{{ $prestamo->created_at->format('d/m/Y') }}</td>
                     <td>
-                       <form action="{{ route('prestamo.aprobar', ['id' => $prestamo->id]) }}" method="POST" class="d-inline">
+                      <form action="{{ route('prestamo.aprobar', $prestamo->id) }}" method="POST">
     @csrf
 
+    <!-- Selección de interés -->
     <label for="interes">Interés:</label>
-    <select name="interes" id="interes" class="form-control mb-2" required>
-        <option value="5">5%</option>
-        <option value="10">10%</option>
-        <option value="15">15%</option>
+    <select name="interes" required class="form-control">
+        @foreach ($configuraciones as $config)
+            <option value="{{ $config->interes }}">
+                {{ $config->interes }}%
+            </option>
+        @endforeach
     </select>
 
-    <label for="penalidad">Penalidad:</label>
-    <select name="penalidad" id="penalidad" class="form-control mb-2" required>
-        <option value="10">10%</option>
-        <option value="20">20%</option>
+    <!-- Selección de penalidad -->
+    <label for="penalidad" class="mt-2">Penalidad:</label>
+    <select name="penalidad" required class="form-control">
+        @foreach ($configuraciones as $config)
+            <option value="{{ $config->penalidad }}">
+                {{ $config->penalidad }}%
+            </option>
+        @endforeach
     </select>
 
-    <button type="submit" class="btn btn-success btn-sm">Aprobar préstamo</button>
+    <button type="submit" class="btn btn-success mt-2">Aprobar</button>
 </form>
 
                         <form action="{{ route('prestamo.rechazar', $prestamo->id) }}" method="POST" class="d-inline">
@@ -89,12 +98,16 @@
             <th>% Penalidad</th>
             <th>Penalidad por Interés</th>
             <th>Penalidades Acumuladas</th>
+            <th>Interés Acumulado</th>
+            <th><strong>Interés Total</strong></th> <!-- NUEVA COLUMNA -->
             <th>Total a Pagar</th>
             <th>Fecha Inicio</th>
             <th>Fecha Fin</th>
             <th>Fecha de Pago</th>
             <th>Estado</th>
             <th>Descripción</th>
+
+            
             
             <th>Acciones</th>
         </tr>
@@ -111,17 +124,28 @@
                 <td>{{ $prestamo->porcentaje_penalidad ? number_format($prestamo->porcentaje_penalidad, 2) . '%' : 'N/A' }}</td>
                 <td>S/. {{ number_format($prestamo->interes_penalidad, 2) }}</td>
                 <td>S/. {{ number_format($prestamo->penalidades_acumuladas, 2) }}</td>
-                <td>
-                    S/. {{ number_format(
-                        $prestamo->total_pagar 
-                        ?? ($prestamo->monto + $prestamo->interes_pagar + $prestamo->interes_penalidad + $prestamo->penalidades_acumuladas), 
-                    2) }}
-                </td>
+
+                 <td>S/. {{ number_format($prestamo->interes_acumulado, 2) }}</td>
+               <!-- NUEVA COLUMNA: INTERÉS TOTAL -->
+<td>
+    S/. {{ number_format($prestamo->interes_acumulado + $prestamo->penalidades_acumuladas + $prestamo->interes_pagar, 2) }}
+</td>
+              <!-- TOTAL A PAGAR: Monto + Interés Total -->
+<td>
+    S/. {{ number_format(
+        $prestamo->monto +
+        $prestamo->interes_acumulado +
+        $prestamo->penalidades_acumuladas +
+        $prestamo->interes_pagar,
+    2) }}
+</td>
                 <td>{{ \Carbon\Carbon::parse($prestamo->fecha_inicio)->format('d/m/Y') }}</td>
                 <td>{{ \Carbon\Carbon::parse($prestamo->fecha_fin)->format('d/m/Y') }}</td>
                 <td>{{ optional($prestamo->fecha_pago)->format('d/m/Y') }}</td>
                 <td>{{ ucfirst($prestamo->estado) }}</td>
                 <td>{{ $prestamo->descripcion }}</td>
+                
+
                 
                 <td>
                     <form method="POST" action="{{ route('prestamos.renovar', $prestamo->id) }}">
