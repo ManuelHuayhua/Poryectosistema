@@ -44,8 +44,8 @@ Route::middleware('auth')->group(function () {
 Route::post('/prestamos/{id}/renovar', [PrestamoController::class, 'renovar'])->name('prestamos.renovar');
 
 
-Route::post('/prestamos/{id}/diferencia', [PrestamoController::class, 'aplicarDiferencia'])->name('prestamos.diferencia');
 
+Route::post('/prestamos/{id}/diferencia', [PrestamoController::class, 'diferencia'])->name('prestamos.diferencia');
 
 Route::middleware(['auth', 'is_admin'])->group(function () {
      Route::get('/admin', [PrestamoController::class, 'indexAdmin']);
@@ -56,3 +56,4 @@ Route::middleware(['auth', 'is_admin'])->group(function () {
     Route::post('/admin/createuser', [UserController::class, 'store'])->name('admin.storeuser');
 });
 
+Route::post('/prestamos/{id}/diferencia', [PrestamoController::class, 'diferencia'])->name('prestamos.diferencia');

@@ -154,12 +154,10 @@
 </form>
                 </td>
                 <td>
-                    <form method="POST" action="{{ route('prestamos.diferencia', $prestamo->id) }}" class="mt-2">
+                   <form action="{{ route('prestamos.diferencia', $prestamo->id) }}" method="POST" onsubmit="return confirm('¿Estás seguro de aplicar esta diferencia?')">
     @csrf
-    <div class="input-group">
-        <input type="number" name="diferencia" step="0.01" min="0" class="form-control form-control-sm" placeholder="Dif. pagada" required>
-        <button type="submit" class="btn btn-success btn-sm">Aplicar Diferencia</button>
-    </div>
+    <input type="number" name="diferencia" step="0.01" placeholder="Ingrese diferencia" required class="form-control">
+    <button type="submit" class="btn btn-warning btn-sm mt-1">Aplicar Diferencia</button>
 </form>
                 </td>
                 

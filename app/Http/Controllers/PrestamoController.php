@@ -102,7 +102,6 @@ public function renovar($id)
 {
     $prestamoAnterior = Prestamo::findOrFail($id);
 
-    // Obtener penalidades anteriores del mismo numero_prestamo
     $penalidades = Penalidad::where('numero_prestamo', $prestamoAnterior->numero_prestamo)
         ->orderBy('numero_penalizacion')
         ->get();
@@ -110,7 +109,6 @@ public function renovar($id)
     $suma_interes = 0;
     $interes_debe_total = 0;
 
-    // Recalculamos progresivamente
     foreach ($penalidades as $penalidad) {
         if ($suma_interes == 0) {
             $suma_interes = $penalidad->suma_interes;
@@ -120,19 +118,36 @@ public function renovar($id)
 
         $interes_penalidad_decimal = $penalidad->interes_penalidad / 100;
         $interes_debe = $suma_interes * $interes_penalidad_decimal;
-
         $interes_debe_total += $interes_debe;
     }
 
-    // 👇 Cálculo de penalidades acumuladas
-    $penalidades_acumuladas = Penalidad::where('numero_prestamo', $prestamoAnterior->numero_prestamo)
-        ->sum('interes_debe');
+    // Cálculo de penalidades acumuladas desde la última diferencia
+    $ultimaDiferencia = Penalidad::where('numero_prestamo', $prestamoAnterior->numero_prestamo)
+        ->where('tipo_operacion', 'diferencia')
+        ->orderByDesc('id')
+        ->first();
 
-    // 👇 NUEVO: Cálculo de interes_acumulado
-    $interes_acumulado = Prestamo::where('numero_prestamo', $prestamoAnterior->numero_prestamo)
-        ->sum(DB::raw('interes_pagar + penalidades_acumuladas'));
+    if ($ultimaDiferencia) {
+        $penalidades_acumuladas = Penalidad::where('numero_prestamo', $prestamoAnterior->numero_prestamo)
+            ->where('id', '>=', $ultimaDiferencia->id)
+            ->sum('interes_debe');
+    } else {
+        $penalidades_acumuladas = Penalidad::where('numero_prestamo', $prestamoAnterior->numero_prestamo)
+            ->sum('interes_debe');
+    }
 
-    // Crear nuevo préstamo renovado
+    // Obtener el préstamo anterior más reciente
+    $prestamoAnteriorUltimo = Prestamo::where('numero_prestamo', $prestamoAnterior->numero_prestamo)
+        ->orderByDesc('id')
+        ->first();
+
+    $interes_acumulado = $prestamoAnteriorUltimo
+        ? $prestamoAnteriorUltimo->interes_pagar
+            + $prestamoAnteriorUltimo->interes_acumulado
+            + $prestamoAnteriorUltimo->interes_penalidad
+        : $prestamoAnterior->interes_pagar + $prestamoAnterior->interes_penalidad;
+
+    // Crear nuevo préstamo
     $nuevoPrestamo = Prestamo::create([
         'user_id' => $prestamoAnterior->user_id,
         'numero_prestamo' => $prestamoAnterior->numero_prestamo,
@@ -141,16 +156,16 @@ public function renovar($id)
         'interes' => $prestamoAnterior->interes,
         'porcentaje_penalidad' => $prestamoAnterior->porcentaje_penalidad,
         'interes_pagar' => $prestamoAnterior->interes_pagar,
-        'interes_penalidad' => $prestamoAnterior->interes_pagar * ($prestamoAnterior->porcentaje_penalidad / 100), 
+        'interes_penalidad' => $prestamoAnterior->interes_pagar * ($prestamoAnterior->porcentaje_penalidad / 100),
         'penalidades_acumuladas' => $penalidades_acumuladas,
-        'interes_acumulado' => $interes_acumulado, // ✅ Línea añadida
+        'interes_acumulado' => $interes_acumulado,
         'total_pagar' => $prestamoAnterior->monto + $prestamoAnterior->interes_pagar + $penalidades_acumuladas,
         'fecha_inicio' => now(),
         'fecha_fin' => now()->addDays(28),
     ]);
 
+    // Crear nueva penalidad
     $numeroPenalizacion = $penalidades->count() + 1;
-
     $ultima_penalidad = $penalidades->last();
     $ultima_suma = $ultima_penalidad->suma_interes + $ultima_penalidad->interes_debe;
     $penalidad_decimal = $ultima_penalidad->interes_penalidad / 100;
@@ -166,7 +181,69 @@ public function renovar($id)
         'user_id' => $nuevoPrestamo->user_id,
     ]);
 
-    return redirect()->back()->with('success', 'Préstamo renovado correctamente con penalidad progresiva, acumulada y nuevo interés acumulado.');
+    return redirect()->back()->with('success', 'Préstamo renovado correctamente con penalidad progresiva y acumulada desde la última diferencia.');
+}
+
+
+public function diferencia(Request $request, $id)
+{
+    $request->validate([
+        'diferencia' => 'required|numeric|min:0',
+    ]);
+
+    $prestamoAnterior = Prestamo::findOrFail($id);
+
+    // Reducir el monto
+    $nuevoMonto = $prestamoAnterior->monto - $request->diferencia;
+    if ($nuevoMonto < 0) {
+        $nuevoMonto = 0;
+    }
+
+    // Calcular nuevo interes_pagar
+    $interesDecimal = $prestamoAnterior->interes / 100;
+    $interes_pagar = $nuevoMonto * $interesDecimal;
+
+    // Calcular monto total a pagar
+    $total_pagar = $nuevoMonto + $interes_pagar;
+
+    // Crear nuevo préstamo
+    $nuevoPrestamo = Prestamo::create([
+        'user_id' => $prestamoAnterior->user_id,
+        'numero_prestamo' => $prestamoAnterior->numero_prestamo,
+        'monto' => $nuevoMonto,
+        'estado' => 'aprobado',
+        'interes' => $prestamoAnterior->interes,
+        'porcentaje_penalidad' => $prestamoAnterior->porcentaje_penalidad,
+        'interes_pagar' => $interes_pagar,
+        'interes_penalidad' => 0, // Puedes dejarlo en 0 si solo se usará en la tabla penalidades
+        'penalidades_acumuladas' => 0,
+        'interes_acumulado' => 0,
+        'total_pagar' => $total_pagar,
+        'fecha_inicio' => now(),
+        'fecha_fin' => now()->addDays(28),
+        'descripcion' => 'Diferencia aplicada: reducción de ' . $request->diferencia,
+    ]);
+
+    // Obtener número de penalización
+    $numeroPenalizacion = Penalidad::where('user_id', $prestamoAnterior->user_id)
+        ->where('numero_prestamo', $prestamoAnterior->numero_prestamo)
+        ->max('numero_penalizacion');
+
+    $numeroPenalizacion = $numeroPenalizacion ? $numeroPenalizacion + 1 : 1;
+
+    // Registrar penalidad con el porcentaje exacto del préstamo
+    Penalidad::create([
+        'prestamo_id' => $nuevoPrestamo->id,
+        'user_id' => $prestamoAnterior->user_id,
+        'numero_prestamo' => $prestamoAnterior->numero_prestamo,
+        'numero_penalizacion' => $numeroPenalizacion,
+        'suma_interes' => $interes_pagar,
+        'interes_penalidad' => $prestamoAnterior->porcentaje_penalidad, // <-- Aquí va el porcentaje
+        'interes_debe' => $interes_pagar * ($prestamoAnterior->porcentaje_penalidad / 100), // Este sí es el monto
+        'tipo_operacion' => 'diferencia',
+    ]);
+
+    return redirect()->back()->with('success', 'Diferencia aplicada y penalidad registrada correctamente.');
 }
 
 }

@@ -17,6 +17,7 @@ class Penalidad extends Model
     'interes_penalidad',
     'interes_debe',
     'user_id',
+    'tipo_operacion',
 ];
     public function prestamo()
 {
