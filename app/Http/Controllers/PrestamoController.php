@@ -147,6 +147,10 @@ public function renovar($id)
             + $prestamoAnteriorUltimo->interes_penalidad
         : $prestamoAnterior->interes_pagar + $prestamoAnterior->interes_penalidad;
 
+        // Calcular nuevas fechas basadas en la fecha_fin del último préstamo
+    $nueva_fecha_inicio = $prestamoAnteriorUltimo->fecha_fin;
+    $nueva_fecha_fin = \Carbon\Carbon::parse($prestamoAnteriorUltimo->fecha_fin)->addDays(28);
+
     // Crear nuevo préstamo
     $nuevoPrestamo = Prestamo::create([
         'user_id' => $prestamoAnterior->user_id,
@@ -160,8 +164,8 @@ public function renovar($id)
         'penalidades_acumuladas' => $penalidades_acumuladas,
         'interes_acumulado' => $interes_acumulado,
         'total_pagar' => $prestamoAnterior->monto + $prestamoAnterior->interes_pagar + $penalidades_acumuladas,
-        'fecha_inicio' => now(),
-        'fecha_fin' => now()->addDays(28),
+        'fecha_inicio' => $nueva_fecha_inicio,
+        'fecha_fin' => $nueva_fecha_fin,
     ]);
 
     // Crear nueva penalidad
@@ -206,6 +210,15 @@ public function diferencia(Request $request, $id)
     // Calcular monto total a pagar
     $total_pagar = $nuevoMonto + $interes_pagar;
 
+    // Obtener el préstamo anterior más reciente
+    $prestamoAnteriorUltimo = Prestamo::where('numero_prestamo', $prestamoAnterior->numero_prestamo)
+        ->orderByDesc('id')
+        ->first();
+
+    // Calcular nuevas fechas basadas en la fecha_fin del último préstamo
+    $nueva_fecha_inicio = $prestamoAnteriorUltimo->fecha_fin;
+    $nueva_fecha_fin = Carbon::parse($prestamoAnteriorUltimo->fecha_fin)->addDays(28);
+
     // Crear nuevo préstamo
     $nuevoPrestamo = Prestamo::create([
         'user_id' => $prestamoAnterior->user_id,
@@ -219,8 +232,8 @@ public function diferencia(Request $request, $id)
         'penalidades_acumuladas' => 0,
         'interes_acumulado' => 0,
         'total_pagar' => $total_pagar,
-        'fecha_inicio' => now(),
-        'fecha_fin' => now()->addDays(28),
+        'fecha_inicio' => $nueva_fecha_inicio,
+        'fecha_fin' => $nueva_fecha_fin,
         'descripcion' => 'Diferencia aplicada: reducción de ' . $request->diferencia,
     ]);
 
@@ -245,5 +258,19 @@ public function diferencia(Request $request, $id)
 
     return redirect()->back()->with('success', 'Diferencia aplicada y penalidad registrada correctamente.');
 }
+
+
+public function marcarPagado(Request $request, $id)
+{
+    $prestamo = Prestamo::findOrFail($id);
+
+    $prestamo->estado = 'pagado';
+    $prestamo->fecha_pago = now();
+    $prestamo->descripcion = 'Préstamo marcado como pagado manualmente.';
+    $prestamo->save();
+
+    return redirect()->back()->with('success', 'Préstamo marcado como pagado correctamente.');
+}
+
 
 }

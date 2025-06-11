@@ -106,6 +106,7 @@
             <th>Fecha de Pago</th>
             <th>Estado</th>
             <th>Descripción</th>
+            
 
             
             
@@ -159,6 +160,14 @@
     <input type="number" name="diferencia" step="0.01" placeholder="Ingrese diferencia" required class="form-control">
     <button type="submit" class="btn btn-warning btn-sm mt-1">Aplicar Diferencia</button>
 </form>
+                </td>
+                <td>
+                    <td>
+    <form action="{{ route('prestamos.pagado', $prestamo->id) }}" method="POST" onsubmit="return confirm('¿Estás seguro de marcar como pagado?')">
+        @csrf
+        <button type="submit" class="btn btn-success btn-sm">Pagado</button>
+    </form>
+</td>
                 </td>
                 
             </tr>

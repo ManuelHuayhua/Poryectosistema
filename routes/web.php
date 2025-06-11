@@ -57,3 +57,4 @@ Route::middleware(['auth', 'is_admin'])->group(function () {
 });
 
 Route::post('/prestamos/{id}/diferencia', [PrestamoController::class, 'diferencia'])->name('prestamos.diferencia');
+Route::post('/prestamos/{id}/pagado', [PrestamoController::class, 'marcarPagado'])->name('prestamos.pagado');
