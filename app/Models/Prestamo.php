@@ -25,6 +25,8 @@ class Prestamo extends Model
     'fecha_pago',
     'estado',
     'descripcion',
+    'interes_total',
+   
 ];
 
  protected $casts = [
@@ -32,7 +34,7 @@ class Prestamo extends Model
         'fecha_fin' => 'datetime',
         'fecha_pago' => 'datetime',
     ];
-    
+     
     public function user()
     {
         return $this->belongsTo(User::class);

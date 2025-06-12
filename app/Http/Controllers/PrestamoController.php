@@ -71,6 +71,7 @@ public function aprobar(Request $request, $id)
     $interesCalculado = $monto * $interesDecimal;
     $total = $monto + $interesCalculado;
 
+    $interesTotal = $interesCalculado;
     $prestamo->update([
         'interes' => $interes,
         'porcentaje_penalidad' => $penalidad,
@@ -79,6 +80,8 @@ public function aprobar(Request $request, $id)
         'fecha_inicio' => Carbon::now(),
         'fecha_fin' => Carbon::now()->addDays(28),
         'estado' => 'aprobado',
+        'interes_total' => $interesTotal,
+        
     ]);
 
     $numeroPenalizacion = $prestamo->penalidades()->count() + 1;
@@ -92,6 +95,7 @@ public function aprobar(Request $request, $id)
         'interes_penalidad' => $penalidad,
         'interes_debe' => $interesDebe,
         'user_id' => $prestamo->user_id,
+        
     ]);
 
     return redirect()->back()->with('success', "Préstamo aprobado con $interes% de interés y $penalidad% de penalidad.");
@@ -144,13 +148,13 @@ public function renovar($id)
     $interes_acumulado = $prestamoAnteriorUltimo
         ? $prestamoAnteriorUltimo->interes_pagar
             + $prestamoAnteriorUltimo->interes_acumulado
-            + $prestamoAnteriorUltimo->interes_penalidad
+            + $prestamoAnteriorUltimo->penalidades_acumuladas
         : $prestamoAnterior->interes_pagar + $prestamoAnterior->interes_penalidad;
 
         // Calcular nuevas fechas basadas en la fecha_fin del último préstamo
     $nueva_fecha_inicio = $prestamoAnteriorUltimo->fecha_fin;
     $nueva_fecha_fin = \Carbon\Carbon::parse($prestamoAnteriorUltimo->fecha_fin)->addDays(28);
-
+    $interesTotal =  $interes_acumulado + $penalidades_acumuladas + $prestamoAnterior->interes_pagar;
     // Crear nuevo préstamo
     $nuevoPrestamo = Prestamo::create([
         'user_id' => $prestamoAnterior->user_id,
@@ -163,9 +167,10 @@ public function renovar($id)
         'interes_penalidad' => $prestamoAnterior->interes_pagar * ($prestamoAnterior->porcentaje_penalidad / 100),
         'penalidades_acumuladas' => $penalidades_acumuladas,
         'interes_acumulado' => $interes_acumulado,
-        'total_pagar' => $prestamoAnterior->monto + $prestamoAnterior->interes_pagar + $penalidades_acumuladas,
+        'total_pagar' => $prestamoAnterior->monto + $interesTotal,
         'fecha_inicio' => $nueva_fecha_inicio,
         'fecha_fin' => $nueva_fecha_fin,
+        'interes_total' => $interesTotal,
     ]);
 
     // Crear nueva penalidad
@@ -264,12 +269,19 @@ public function marcarPagado(Request $request, $id)
 {
     $prestamo = Prestamo::findOrFail($id);
 
+    // Solo actualizar el estado y la fecha de pago
     $prestamo->estado = 'pagado';
     $prestamo->fecha_pago = now();
     $prestamo->descripcion = 'Préstamo marcado como pagado manualmente.';
     $prestamo->save();
 
-    return redirect()->back()->with('success', 'Préstamo marcado como pagado correctamente.');
+    // Actualizar penalidades relacionadas
+    Penalidad::where('prestamo_id', $prestamo->id)->update([
+        'suma_interes' => 0,
+        'interes_debe' => 0,
+    ]);
+
+    return redirect()->back()->with('success', 'Préstamo y penalidades marcados como pagados correctamente.');
 }
 
 

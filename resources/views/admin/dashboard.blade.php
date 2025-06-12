@@ -129,16 +129,10 @@
                  <td>S/. {{ number_format($prestamo->interes_acumulado, 2) }}</td>
                <!-- NUEVA COLUMNA: INTERÉS TOTAL -->
 <td>
-    S/. {{ number_format($prestamo->interes_acumulado + $prestamo->penalidades_acumuladas + $prestamo->interes_pagar, 2) }}
-</td>
+    S/. {{ number_format($prestamo->interes_total, 2) }}</td>
               <!-- TOTAL A PAGAR: Monto + Interés Total -->
 <td>
-    S/. {{ number_format(
-        $prestamo->monto +
-        $prestamo->interes_acumulado +
-        $prestamo->penalidades_acumuladas +
-        $prestamo->interes_pagar,
-    2) }}
+    S/. {{ number_format($prestamo->total_pagar,2) }}
 </td>
                 <td>{{ \Carbon\Carbon::parse($prestamo->fecha_inicio)->format('d/m/Y') }}</td>
                 <td>{{ \Carbon\Carbon::parse($prestamo->fecha_fin)->format('d/m/Y') }}</td>

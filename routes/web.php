@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\PrestamoController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\ReporteUserController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -25,9 +27,11 @@ Auth::routes();
 Route::get('/home', [HomeController::class, 'index'])->name('home')->middleware('auth');
 // Ruta del panel principal del usuario después de iniciar sesión
 
-
 // Ruta para que el usuario pueda solicitar un préstamo
 Route::post('/solicitar-prestamo', [PrestamoController::class, 'store'])->name('prestamo.store');
+
+
+Route::get('/reporte-user', [ReporteUserController::class, 'mostrarReporte'])->name('reporte.user')->middleware('auth');
 
 // Ruta para que el ADMIN vea todos los préstamos (pendientes, aprobados, rechazados)
 Route::get('/admin', [PrestamoController::class, 'indexAdmin'])->middleware('auth');
