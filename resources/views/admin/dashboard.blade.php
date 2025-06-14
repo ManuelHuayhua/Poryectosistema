@@ -143,16 +143,15 @@
 
                 
                 <td>
-                    <form method="POST" action="{{ route('prestamos.renovar', $prestamo->id) }}">
+              <form method="POST" action="{{ route('prestamos.penalidad', $prestamo->id) }}">
     @csrf
-    <button type="submit" class="btn btn-warning btn-sm">Renovar</button>
+    <button type="submit" class="btn btn-danger btn-sm">Penalidad</button>
 </form>
                 </td>
                 <td>
-                   <form action="{{ route('prestamos.diferencia', $prestamo->id) }}" method="POST" onsubmit="return confirm('¿Estás seguro de aplicar esta diferencia?')">
+               <form action="{{ route('prestamos.renovar', $prestamo->id) }}" method="POST" onsubmit="return confirm('¿Estás seguro de renovar este préstamo?')">
     @csrf
-    <input type="number" name="diferencia" step="0.01" placeholder="Ingrese diferencia" required class="form-control">
-    <button type="submit" class="btn btn-warning btn-sm mt-1">Aplicar Diferencia</button>
+    <button type="submit" class="btn btn-primary btn-sm mt-1">Renovar</button>
 </form>
                 </td>
                 <td>

@@ -45,11 +45,10 @@ Route::middleware('auth')->group(function () {
 
 
 // Ruta para que el ADMIN pague un préstamo
-Route::post('/prestamos/{id}/renovar', [PrestamoController::class, 'renovar'])->name('prestamos.renovar');
+Route::post('/prestamos/{id}/penalidad', [PrestamoController::class, 'penalidad'])->name('prestamos.penalidad');
 
 
 
-Route::post('/prestamos/{id}/diferencia', [PrestamoController::class, 'diferencia'])->name('prestamos.diferencia');
 
 Route::middleware(['auth', 'is_admin'])->group(function () {
      Route::get('/admin', [PrestamoController::class, 'indexAdmin']);
@@ -60,5 +59,6 @@ Route::middleware(['auth', 'is_admin'])->group(function () {
     Route::post('/admin/createuser', [UserController::class, 'store'])->name('admin.storeuser');
 });
 
-Route::post('/prestamos/{id}/diferencia', [PrestamoController::class, 'diferencia'])->name('prestamos.diferencia');
+Route::post('/prestamos/{id}/renovar', [PrestamoController::class, 'renovar'])->name('prestamos.renovar');
+
 Route::post('/prestamos/{id}/pagado', [PrestamoController::class, 'marcarPagado'])->name('prestamos.pagado');

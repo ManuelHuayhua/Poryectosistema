@@ -17,7 +17,8 @@ class ReporteUserController extends Controller
                       ->get();
 
         // Agrupamos por numero_prestamo
-        $prestamos_grouped = $prestamos->groupBy('numero_prestamo');
+       
+        $prestamos_grouped = $prestamos->sortByDesc('numero_prestamo')->groupBy('numero_prestamo');
 
         return view('reporteuser', compact('prestamos_grouped'));
     }
