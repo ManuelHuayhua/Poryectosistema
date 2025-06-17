@@ -7,7 +7,8 @@ use App\Models\User;
 use Illuminate\Foundation\Auth\RegistersUsers;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-
+use Illuminate\Auth\Events\Registered;
+use Illuminate\Http\Request;
 class RegisterController extends Controller
 {
     /*
@@ -20,7 +21,19 @@ class RegisterController extends Controller
     | provide this functionality without requiring any additional code.
     |
     */
+public function register(Request $request)
+{
+    $this->validator($request->all())->validate();
 
+    $user = $this->create($request->all());
+
+    event(new Registered($user));
+
+    // Aquí NO autenticamos al usuario automáticamente
+    // Auth::login($user);
+
+    return redirect()->route('login')->with('success', 'Cuenta creada correctamente. Inicia sesión para continuar.');
+}
     use RegistersUsers;
 
     /**

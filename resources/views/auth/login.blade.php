@@ -526,15 +526,21 @@
         </ul>
     </div>
 @endif
+@if(session('success'))
+    <div class="alert alert-success">
+        {{ session('success') }}
+    </div>
+@endif
+
                         <!-- Formulario -->
                         <form action="{{ route('login') }}" method="post">
                             @csrf
                             
                             <div class="form-group">
-                                <label class="form-label">Correo Electrónico</label>
+                                <label class="form-label">DNI</label>
                                 <div class="input-container">
                                     <i class="fas fa-envelope input-icon"></i>
-                                    <input type="email" name="email" class="form-control" placeholder="ejemplo@correo.com" required>
+                                    <input type="text" name="dni" class="form-control" placeholder="Ingrese su DNI" required>
                                 </div>
                             </div>
                             

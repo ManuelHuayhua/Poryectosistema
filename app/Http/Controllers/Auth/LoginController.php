@@ -39,6 +39,12 @@ class LoginController extends Controller
         $this->middleware('auth')->only('logout');
     }
 
+     // CAMBIO IMPORTANTE: usar dni en lugar de email
+    public function username()
+    {
+        return 'dni';
+    }
+
     protected function authenticated(Request $request, $user)
 {
     if ($user->is_admin) {
@@ -47,5 +53,7 @@ class LoginController extends Controller
 
     return redirect('/home'); // ruta usuario normal
 }
+
+
 
 }

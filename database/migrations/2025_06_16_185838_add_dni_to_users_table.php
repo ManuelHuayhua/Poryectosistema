@@ -11,10 +11,10 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+   public function up()
     {
-       Schema::table('users', function (Blueprint $table) {
-            $table->string('dni')->nullable()->after('tipo_origen'); // ajusta el "after" si es necesario
+        Schema::table('users', function (Blueprint $table) {
+            $table->string('dni')->nullable()->unique()->after('tipo_origen');
         });
     }
 

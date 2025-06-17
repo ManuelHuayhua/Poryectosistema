@@ -9,9 +9,10 @@ use Illuminate\Support\Facades\Hash;
 class UserController extends Controller
 {
     public function create()
-    {
-        return view('admin.createuser');
-    }
+{
+    $usuarios = User::all(); // 👈 agregamos esto
+    return view('admin.createuser', compact('usuarios'));
+}
 
     public function store(Request $request)
     {
@@ -27,9 +28,9 @@ class UserController extends Controller
         'celular'           => 'nullable|string|max:20',
         'direccion'         => 'nullable|string|max:255',
         'tipo_origen'       => 'nullable|string|max:255',
-        'email'             => 'required|email|unique:users',
+         'email'             => 'nullable|email|unique:users', // ✅ Cambiado aquí
         'password'          => 'required|min:6|confirmed',
-        'dni' => 'nullable|string|max:20',
+        'dni' => 'required|string|max:20|unique:users',
     ]);
 
         User::create([
@@ -52,4 +53,35 @@ class UserController extends Controller
 
         return redirect()->route('admin.createuser')->with('success', 'Usuario creado exitosamente.');
     }
+
+//cambiar contraseña de usuario
+    // Mostrar tabla de usuarios
+public function index()
+{
+    $usuarios = User::all();
+    return view('admin.usuarios', compact('usuarios'));
+}
+
+// Mostrar formulario para cambiar contraseña
+public function editPassword($id)
+{
+    $usuario = User::findOrFail($id);
+    return view('admin.cambiar-password', compact('usuario'));
+}
+
+// Guardar nueva contraseña
+public function updatePassword(Request $request, $id)
+{
+    $request->validate([
+        'password' => 'required|min:6|confirmed',
+    ]);
+
+    $usuario = User::findOrFail($id);
+    $usuario->password = Hash::make($request->password);
+    $usuario->save();
+
+   return redirect()->route('admin.createuser')->with('success_password', 'Contraseña actualizada correctamente.');
+
+
+}
 }

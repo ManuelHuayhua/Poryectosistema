@@ -45,24 +45,39 @@ Route::middleware('auth')->group(function () {
 
 
 
-// Ruta para que el ADMIN pague un préstamo
-Route::post('/prestamos/{id}/penalidad', [PrestamoController::class, 'penalidad'])->name('prestamos.penalidad');
+
 
 
 
 
 Route::middleware(['auth', 'is_admin'])->group(function () {
      Route::get('/admin', [PrestamoController::class, 'indexAdmin']);
+
+
+     // Gestión de préstamos
     Route::post('/admin/prestamos/aprobar/{id}', [PrestamoController::class, 'aprobar'])->name('prestamo.aprobar');
     Route::post('/admin/prestamos/rechazar/{id}', [PrestamoController::class, 'rechazar'])->name('prestamo.rechazar');
+    Route::get('/admin/prestamos/pendientes', [PrestamoPendienteController::class, 'index'])->name('admin.prestamos.pendientes');
 
+    // Gestión de usuarios
     Route::get('/admin/createuser', [UserController::class, 'create'])->name('admin.createuser');
     Route::post('/admin/createuser', [UserController::class, 'store'])->name('admin.storeuser');
-      Route::get('/admin/prestamos/pendientes', [PrestamoPendienteController::class, 'index'])->name('admin.prestamos.pendientes');
-});
+    Route::post('/admin/usuarios/{id}/actualizar-password', [UserController::class, 'updatePassword'])->name('admin.password.update');
 
-Route::post('/prestamos/{id}/renovar', [PrestamoController::class, 'renovar'])->name('prestamos.renovar');
+
+    Route::post('/prestamos/{id}/renovar', [PrestamoController::class, 'renovar'])->name('prestamos.renovar');
 
 Route::post('/prestamos/{id}/pagado', [PrestamoController::class, 'marcarPagado'])->name('prestamos.pagado');
 
 Route::post('/prestamos/{id}/diferencia', [PrestamoController::class, 'diferencia'])->name('prestamos.diferencia');
+Route::post('/prestamos/{id}/penalidad', [PrestamoController::class, 'penalidad'])->name('prestamos.penalidad');
+
+    
+});
+
+
+
+
+
+
+
