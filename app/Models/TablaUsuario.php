@@ -38,4 +38,11 @@ class TablaUsuario extends Model
         return $this->hasMany(Penalidad::class, 'numero_prestamo', 'numero_prestamo')
                     ->where('user_id', $this->user_id);
     }
+
+     // RELACIÓN CON PRÉSTAMO
+    public function prestamo()
+    {
+        return $this->belongsTo(Prestamo::class);
+    }
+    
 }

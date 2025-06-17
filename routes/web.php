@@ -7,7 +7,7 @@ use App\Http\Controllers\PrestamoController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\ReporteUserController;
-
+use App\Http\Controllers\Admin\PrestamoPendienteController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -31,7 +31,7 @@ Route::get('/home', [HomeController::class, 'index'])->name('home')->middleware(
 Route::post('/solicitar-prestamo', [PrestamoController::class, 'store'])->name('prestamo.store');
 
 
-Route::get('/reporte-user', [ReporteUserController::class, 'mostrarReporte'])->name('reporte.user')->middleware('auth');
+Route::get('/reporteusuarios', [ReporteUserController::class, 'index'])->name('reporteusuarios.index');
 
 // Ruta para que el ADMIN vea todos los préstamos (pendientes, aprobados, rechazados)
 Route::get('/admin', [PrestamoController::class, 'indexAdmin'])->middleware('auth');
@@ -40,6 +40,7 @@ Route::get('/admin', [PrestamoController::class, 'indexAdmin'])->middleware('aut
  
 Route::middleware('auth')->group(function () {
     Route::post('/prestamos/aprobar', [PrestamoController::class, 'aprobar']);
+  
 });
 
 
@@ -57,8 +58,11 @@ Route::middleware(['auth', 'is_admin'])->group(function () {
 
     Route::get('/admin/createuser', [UserController::class, 'create'])->name('admin.createuser');
     Route::post('/admin/createuser', [UserController::class, 'store'])->name('admin.storeuser');
+      Route::get('/admin/prestamos/pendientes', [PrestamoPendienteController::class, 'index'])->name('admin.prestamos.pendientes');
 });
 
 Route::post('/prestamos/{id}/renovar', [PrestamoController::class, 'renovar'])->name('prestamos.renovar');
 
 Route::post('/prestamos/{id}/pagado', [PrestamoController::class, 'marcarPagado'])->name('prestamos.pagado');
+
+Route::post('/prestamos/{id}/diferencia', [PrestamoController::class, 'diferencia'])->name('prestamos.diferencia');

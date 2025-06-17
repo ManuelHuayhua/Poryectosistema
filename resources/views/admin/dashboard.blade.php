@@ -155,6 +155,14 @@
 </form>
                 </td>
                 <td>
+                  <form method="POST" action="{{ route('prestamos.diferencia', $prestamo->id) }}" class="mt-1">
+    @csrf
+    <div class="input-group">
+        <input type="number" step="0.01" min="0" max="{{ $prestamo->monto }}" name="nuevo_monto" class="form-control form-control-sm" placeholder="Monto a descontar" required>
+        <button type="submit" class="btn btn-warning btn-sm">Diferencia</button>
+    </div>
+    <small class="text-muted">Máx: {{ number_format($prestamo->monto, 2) }}</small>
+</form>
                     <td>
     <form action="{{ route('prestamos.pagado', $prestamo->id) }}" method="POST" onsubmit="return confirm('¿Estás seguro de marcar como pagado?')">
         @csrf

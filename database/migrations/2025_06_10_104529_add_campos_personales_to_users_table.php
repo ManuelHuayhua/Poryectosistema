@@ -11,19 +11,19 @@ return new class extends Migration
      *
      * @return void
      */
-     public function up()
+      public function up()
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('apellido_paterno')->after('name');
-            $table->string('apellido_materno')->after('apellido_paterno');
-            $table->string('nacionalidad')->after('apellido_materno');
-            $table->string('sexo')->after('nacionalidad');
-            $table->string('estado_civil')->after('sexo');
+            $table->string('apellido_paterno')->nullable()->after('name');
+            $table->string('apellido_materno')->nullable()->after('apellido_paterno');
+            $table->string('nacionalidad')->nullable()->after('apellido_materno');
+            $table->string('sexo')->nullable()->after('nacionalidad');
+            $table->string('estado_civil')->nullable()->after('sexo');
             $table->date('fecha_nacimiento')->nullable()->after('estado_civil');
             $table->string('telefono')->nullable()->after('fecha_nacimiento');
             $table->string('celular')->nullable()->after('telefono');
             $table->string('direccion')->nullable()->after('celular');
-            $table->string('tipo_origen')->nullable()->after('direccion'); // 👈 Ahora es string y no es obligatorio
+            $table->string('tipo_origen')->nullable()->after('direccion');
         });
     }
 

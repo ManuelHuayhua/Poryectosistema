@@ -71,6 +71,13 @@
     </div>
 
     <div>
+    <label for="dni">DNI</label>
+    <input type="text" name="dni" id="dni" value="{{ old('dni') }}">
+    @error('dni') <small style="color:red;">{{ $message }}</small> @enderror
+</div>
+
+
+    <div>
         <label for="direccion">Dirección</label>
         <input type="text" name="direccion" id="direccion" value="{{ old('direccion') }}">
     </div>

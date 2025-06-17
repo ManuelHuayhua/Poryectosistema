@@ -29,6 +29,7 @@ class UserController extends Controller
         'tipo_origen'       => 'nullable|string|max:255',
         'email'             => 'required|email|unique:users',
         'password'          => 'required|min:6|confirmed',
+        'dni' => 'nullable|string|max:20',
     ]);
 
         User::create([
@@ -46,6 +47,7 @@ class UserController extends Controller
         'email'             => $request->email,
         'password'          => Hash::make($request->password),
         'is_admin'          => $request->boolean('is_admin'),
+          'dni'               => $request->dni,
     ]);
 
         return redirect()->route('admin.createuser')->with('success', 'Usuario creado exitosamente.');

@@ -239,11 +239,18 @@ public function penalidad($id)
     }
 
     // Obtenemos las penalidades anteriores para insertar en tabla_usuario
+    if ($ultimaDiferencia) {
     $penalidades_anteriores = Penalidad::where('numero_prestamo', $nuevoPrestamo->numero_prestamo)
+        ->where('id', '>=', $ultimaDiferencia->id)
+        ->where('id', '<', $nuevaPenalidad->id)
         ->orderBy('numero_penalizacion')
-        ->take($conteoPenalidadesAnteriores)
         ->get();
-
+} else {
+    $penalidades_anteriores = Penalidad::where('numero_prestamo', $nuevoPrestamo->numero_prestamo)
+        ->where('id', '<', $nuevaPenalidad->id)
+        ->orderBy('numero_penalizacion')
+        ->get();
+}
     foreach ($penalidades_anteriores as $penalidad_item) {
         DB::table('tabla_usuario')->insert([
             'user_id' => $nuevoPrestamo->user_id,
@@ -301,7 +308,7 @@ public function renovar(Request $request, $id)
         'interes' => $prestamoAnterior->interes,
         'porcentaje_penalidad' => $prestamoAnterior->porcentaje_penalidad,
         'interes_pagar' => $interes_pagar,
-        'interes_penalidad' => $prestamoAnterior->interes_penalidad,
+        'interes_penalidad' => 0,
         'penalidades_acumuladas' => $prestamoAnterior->penalidades_acumuladas,
         'interes_acumulado' => $prestamoAnterior->interes_acumulado,
         'total_pagar' => $total_pagar,
@@ -341,8 +348,8 @@ public function renovar(Request $request, $id)
         'fecha_prestamos' => $nueva_fecha_inicio,
         'fecha_pago' => $nueva_fecha_fin,
         'monto' => $nuevoMonto,
-        'interes' => $interes_pagar,
-        'interes_porcentaje' => 0,
+        'interes' => 0,
+        'interes_porcentaje' => $prestamoAnterior->porcentaje_penalidad,
         'descripcion' => 'Renovación automática del préstamo',
         'estado' => 'aprobado',
         'created_at' => now(),
@@ -353,23 +360,121 @@ public function renovar(Request $request, $id)
 }
 
 
+public function diferencia(Request $request, $id)
+{
+    $prestamoAnterior = Prestamo::findOrFail($id);
+
+    // Validamos que el monto que se pagará como diferencia sea válido
+    $request->validate([
+        'nuevo_monto' => 'required|numeric|min:0.01|max:' . $prestamoAnterior->monto,
+    ]);
+
+    // Monto que el usuario pagó como diferencia
+    $montoPagado = $request->nuevo_monto;
+
+    // El capital restante luego de pagar esa diferencia
+    $capitalRestante = $prestamoAnterior->monto - $montoPagado;
+
+    // Recalculamos el interés solo sobre el capital restante
+    $interesDecimal = $prestamoAnterior->interes / 100;
+    $interesPagar = $capitalRestante * $interesDecimal;
+
+    // Calculamos el nuevo interés total a pagar sumando lo que ya venía acumulado
+    $interesTotal = $prestamoAnterior->interes_acumulado + $prestamoAnterior->penalidades_acumuladas + $interesPagar;
+
+    // Monto total a pagar (capital restante + intereses totales)
+    $totalPagar = $capitalRestante + $interesTotal;
+
+    // Las fechas continúan como si fuera una renovación
+    $prestamoAnteriorUltimo = Prestamo::where('numero_prestamo', $prestamoAnterior->numero_prestamo)
+        ->orderByDesc('id')
+        ->first();
+
+    $nuevaFechaInicio = $prestamoAnteriorUltimo->fecha_fin;
+    $nuevaFechaFin = Carbon::parse($prestamoAnteriorUltimo->fecha_fin)->addDays(28);
+
+    // Creamos un nuevo préstamo con el capital reducido y el nuevo interés calculado
+    $nuevoPrestamo = Prestamo::create([
+        'user_id' => $prestamoAnterior->user_id,
+        'numero_prestamo' => $prestamoAnterior->numero_prestamo,
+        'monto' => $capitalRestante,
+        'estado' => 'aprobado',
+        'interes' => $prestamoAnterior->interes,
+        'porcentaje_penalidad' => $prestamoAnterior->porcentaje_penalidad,
+        'interes_pagar' => $interesPagar,
+        'interes_penalidad' => 0,
+        'penalidades_acumuladas' => $prestamoAnterior->penalidades_acumuladas,
+        'interes_acumulado' => $prestamoAnterior->interes_acumulado,
+        'total_pagar' => $totalPagar,
+        'fecha_inicio' => $nuevaFechaInicio,
+        'fecha_fin' => $nuevaFechaFin,
+        'descripcion' => 'Ajuste por diferencia aplicado',
+        'interes_total' => $interesTotal,
+    ]);
+
+    // Buscamos el número de penalización actual
+    $numeroPenalizacion = Penalidad::where('user_id', $prestamoAnterior->user_id)
+        ->where('numero_prestamo', $prestamoAnterior->numero_prestamo)
+        ->max('numero_penalizacion');
+    $numeroPenalizacion = $numeroPenalizacion ? $numeroPenalizacion + 1 : 1;
+    // Calculamos penalidad aplicable al nuevo interés generado
+        $porcentajePenalidad = $prestamoAnterior->porcentaje_penalidad;
+        $interesDebe = $interesPagar * ($porcentajePenalidad / 100);
+    // Registramos en la tabla de penalidades pero como tipo "diferencia"
+    Penalidad::create([
+        'prestamo_id' => $nuevoPrestamo->id,
+        'user_id' => $prestamoAnterior->user_id,
+        'numero_prestamo' => $prestamoAnterior->numero_prestamo,
+        'numero_penalizacion' => $numeroPenalizacion,
+        'suma_interes' => $interesPagar,
+         'interes_penalidad' => $porcentajePenalidad,
+         'interes_debe' => $interesDebe,
+        'tipo_operacion' => 'diferencia',
+    ]);
+
+    // Registramos en la tabla_usuario
+    DB::table('tabla_usuario')->insert([
+        'user_id' => $prestamoAnterior->user_id,
+        'prestamo_id' => $nuevoPrestamo->id,
+        'numero_prestamo' => $prestamoAnterior->numero_prestamo,
+        'item' => null,
+        'renovacion' => null,
+        'junta' => null,
+        'fecha_prestamos' => $nuevaFechaInicio,
+        'fecha_pago' => $nuevaFechaFin,
+        'monto' => $capitalRestante,
+        'interes' => $interesPagar,
+        'interes_porcentaje' => $prestamoAnterior->interes,
+
+        'descripcion' => 'Ajuste por diferencia aplicado',
+        'estado' => 'aprobado',
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    return redirect()->back()->with('success', 'Se aplicó correctamente la diferencia al préstamo.');
+}
+
+
 public function marcarPagado(Request $request, $id)
 {
     $prestamo = Prestamo::findOrFail($id);
 
-    // Solo actualizar el estado y la fecha de pago
+    // Actualizar el préstamo principal
     $prestamo->estado = 'pagado';
     $prestamo->fecha_pago = now();
     $prestamo->descripcion = 'Préstamo marcado como pagado manualmente.';
     $prestamo->save();
 
-    // Actualizar penalidades relacionadas
-    Penalidad::where('prestamo_id', $prestamo->id)->update([
-        'suma_interes' => 0,
-        'interes_debe' => 0,
-    ]);
+    // Actualizar la tabla_usuario relacionada
+    DB::table('tabla_usuario')
+        ->where('prestamo_id', $prestamo->id)
+        ->update([
+            'estado' => 'pagado',
+            'fecha_pago' => now(),
+        ]);
 
-    return redirect()->back()->with('success', 'Préstamo y penalidades marcados como pagados correctamente.');
+    return redirect()->back()->with('success', 'Préstamo marcado como pagado correctamente.');
 }
 
 
