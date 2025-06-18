@@ -8,6 +8,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\ReporteUserController;
 use App\Http\Controllers\Admin\PrestamoPendienteController;
+use App\Http\Controllers\PerfilController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -36,22 +37,17 @@ Route::get('/reporteusuarios', [ReporteUserController::class, 'index'])->name('r
 // Ruta para que el ADMIN vea todos los préstamos (pendientes, aprobados, rechazados)
 Route::get('/admin', [PrestamoController::class, 'indexAdmin'])->middleware('auth');
 
-
+  Route::get('/perfil', [PerfilController::class, 'show'])->name('perfil');
+  Route::post('/perfil/cambiar-password', [PerfilController::class, 'cambiarPassword'])->name('perfil.cambiarPassword');
  
 Route::middleware('auth')->group(function () {
     Route::post('/prestamos/aprobar', [PrestamoController::class, 'aprobar']);
+    
   
 });
 
-
-
-
-
-
-
-
 Route::middleware(['auth', 'is_admin'])->group(function () {
-     Route::get('/admin', [PrestamoController::class, 'indexAdmin']);
+     Route::get('/admin', [PrestamoController::class, 'indexAdmin'])->name('indexAdmin');
 
 
      // Gestión de préstamos

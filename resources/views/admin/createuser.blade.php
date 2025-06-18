@@ -333,13 +333,13 @@
 
     <nav class="sidebar-nav">
         <div class="nav-item">
-            <a href="#" class="nav-link"><i class="fas fa-home"></i><span>Inicio</span></a>
+            <a href="{{ route('indexAdmin') }}" class="nav-link"><i class="fas fa-home" ></i><span>Inicio</span></a>
         </div>
         <div class="nav-item">
-            <a href="#" class="nav-link"><i class="fas fa-user-circle"></i><span>Perfil</span></a>
+            <a href="{{ route('admin.createuser') }}" class="nav-link active"><i class="fas fa-user-circle" ></i><span>Crear Usuario</span></a>
         </div>
-        <div class="nav-item">
-            <a href="#" class="nav-link"><i class="fas fa-download"></i><span>Descargas</span></a>
+        <div class="nav-item ">
+            <a href="{{ route('admin.prestamos.pendientes') }}" class="nav-link " ><i class="fas fa-download"></i><span>Descargas Contrato</span></a>
         </div>
 
         <div class="nav-item mt-auto">

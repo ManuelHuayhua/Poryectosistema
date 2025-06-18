@@ -319,7 +319,11 @@ public function renovar(Request $request, $id)
     $ultimaPenalidad = $penalidades->last();
 
     // Penalidades válidas para insertar (todas menos la última)
-    $penalidadesValidas = $penalidades->count() > 1 ? $penalidades->slice(0, -1) : collect();
+    $penalidadesValidas = $penalidades->count() > 1
+    ? $penalidades->slice(0, -1)->filter(function ($penalidad) {
+        return $penalidad->tipo_operacion !== 'renovacion';
+    })->values()
+    : collect();
 
     // Acumulados
     $penalidadesNuevas = $penalidadesValidas->sum('interes_debe');
