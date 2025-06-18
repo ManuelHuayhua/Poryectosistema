@@ -26,7 +26,9 @@ class Prestamo extends Model
     'estado',
     'descripcion',
     'interes_total',
-   
+    'n_junta',
+    'item_prestamo', // Nuevo campo agregado
+
 ];
 
  protected $casts = [

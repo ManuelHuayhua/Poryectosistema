@@ -24,9 +24,17 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+
+Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
+Route::post('/register', [RegisterController::class, 'register']);
+
+
 Auth::routes();
 Route::get('/home', [HomeController::class, 'index'])->name('home')->middleware('auth');
 // Ruta del panel principal del usuario después de iniciar sesión
+
+
+
 
 // Ruta para que el usuario pueda solicitar un préstamo
 Route::post('/solicitar-prestamo', [PrestamoController::class, 'store'])->name('prestamo.store');
@@ -65,7 +73,7 @@ Route::middleware(['auth', 'is_admin'])->group(function () {
 
 Route::post('/prestamos/{id}/pagado', [PrestamoController::class, 'marcarPagado'])->name('prestamos.pagado');
 
-Route::post('/prestamos/{id}/diferencia', [PrestamoController::class, 'diferencia'])->name('prestamos.diferencia');
+Route::post('/prestamos/diferencia/{id}', [PrestamoController::class, 'aplicarDiferencia'])->name('prestamos.diferencia');
 Route::post('/prestamos/{id}/penalidad', [PrestamoController::class, 'penalidad'])->name('prestamos.penalidad');
 
     

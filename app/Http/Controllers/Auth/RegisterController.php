@@ -11,54 +11,23 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 class RegisterController extends Controller
 {
-    /*
-    |--------------------------------------------------------------------------
-    | Register Controller
-    |--------------------------------------------------------------------------
-    |
-    | This controller handles the registration of new users as well as their
-    | validation and creation. By default this controller uses a trait to
-    | provide this functionality without requiring any additional code.
-    |
-    */
-public function register(Request $request)
-{
-    $this->validator($request->all())->validate();
-
-    $user = $this->create($request->all());
-
-    event(new Registered($user));
-
-    // Aquí NO autenticamos al usuario automáticamente
-    // Auth::login($user);
-
-    return redirect()->route('login')->with('success', 'Cuenta creada correctamente. Inicia sesión para continuar.');
-}
-    use RegistersUsers;
-
-    /**
-     * Where to redirect users after registration.
-     *
-     * @var string
-     */
-    protected $redirectTo = '/home';
-
-    /**
-     * Create a new controller instance.
-     *
-     * @return void
-     */
     public function __construct()
     {
         $this->middleware('guest');
     }
 
-    /**
-     * Get a validator for an incoming registration request.
-     *
-     * @param  array  $data
-     * @return \Illuminate\Contracts\Validation\Validator
-     */
+    public function register(Request $request)
+    {
+        $this->validator($request->all())->validate();
+
+        $user = $this->create($request->all());
+
+        event(new Registered($user));
+
+        // NO se loguea automáticamente
+        return redirect()->route('login')->with('success', 'Cuenta creada correctamente. Inicia sesión para continuar.');
+    }
+
     protected function validator(array $data)
     {
         return Validator::make($data, [
@@ -68,12 +37,6 @@ public function register(Request $request)
         ]);
     }
 
-    /**
-     * Create a new user instance after a valid registration.
-     *
-     * @param  array  $data
-     * @return \App\Models\User
-     */
     protected function create(array $data)
     {
         return User::create([
@@ -81,5 +44,10 @@ public function register(Request $request)
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
         ]);
+    }
+
+    public function showRegistrationForm()
+    {
+        return view('auth.register');
     }
 }

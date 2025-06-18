@@ -65,13 +65,42 @@
         @endforeach
     </select>
 
+    <!-- Checkbox para indicar si es junta -->
+<div class="form-check mt-2">
+    <input class="form-check-input" type="checkbox" name="es_junta" id="es_junta" value="1" onchange="toggleJuntaSelect()">
+    <label class="form-check-label" for="es_junta">
+        ¿Es junta?
+    </label>
+</div>
+
+<!-- Select de tipo_origen, oculto por defecto -->
+<div id="tipo_origen_container" class="mt-2" style="display: none;">
+    <label for="tipo_origen">Seleccione tipo de origen:</label>
+    <select name="tipo_origen" class="form-control">
+        @foreach($configuraciones as $config)
+            @if($config->tipo_origen)
+                <option value="{{ $config->tipo_origen }}">{{ $config->tipo_origen }}</option>
+            @endif
+        @endforeach
+    </select>
+</div>
+
+<!-- Script para mostrar u ocultar el select -->
+<script>
+    function toggleJuntaSelect() {
+        const checkbox = document.getElementById('es_junta');
+        const container = document.getElementById('tipo_origen_container');
+        container.style.display = checkbox.checked ? 'block' : 'none';
+    }
+</script>
+
     <button type="submit" class="btn btn-success mt-2">Aprobar</button>
 </form>
 
-                        <form action="{{ route('prestamo.rechazar', $prestamo->id) }}" method="POST" class="d-inline">
-                            @csrf
-                            <button type="submit" class="btn btn-danger btn-sm">Rechazar</button>
-                        </form>
+                       <form action="{{ route('prestamo.rechazar', $prestamo->id) }}" method="POST" class="mt-2">
+    @csrf
+    <button type="submit" class="btn btn-danger">Rechazar</button>
+</form>
                     </td>
                 </tr>
             @empty
@@ -84,6 +113,7 @@
 
 
    {{-- Préstamos Aprobados --}}
+{{-- Préstamos Aprobados --}}
 <h4 class="mt-5 text-success">Préstamos Aprobados</h4>
 
 <table class="table table-bordered mt-3">
@@ -95,90 +125,73 @@
             <th>Monto</th>
             <th>Interés (%)</th>
             <th>Interés a Pagar</th>
-            <th>% Penalidad</th>
-            <th>Penalidad por Interés</th>
-            <th>Penalidades Acumuladas</th>
-            <th>Interés Acumulado</th>
-            <th><strong>Interés Total</strong></th> <!-- NUEVA COLUMNA -->
-            <th>Total a Pagar</th>
             <th>Fecha Inicio</th>
             <th>Fecha Fin</th>
             <th>Fecha de Pago</th>
             <th>Estado</th>
             <th>Descripción</th>
-            
-
-            
-            
             <th>Acciones</th>
+            <th>Diferencia</th>
         </tr>
     </thead>
     <tbody>
-        @forelse($prestamosAprobados as $prestamo)
-            <tr>
-                <td>{{ $prestamo->id }}</td>
-                <td>{{ $prestamo->numero_prestamo }}</td> 
-                <td>{{ $prestamo->user->name }}</td>
-                <td>S/. {{ number_format($prestamo->monto, 2) }}</td>
-                <td>{{ $prestamo->interes }}%</td>
-                <td>S/. {{ number_format($prestamo->interes_pagar, 2) }}</td>
-                <td>{{ $prestamo->porcentaje_penalidad ? number_format($prestamo->porcentaje_penalidad, 2) . '%' : 'N/A' }}</td>
-                <td>S/. {{ number_format($prestamo->interes_penalidad, 2) }}</td>
-                <td>S/. {{ number_format($prestamo->penalidades_acumuladas, 2) }}</td>
+    @php
+        $grupos = $prestamosAprobados->groupBy('numero_prestamo');
+    @endphp
 
-                 <td>S/. {{ number_format($prestamo->interes_acumulado, 2) }}</td>
-               <!-- NUEVA COLUMNA: INTERÉS TOTAL -->
-<td>
-    S/. {{ number_format($prestamo->interes_total, 2) }}</td>
-              <!-- TOTAL A PAGAR: Monto + Interés Total -->
-<td>
-    S/. {{ number_format($prestamo->total_pagar,2) }}
-</td>
-                <td>{{ \Carbon\Carbon::parse($prestamo->fecha_inicio)->format('d/m/Y') }}</td>
-                <td>{{ \Carbon\Carbon::parse($prestamo->fecha_fin)->format('d/m/Y') }}</td>
-                <td>{{ optional($prestamo->fecha_pago)->format('d/m/Y') }}</td>
-                <td>{{ ucfirst($prestamo->estado) }}</td>
-                <td>{{ $prestamo->descripcion }}</td>
-                
+    @forelse($grupos as $grupo)
+        @foreach($grupo as $index => $prestamo)
+        <tr>
+            <td>{{ $prestamo->id }}</td>
+            <td>{{ $prestamo->numero_prestamo }}</td>
+            <td>{{ $prestamo->user->name }}</td>
+            <td>S/. {{ number_format($prestamo->monto, 2) }}</td>
+            <td>{{ $prestamo->interes }}%</td>
+            <td>S/. {{ number_format($prestamo->interes_pagar, 2) }}</td>
+            <td>{{ \Carbon\Carbon::parse($prestamo->fecha_inicio)->format('d/m/Y') }}</td>
+            <td>{{ \Carbon\Carbon::parse($prestamo->fecha_fin)->format('d/m/Y') }}</td>
+            <td>{{ optional($prestamo->fecha_pago)->format('d/m/Y') }}</td>
+            <td>{{ ucfirst($prestamo->estado) }}</td>
+            <td>{{ $prestamo->descripcion }}</td>
+            <td>
+                {{-- Solo en la primera fila mostramos los botones de grupo --}}
+                @if($index === 0)
+                    <form method="POST" action="{{ route('prestamos.penalidad', $prestamo->id) }}" class="mb-1">
+                        @csrf
+                        <button type="submit" class="btn btn-danger btn-sm">Penalidad</button>
+                    </form>
 
-                
-                <td>
-              <form method="POST" action="{{ route('prestamos.penalidad', $prestamo->id) }}">
+                    <form action="{{ route('prestamos.renovar', $prestamo->id) }}" method="POST"
+                        onsubmit="return confirm('¿Renovar este préstamo?')" class="mb-1">
+                        @csrf
+                        <button type="submit" class="btn btn-primary btn-sm">Renovar</button>
+                    </form>
+                @endif
+
+                <form method="POST" action="{{ route('prestamos.diferencia', $prestamo->id) }}" class="mb-1 d-flex gap-1 align-items-center">
     @csrf
-    <button type="submit" class="btn btn-danger btn-sm">Penalidad</button>
+    <input type="number" name="diferencia" step="0.01" required placeholder="Diferencia"
+        class="form-control form-control-sm w-50" title="Ingresa el monto a sumar o restar (puede ser negativo)">
+    <button type="submit" class="btn btn-warning btn-sm">Aplicar Diferencia</button>
 </form>
-                </td>
-                <td>
-               <form action="{{ route('prestamos.renovar', $prestamo->id) }}" method="POST" onsubmit="return confirm('¿Estás seguro de renovar este préstamo?')">
+            </td>
+            <td>
+                <form method="POST" action="{{ route('prestamos.diferencia', $prestamo->id) }}" class="mb-1">
     @csrf
-    <button type="submit" class="btn btn-primary btn-sm mt-1">Renovar</button>
+    <button type="submit" class="btn btn-warning btn-sm">Diferencia</button>
 </form>
-                </td>
-                <td>
-                  <form method="POST" action="{{ route('prestamos.diferencia', $prestamo->id) }}" class="mt-1">
-    @csrf
-    <div class="input-group">
-        <input type="number" step="0.01" min="0" max="{{ $prestamo->monto }}" name="nuevo_monto" class="form-control form-control-sm" placeholder="Monto a descontar" required>
-        <button type="submit" class="btn btn-warning btn-sm">Diferencia</button>
-    </div>
-    <small class="text-muted">Máx: {{ number_format($prestamo->monto, 2) }}</small>
-</form>
-                    <td>
-    <form action="{{ route('prestamos.pagado', $prestamo->id) }}" method="POST" onsubmit="return confirm('¿Estás seguro de marcar como pagado?')">
-        @csrf
-        <button type="submit" class="btn btn-success btn-sm">Pagado</button>
-    </form>
-</td>
-                </td>
-                
-            </tr>
-        @empty
-            <tr>
-                <td colspan="17">No hay préstamos aprobados.</td>
-            </tr>
-        @endforelse
+            </td>
+        </tr>
+        @endforeach
+    @empty
+        <tr>
+            <td colspan="13">No hay préstamos aprobados.</td>
+        </tr>
+    @endforelse
     </tbody>
 </table>
+
+
 
 
 
