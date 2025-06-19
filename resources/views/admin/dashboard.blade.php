@@ -141,6 +141,9 @@
 
     @forelse($grupos as $grupo)
         @foreach($grupo as $index => $prestamo)
+        @php
+            $grupoId = $prestamo->numero_prestamo . '_' . $prestamo->item_prestamo;
+        @endphp
         <tr>
             <td>{{ $prestamo->id }}</td>
             <td>{{ $prestamo->numero_prestamo }}</td>
@@ -154,32 +157,44 @@
             <td>{{ ucfirst($prestamo->estado) }}</td>
             <td>{{ $prestamo->descripcion }}</td>
             <td>
-                {{-- Solo en la primera fila mostramos los botones de grupo --}}
                 @if($index === 0)
+                    {{-- Penalidad --}}
                     <form method="POST" action="{{ route('prestamos.penalidad', $prestamo->id) }}" class="mb-1">
                         @csrf
                         <button type="submit" class="btn btn-danger btn-sm">Penalidad</button>
                     </form>
 
+                    {{-- Renovar --}}
                     <form action="{{ route('prestamos.renovar', $prestamo->id) }}" method="POST"
                         onsubmit="return confirm('¿Renovar este préstamo?')" class="mb-1">
                         @csrf
                         <button type="submit" class="btn btn-primary btn-sm">Renovar</button>
                     </form>
                 @endif
-
-                <form method="POST" action="{{ route('prestamos.diferencia', $prestamo->id) }}" class="mb-1 d-flex gap-1 align-items-center">
-    @csrf
-    <input type="number" name="diferencia" step="0.01" required placeholder="Diferencia"
-        class="form-control form-control-sm w-50" title="Ingresa el monto a sumar o restar (puede ser negativo)">
-    <button type="submit" class="btn btn-warning btn-sm">Aplicar Diferencia</button>
-</form>
             </td>
+
             <td>
-                <form method="POST" action="{{ route('prestamos.diferencia', $prestamo->id) }}" class="mb-1">
-    @csrf
-    <button type="submit" class="btn btn-warning btn-sm">Diferencia</button>
-</form>
+                @if($index === 0)
+                    {{-- Aplicar Diferencia (solo en primera fila) --}}
+                    <form method="POST" action="{{ route('prestamos.diferencia', $prestamo->id) }}" onsubmit="guardarCancelados('{{ $grupoId }}')">
+                        @csrf
+                        <div class="input-group mb-1">
+                            <input type="number" name="diferencia_monto" step="0.01" placeholder="Monto a restar" class="form-control form-control-sm" required>
+                        </div>
+
+                        {{-- Hidden inputs --}}
+                        <input type="hidden" name="grupo" value="{{ $prestamo->numero_prestamo }}">
+                        <input type="hidden" name="item" value="{{ $prestamo->item_prestamo }}">
+                        <input type="hidden" name="filas_canceladas" id="cancelados_{{ $grupoId }}">
+
+                        <button type="submit" class="btn btn-warning btn-sm">Aplicar Diferencia</button>
+                    </form>
+                @else
+                    {{-- Check de cancelación para otras filas --}}
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input check-cancelado" data-grupo="{{ $grupoId }}" value="{{ $prestamo->id }}">
+                    </div>
+                @endif
             </td>
         </tr>
         @endforeach
@@ -190,6 +205,23 @@
     @endforelse
     </tbody>
 </table>
+
+{{-- JavaScript para capturar los checkboxes marcados --}}
+<script>
+    function guardarCancelados(grupoId) {
+        let checkboxes = document.querySelectorAll('.check-cancelado[data-grupo="' + grupoId + '"]');
+        let ids = [];
+
+        checkboxes.forEach(cb => {
+            if (cb.checked) {
+                ids.push(cb.value);
+            }
+        });
+
+        // Asignar los valores a input hidden
+        document.getElementById('cancelados_' + grupoId).value = ids.join(',');
+    }
+</script>
 
 
 

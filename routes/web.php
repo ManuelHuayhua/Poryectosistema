@@ -76,7 +76,8 @@ Route::post('/prestamos/{id}/pagado', [PrestamoController::class, 'marcarPagado'
 Route::post('/prestamos/diferencia/{id}', [PrestamoController::class, 'aplicarDiferencia'])->name('prestamos.diferencia');
 Route::post('/prestamos/{id}/penalidad', [PrestamoController::class, 'penalidad'])->name('prestamos.penalidad');
 
-    
+Route::post('/prestamos/{id}/diferencia', [PrestamoController::class, 'aplicarDiferencia'])->name('prestamos.diferencia');
+
 });
 
 

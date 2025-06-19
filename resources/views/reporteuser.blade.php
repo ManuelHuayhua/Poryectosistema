@@ -181,11 +181,9 @@
 
 <!-- Contenido principal -->
 <div class="main-content">
-    
 <div class="container my-4">
     <h1 class="text-center mb-4">📄 Reporte de Préstamos</h1>
 
-    {{-- Botón de impresión --}}
     <div class="mb-3 no-print text-end">
         <button onclick="imprimirSeleccionados()" class="btn btn-success">🖨️ Imprimir Seleccionados</button>
     </div>
@@ -203,7 +201,7 @@
         <tbody>
             @foreach($prestamos as $numero_prestamo => $registros)
                 @php
-                    $ultimo = $registros->sortByDesc('fecha_prestamos')->first();
+                    $ultimo = $registros->sortByDesc('fecha_inicio')->first();
                 @endphp
 
                 <tr class="fila-principal-{{ $numero_prestamo }}">
@@ -211,8 +209,8 @@
                         <input type="checkbox" class="seleccionar-reporte" data-target="{{ $numero_prestamo }}">
                     </td>
                     <td>{{ $numero_prestamo }}</td>
-                    <td>{{ $ultimo->fecha_prestamos }}</td>
-                    <td>{{ $ultimo->fecha_pago }}</td>
+                    <td>{{ $ultimo->fecha_inicio }}</td>
+                    <td>{{ $ultimo->fecha_fin }}</td>
                     <td class="text-center">
                         <button class="btn btn-primary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#detalle-{{ $numero_prestamo }}">
                             Ver Detalle
@@ -220,56 +218,54 @@
                     </td>
                 </tr>
 
-                {{-- Detalles --}}
+                {{-- Detalle --}}
                 <tr class="collapse bloque-imprimible bloque-{{ $numero_prestamo }}" id="detalle-{{ $numero_prestamo }}">
                     <td colspan="5">
                         <table class="table table-sm table-bordered text-center align-middle">
                             <thead class="table-light">
                                 <tr>
-                                    <th>ID Préstamo</th>
+                                    <th>ID</th>
                                     <th>Item</th>
-                                    <th>Renovación</th>
-                                    <th>Junta</th>
-                                    <th>Fecha Préstamo</th>
-                                    <th>Fecha Pago</th>
+                                    <th>Fecha Inicio</th>
+                                    <th>Fecha Fin</th>
+                                   
                                     <th>Monto</th>
                                     <th>Interés</th>
-                                    <th>% Interés</th>
+                                    <th>Interés a Pagar</th>
                                     <th>Descripción</th>
-                                    <th>Estado</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @php
                                     $totalMonto = 0;
                                     $totalInteres = 0;
+                                    $totalInteresPagar = 0;
                                 @endphp
-                                @foreach($registros->sortBy('fecha_prestamos') as $detalle)
+                                @foreach($registros->sortBy('fecha_inicio') as $detalle)
                                     @php
                                         $totalMonto += $detalle->monto;
                                         $totalInteres += $detalle->interes;
+                                        $totalInteresPagar += $detalle->interes_pagar;
                                     @endphp
                                     <tr>
-                                        <td>{{ $detalle->prestamo_id }}</td>
-                                        <td>{{ $detalle->item }}</td>
-                                        <td>{{ $detalle->renovacion }}</td>
-                                        <td>{{ $detalle->junta }}</td>
-                                        <td>{{ $detalle->fecha_prestamos }}</td>
-                                        <td>{{ $detalle->fecha_pago }}</td>
+                                        <td>{{ $detalle->id }}</td>
+                                        <td>{{ $detalle->item_prestamo }}</td>
+                                        <td>{{ $detalle->fecha_inicio }}</td>
+                                        <td>{{ $detalle->fecha_fin }}</td>
+                                      
                                         <td>S/ {{ number_format($detalle->monto, 2) }}</td>
                                         <td>S/ {{ number_format($detalle->interes, 2) }}</td>
-                                        <td>{{ $detalle->interes_porcentaje }}%</td>
+                                        <td>S/ {{ number_format($detalle->interes_pagar, 2) }}</td>
                                         <td>{{ $detalle->descripcion }}</td>
-                                        <td>{{ $detalle->estado }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
                             <tfoot class="table-secondary">
                                 <tr>
-                                    <th colspan="6" class="text-end">Totales:</th>
+                                    <th colspan="5" class="text-end">Totales:</th>
                                     <th>S/ {{ number_format($totalMonto, 2) }}</th>
                                     <th>S/ {{ number_format($totalInteres, 2) }}</th>
-                                    <th colspan="3"></th>
+                                    <th>S/ {{ number_format($totalInteresPagar, 2) }}</th>
                                 </tr>
                             </tfoot>
                         </table>
@@ -278,6 +274,7 @@
             @endforeach
         </tbody>
     </table>
+</div>
 </div>
 
 {{-- Estilos de impresión --}}

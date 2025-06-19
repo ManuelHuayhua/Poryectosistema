@@ -30,6 +30,7 @@ class PrestamoController extends Controller
     $prestamo = Prestamo::create([
         'user_id' => $user->id,
         'numero_prestamo' => $numeroPrestamo,
+        'item_prestamo' =>1,
         'monto' => $request->monto,
         'estado' => 'pendiente',
     ]);
@@ -145,7 +146,8 @@ public function rechazar(Request $request, $id)
 public function penalidad($id) 
 {
     $prestamoBase = Prestamo::findOrFail($id);
-    $porcentajePenalidad = 20;
+    // Obtener el porcentaje penalidad del préstamo base
+    $porcentajePenalidad = $prestamoBase->porcentaje_penalidad;
 
     // Obtener el último item_prestamo del mismo número de préstamo
     $ultimoItem = Prestamo::where('numero_prestamo', $prestamoBase->numero_prestamo)
@@ -181,6 +183,7 @@ public function penalidad($id)
             'monto' => $registro->monto,
             'interes' => $registro->interes,
             'interes_pagar' => $registro->interes_pagar,
+             'porcentaje_penalidad' => $registro->porcentaje_penalidad,
             'estado' => 'aprobado',
             'descripcion' => $registro->descripcion,
             'fecha_inicio' => $fechaInicio,
@@ -256,6 +259,7 @@ public function renovar($id)
             'monto' => $registro->monto,
             'interes' => $registro->interes,
             'interes_pagar' => $registro->interes_pagar,
+            'porcentaje_penalidad' => $registro->porcentaje_penalidad,
             'estado' => 'aprobado',
             'descripcion' => $index === 0 ? 'renovar' : $registro->descripcion,
             'fecha_inicio' => $fechaInicio,
@@ -267,47 +271,46 @@ public function renovar($id)
 
     return redirect()->back()->with('success', 'Préstamo renovado correctamente.');
 }
+
 public function aplicarDiferencia(Request $request, $id)
 {
-    $request->validate([
-        'diferencia' => 'required|numeric',
-    ]);
-
     $prestamoBase = Prestamo::findOrFail($id);
-    $diferencia = abs($request->input('diferencia'));
+    $diferenciaMonto = floatval($request->input('diferencia_monto'));
+    $grupo = $request->input('grupo');
+    $item = $request->input('item');
+    $filasCanceladas = explode(',', $request->input('filas_canceladas'));
 
-    $numeroPrestamo = $prestamoBase->numero_prestamo;
-    $itemActual = $prestamoBase->item_prestamo;
+    $nuevoItem = $item + 1;
 
-    // Verificar que el préstamo base sea la primera fila del grupo
-    $primerPrestamo = Prestamo::where('numero_prestamo', $numeroPrestamo)
-        ->where('item_prestamo', $itemActual)
-        ->orderBy('id')
-        ->first();
-
-    if ($prestamoBase->id !== $primerPrestamo->id) {
-        return redirect()->back()->with('error', 'Solo puedes aplicar diferencia a la primera fila del grupo.');
-    }
-
-    // Obtener todo el grupo actual
-    $grupoAnterior = Prestamo::where('numero_prestamo', $numeroPrestamo)
-        ->where('item_prestamo', $itemActual)
+    $grupoAnterior = Prestamo::where('numero_prestamo', $grupo)
+        ->where('item_prestamo', $item)
         ->orderBy('id')
         ->get();
 
-    $nuevoItem = Prestamo::where('numero_prestamo', $numeroPrestamo)->max('item_prestamo') + 1;
+    if ($grupoAnterior->isEmpty()) {
+        return redirect()->back()->with('error', 'No se encontraron registros.');
+    }
+
+    // ✅ MARCAR como "cancelado" en la tabla original
+    if (!empty($filasCanceladas)) {
+        Prestamo::whereIn('id', $filasCanceladas)->update(['descripcion' => 'cancelado']);
+    }
 
     $fechaInicio = $grupoAnterior->first()->fecha_fin;
-    $fechaFin = \Carbon\Carbon::parse($fechaInicio)->addDays(28);
+    $fechaFin = Carbon::parse($fechaInicio)->addDays(28);
 
     foreach ($grupoAnterior as $index => $registro) {
-        $nuevoMonto = $registro->monto;
-        $nuevoInteresPagar = $nuevoMonto * ($registro->interes / 100);
+        if (in_array($registro->id, $filasCanceladas)) {
+            continue; // Saltar filas canceladas
+        }
 
+        $nuevoMonto = $registro->monto;
+        $nuevaDescripcion = $registro->descripcion;
+
+        // Solo en la primera fila: restar el monto
         if ($index === 0) {
-            // Aplica diferencia en el primer registro
-            $nuevoMonto = $registro->monto - $diferencia;
-            $nuevoInteresPagar = $nuevoMonto * ($registro->interes / 100);
+            $nuevoMonto = max(0, $registro->monto - $diferenciaMonto);
+            $nuevaDescripcion = 'diferencia';
         }
 
         Prestamo::create([
@@ -316,16 +319,12 @@ public function aplicarDiferencia(Request $request, $id)
             'item_prestamo' => $nuevoItem,
             'monto' => $nuevoMonto,
             'interes' => $registro->interes,
-            'interes_pagar' => $nuevoInteresPagar,
+            'interes_pagar' => $nuevoMonto * ($registro->interes / 100),
+            'porcentaje_penalidad' => $registro->porcentaje_penalidad,
             'estado' => 'aprobado',
-            'descripcion' => $index === 0 ? 'diferencia aplicada de -' . $diferencia : $registro->descripcion,
+            'descripcion' => $nuevaDescripcion,
             'fecha_inicio' => $fechaInicio,
             'fecha_fin' => $fechaFin,
-            'fecha_pago' => $registro->fecha_pago,
-            'interes_total' => $nuevoInteresPagar,
-            'n_junta' => $registro->n_junta,
-            'created_at' => now(),
-            'updated_at' => now(),
         ]);
     }
 

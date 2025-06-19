@@ -7,10 +7,9 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\TablaUsuario;
 class ReporteUserController extends Controller
 {
- public function index()
+public function index()
 {
-    $prestamos = TablaUsuario::with('prestamo', 'user')
-        ->orderBy('fecha_prestamos', 'desc')
+    $prestamos = Prestamo::orderBy('fecha_inicio', 'desc')
         ->get()
         ->groupBy('numero_prestamo');
 
