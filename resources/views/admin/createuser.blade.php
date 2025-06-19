@@ -341,6 +341,9 @@
         <div class="nav-item ">
             <a href="{{ route('admin.prestamos.pendientes') }}" class="nav-link " ><i class="fas fa-download"></i><span>Descargas Contrato</span></a>
         </div>
+         <div class="nav-item ">
+            <a href="{{ route('admin.configuraciones') }}" class="nav-link " ><i class="fas fa-download"></i><span>Configurar</span></a>
+        </div>
 
         <div class="nav-item mt-auto">
             <a href="{{ route('logout') }}" class="nav-link"
@@ -589,7 +592,11 @@
                                                     <button class="btn btn-primary btn-sm" onclick="openPasswordModal('{{ $usuario->id }}', '{{ $usuario->name }} {{ $usuario->apellido_paterno }}')">
                                                         <i class="fas fa-key me-1"></i>Cambiar contraseña
                                                     </button>
+                                                    <button class="btn btn-warning btn-sm" onclick="openEditModal({{ $usuario }})">
+        <i class="fas fa-edit me-1"></i>Editar
+    </button>
                                                 </td>
+                                                
                                             </tr>
                                         @endforeach
                                     </tbody>
@@ -608,6 +615,126 @@
         </div>
     </div>
 </div>
+
+
+
+
+<!-- Modal Editar Usuario -->
+<div class="modal fade" id="editUserModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg"> {{-- Cambiado a modal-lg para más espacio --}}
+    <form method="POST" action="{{ route('admin.updateuser') }}">
+      @csrf
+      @method('PUT')
+      <input type="hidden" name="id" id="edit_user_id">
+
+      <div class="modal-content">
+        <div class="modal-header bg-warning text-white">
+          <h5 class="modal-title">Editar Usuario</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body row g-3">
+          <div class="col-md-6">
+            <label for="edit_name" class="form-label">Nombre</label>
+            <input type="text" class="form-control" name="name" id="edit_name" required>
+          </div>
+
+          <div class="col-md-6">
+            <label for="edit_apellido_paterno" class="form-label">Apellido Paterno</label>
+            <input type="text" class="form-control" name="apellido_paterno" id="edit_apellido_paterno" required>
+          </div>
+
+          <div class="col-md-6">
+            <label for="edit_apellido_materno" class="form-label">Apellido Materno</label>
+            <input type="text" class="form-control" name="apellido_materno" id="edit_apellido_materno">
+          </div>
+
+          <div class="col-md-6">
+            <label for="edit_email" class="form-label">Correo</label>
+            <input type="email" class="form-control" name="email" id="edit_email" >
+          </div>
+
+          <div class="col-md-6">
+            <label for="edit_dni" class="form-label">DNI</label>
+            <input type="text" class="form-control" name="dni" id="edit_dni">
+          </div>
+
+          <div class="col-md-6">
+            <label for="edit_telefono" class="form-label">Teléfono</label>
+            <input type="text" class="form-control" name="telefono" id="edit_telefono">
+          </div>
+
+          <div class="col-md-6">
+            <label for="edit_sexo" class="form-label">Sexo</label>
+            <select class="form-select" name="sexo" id="edit_sexo">
+              <option value="">Seleccionar</option>
+              <option value="Masculino">Masculino</option>
+              <option value="Femenino">Femenino</option>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label for="edit_estado_civil" class="form-label">Estado Civil</label>
+            <select class="form-select" name="estado_civil" id="edit_estado_civil">
+              <option value="">Seleccionar</option>
+              <option value="Soltero/a">Soltero/a</option>
+              <option value="Casado/a">Casado/a</option>
+              <option value="Viudo/a">Viudo/a</option>
+              <option value="Divorciado/a">Divorciado/a</option>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label for="edit_fecha_nacimiento" class="form-label">Fecha de Nacimiento</label>
+            <input type="date" class="form-control" name="fecha_nacimiento" id="edit_fecha_nacimiento">
+          </div>
+
+          <div class="col-md-6">
+            <label for="edit_nacionalidad" class="form-label">Nacionalidad</label>
+            <input type="text" class="form-control" name="nacionalidad" id="edit_nacionalidad">
+          </div>
+
+          <div class="col-md-6">
+            <label for="edit_direccion" class="form-label">Dirección</label>
+            <input type="text" class="form-control" name="direccion" id="edit_direccion">
+          </div>
+
+          <div class="col-md-6">
+            <label for="edit_tipo_origen" class="form-label">Tipo de Origen</label>
+            <input type="text" class="form-control" name="tipo_origen" id="edit_tipo_origen">
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success">Guardar cambios</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<script>
+    function openEditModal(usuario) {
+        document.getElementById('edit_user_id').value = usuario.id;
+        document.getElementById('edit_name').value = usuario.name;
+        document.getElementById('edit_apellido_paterno').value = usuario.apellido_paterno;
+        document.getElementById('edit_apellido_materno').value = usuario.apellido_materno;
+        document.getElementById('edit_email').value = usuario.email;
+        document.getElementById('edit_dni').value = usuario.dni;
+        document.getElementById('edit_telefono').value = usuario.telefono;
+        document.getElementById('edit_sexo').value = usuario.sexo;
+        document.getElementById('edit_estado_civil').value = usuario.estado_civil;
+        document.getElementById('edit_fecha_nacimiento').value = usuario.fecha_nacimiento;
+        document.getElementById('edit_nacionalidad').value = usuario.nacionalidad;
+        document.getElementById('edit_direccion').value = usuario.direccion;
+        document.getElementById('edit_tipo_origen').value = usuario.tipo_origen;
+
+        var modal = new bootstrap.Modal(document.getElementById('editUserModal'));
+        modal.show();
+    }
+</script>
 
 <!-- Modal para cambiar contraseña -->
 <div class="modal fade" id="passwordModal" tabindex="-1">

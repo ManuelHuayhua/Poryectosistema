@@ -132,6 +132,7 @@
             <th>Descripción</th>
             <th>Acciones</th>
             <th>Diferencia</th>
+            <th>Cancelar</th>
         </tr>
     </thead>
     <tbody>
@@ -196,6 +197,17 @@
                     </div>
                 @endif
             </td>
+            
+            <td>
+    @if($index === 0)
+        {{-- Botón Cancelar --}}
+        <form method="POST" action="{{ route('prestamos.cancelar', $prestamo->id) }}"
+              onsubmit="return confirm('¿Estás seguro de cancelar este préstamo completo?')">
+            @csrf
+            <button type="submit" class="btn btn-outline-dark btn-sm">Cancelar</button>
+        </form>
+    @endif
+</td>
         </tr>
         @endforeach
     @empty

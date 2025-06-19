@@ -9,6 +9,8 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\ReporteUserController;
 use App\Http\Controllers\Admin\PrestamoPendienteController;
 use App\Http\Controllers\PerfilController;
+use App\Http\Controllers\Admin\ReportePrestamosController;
+use App\Http\Controllers\Admin\ConfiguracionController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -29,7 +31,7 @@ Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->na
 Route::post('/register', [RegisterController::class, 'register']);
 
 
-Auth::routes();
+Auth::routes(['register' => false]);
 Route::get('/home', [HomeController::class, 'index'])->name('home')->middleware('auth');
 // Ruta del panel principal del usuario después de iniciar sesión
 
@@ -67,19 +69,32 @@ Route::middleware(['auth', 'is_admin'])->group(function () {
     Route::get('/admin/createuser', [UserController::class, 'create'])->name('admin.createuser');
     Route::post('/admin/createuser', [UserController::class, 'store'])->name('admin.storeuser');
     Route::post('/admin/usuarios/{id}/actualizar-password', [UserController::class, 'updatePassword'])->name('admin.password.update');
-
+    Route::put('/admin/updateuser', [UserController::class, 'updateUser'])->name('admin.updateuser');
 
     Route::post('/prestamos/{id}/renovar', [PrestamoController::class, 'renovar'])->name('prestamos.renovar');
 
 Route::post('/prestamos/{id}/pagado', [PrestamoController::class, 'marcarPagado'])->name('prestamos.pagado');
 
-Route::post('/prestamos/diferencia/{id}', [PrestamoController::class, 'aplicarDiferencia'])->name('prestamos.diferencia');
+
 Route::post('/prestamos/{id}/penalidad', [PrestamoController::class, 'penalidad'])->name('prestamos.penalidad');
 
 Route::post('/prestamos/{id}/diferencia', [PrestamoController::class, 'aplicarDiferencia'])->name('prestamos.diferencia');
 
-});
+Route::post('/prestamos/{id}/cancelar', [PrestamoController::class, 'cancelar'])->name('prestamos.cancelar');
 
+
+
+Route::get('/reporte-prestamos', [ReportePrestamosController::class, 'index'])->name('admin.reporte.prestamos');
+
+
+
+//configuraciones 
+Route::get('/admin/configuraciones', [ConfiguracionController::class, 'index'])->name('admin.configuraciones');
+  Route::post('/admin/configuraciones', [ConfiguracionController::class, 'store'])->name('admin.configuraciones.store');
+  Route::post('/admin/configuraciones/{id}/actualizar', [ConfiguracionController::class, 'update'])->name('admin.configuraciones.update');
+Route::delete('/admin/configuraciones/{id}/eliminar', [ConfiguracionController::class, 'destroy'])->name('admin.configuraciones.destroy');
+
+});
 
 
 

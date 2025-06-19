@@ -9,7 +9,7 @@ class ReporteUserController extends Controller
 {
 public function index()
 {
-    $prestamos = Prestamo::orderBy('fecha_inicio', 'desc')
+    $prestamos = Prestamo::orderBy('numero_prestamo', 'desc') // ← ordena del mayor al menor
         ->get()
         ->groupBy('numero_prestamo');
 

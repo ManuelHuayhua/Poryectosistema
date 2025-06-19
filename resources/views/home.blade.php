@@ -156,10 +156,10 @@
 
     <nav class="sidebar-nav">
         <div class="nav-item">
-            <a href="{{ route('home') }}" class="nav-link"><i class="fas fa-home"></i><span>Inicio</span></a>
+            <a href="{{ route('home') }}" class="nav-link active"><i class="fas fa-home"></i><span>Inicio</span></a>
         </div>
         <div class="nav-item">
-            <a href="#" class="nav-link"><i class="fas fa-user-circle"></i><span>Perfil</span></a>
+            <a href="{{ route('perfil') }}" class="nav-link "><i class="fas fa-user-circle"></i><span>Perfil</span></a>
         </div>
         <div class="nav-item">
             <a href="{{ route('reporteusuarios.index') }}" class="nav-link"><i class="fas fa-download"></i><span>Reporte</span></a>
@@ -213,59 +213,58 @@
         <button type="submit" class="btn btn-primary mt-3">Solicitar préstamo</button>
     </form>
 
-    <!-- Tabla de préstamos -->
-    <h3 class="mt-5">Tus Préstamos</h3>
-    <table class="table table-striped mt-3">
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>Monto</th>
-                <th>Interés (%)</th>
-                <th>Interés a pagar</th>
-                <th>Penalidad (%)</th>
-                <th>Penalidades acumuladas</th>
-                <th>Total a pagar</th>
-                <th>Estado</th>
-                <th>Fecha inicio</th>
-                <th>Fecha fin</th>
-                <th>Fecha pago</th>
-                <th>Descripción</th>
+      
+      <!-- Tabla de préstamos -->
+<h3 class="mt-5">📄 Tus Préstamos</h3>
+<table class="table table-bordered table-hover mt-3">
+    <thead class="table-dark">
+        <tr>
+            <th>N° Préstamo</th>
+            <th>Último Ítem</th>
+            <th>Monto (S/)</th>
+            <th>Interés (%)</th>
+            <th>Interés a Pagar</th>
+            <th>Estado</th>
+            <th>Fecha Inicio</th>
+            <th>Fecha Fin</th>
+            <th>Fecha de Pago</th>
+      
+        </tr>
+    </thead>
+    <tbody>
+        @forelse($prestamos as $prestamo)
+            <tr class="{{ $prestamo->estado === 'cancelado' ? 'table-danger' : '' }}">
+                <td><strong>{{ $prestamo->numero_prestamo }}</strong></td>
+                <td>{{ $prestamo->item_prestamo }}</td>
+                <td>S/ {{ number_format($prestamo->monto, 2) }}</td>
+                <td>{{ $prestamo->interes }}%</td>
+                <td>S/ {{ number_format($prestamo->interes_pagar, 2) }}</td>
+                <td><span class="badge bg-{{ $prestamo->estado == 'pendiente' ? 'warning' : ($prestamo->estado == 'cancelado' ? 'danger' : 'success') }}">
+                    {{ ucfirst($prestamo->estado) }}</span>
+                </td>
+                  <td>{{ \Carbon\Carbon::parse($prestamo->Inicio)->format('Y-m-d') ?? '-' }}</td>
+                <td>{{ \Carbon\Carbon::parse($prestamo->fecha_fin)->format('Y-m-d') ?? '-' }}</td>
+                <td>{{ \Carbon\Carbon::parse($prestamo->fecha_pago)->format('Y-m-d') ?? '-' }}</td>     
+             
             </tr>
-        </thead>
-        <tbody>
-            @forelse($prestamos as $prestamo)
-                <tr>
-                    <td>{{ $prestamo->numero_prestamo }}</td>
-                    <td>S/ {{ number_format($prestamo->monto, 2) }}</td>
-                    <td>{{ $prestamo->interes }}%</td>
-                    <td>S/ {{ number_format($prestamo->interes_pagar, 2) }}</td>
-                    <td>{{ $prestamo->porcentaje_penalidad ?? '0' }}%</td>
-                    <td>S/ {{ number_format($prestamo->penalidades_acumuladas, 2) }}</td>
-                    <td>S/ {{ number_format($prestamo->total_pagar, 2) }}</td>
-                    <td>{{ ucfirst($prestamo->estado) }}</td>
-                    <td>{{ $prestamo->fecha_inicio ?? '-' }}</td>
-                    <td>{{ $prestamo->fecha_fin ?? '-' }}</td>
-                    <td>{{ $prestamo->fecha_pago ?? '-' }}</td>
-                    <td>{{ $prestamo->descripcion ?? '-' }}</td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="12" class="text-center">No tienes préstamos registrados.</td>
-                </tr>
-            @endforelse
-        </tbody>
-    </table>
-</div>
-</div>
+        @empty
+            <tr>
+                <td colspan="10" class="text-center">No tienes préstamos registrados.</td>
+            </tr>
+        @endforelse
+    </tbody>
+</table>
+    </div>
+    </div>
 
-<script>
-    function toggleSidebar() {
-        document.getElementById('sidebar').classList.toggle('show');
-    }
-</script>
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('show');
+        }
+    </script>
 
-</body>
-</html>
+    </body>
+    </html>
 
 
 

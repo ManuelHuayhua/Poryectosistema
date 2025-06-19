@@ -106,6 +106,7 @@ public function aprobar(Request $request, $id)
         'fecha_inicio' => Carbon::now(),
         'fecha_fin' => Carbon::now()->addDays(28),
         'estado' => 'aprobado',
+       
         'interes_total' => $interesTotal,
         'n_junta' => $esJunta ? $tipoOrigen : null,
         
@@ -180,16 +181,18 @@ public function penalidad($id)
             'user_id' => $registro->user_id,
             'numero_prestamo' => $registro->numero_prestamo,
             'item_prestamo' => $nuevoItem,
+            'n_junta'=>$registro->n_junta,
             'monto' => $registro->monto,
             'interes' => $registro->interes,
             'interes_pagar' => $registro->interes_pagar,
              'porcentaje_penalidad' => $registro->porcentaje_penalidad,
             'estado' => 'aprobado',
-            'descripcion' => $registro->descripcion,
+            'descripcion' => 'penalidad',
             'fecha_inicio' => $fechaInicio,
             'fecha_fin' => $fechaFin,
             'created_at' => now(),
             'updated_at' => now(),
+           
         ]);
     }
 
@@ -211,6 +214,7 @@ public function penalidad($id)
     Prestamo::create([
         'user_id' => $prestamoBase->user_id,
         'numero_prestamo' => $prestamoBase->numero_prestamo,
+        'n_junta'=>$registro->n_junta,
         'item_prestamo' => $nuevoItem,
         'monto' => $acumulado,
         'interes' => $porcentajePenalidad,
@@ -256,6 +260,7 @@ public function renovar($id)
             'user_id' => $registro->user_id,
             'numero_prestamo' => $registro->numero_prestamo,
             'item_prestamo' => $nuevoItem,
+            'n_junta'=>$registro->n_junta,
             'monto' => $registro->monto,
             'interes' => $registro->interes,
             'interes_pagar' => $registro->interes_pagar,
@@ -317,6 +322,7 @@ public function aplicarDiferencia(Request $request, $id)
             'user_id' => $registro->user_id,
             'numero_prestamo' => $registro->numero_prestamo,
             'item_prestamo' => $nuevoItem,
+            'n_junta'=>$registro->n_junta,
             'monto' => $nuevoMonto,
             'interes' => $registro->interes,
             'interes_pagar' => $nuevoMonto * ($registro->interes / 100),
@@ -331,25 +337,15 @@ public function aplicarDiferencia(Request $request, $id)
     return redirect()->back()->with('success', 'Diferencia aplicada correctamente.');
 }
 
-public function marcarPagado(Request $request, $id)
+public function cancelar($id)
 {
     $prestamo = Prestamo::findOrFail($id);
+    $numeroPrestamo = $prestamo->numero_prestamo;
 
-    // Actualizar el préstamo principal
-    $prestamo->estado = 'pagado';
-    $prestamo->fecha_pago = now();
-    $prestamo->descripcion = 'Préstamo marcado como pagado manualmente.';
-    $prestamo->save();
+    // Actualizar todos los préstamos con el mismo número a 'cancelado'
+    Prestamo::where('numero_prestamo', $numeroPrestamo)->update(['estado' => 'pagado']);
 
-    // Actualizar la tabla_usuario relacionada
-    DB::table('tabla_usuario')
-        ->where('prestamo_id', $prestamo->id)
-        ->update([
-            'estado' => 'pagado',
-            'fecha_pago' => now(),
-        ]);
-
-    return redirect()->back()->with('success', 'Préstamo marcado como pagado correctamente.');
+    return redirect()->back()->with('success', 'El préstamo fue cancelado correctamente.');
 }
 
 

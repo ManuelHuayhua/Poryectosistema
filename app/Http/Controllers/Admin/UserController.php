@@ -84,4 +84,41 @@ public function updatePassword(Request $request, $id)
 
 
 }
+
+public function updateUser(Request $request)
+{
+    $request->validate([
+        'name' => 'required|string|max:255',
+        'apellido_paterno' => 'required|string|max:255',
+        'apellido_materno' => 'nullable|string|max:255',
+        'email' => 'nullable|email',
+        'dni' => 'nullable|string|max:20',
+        'telefono' => 'nullable|string|max:20',
+        'sexo' => 'nullable|string|max:20',
+        'estado_civil' => 'nullable|string|max:50',
+        'fecha_nacimiento' => 'nullable|date',
+        'nacionalidad' => 'nullable|string|max:50',
+        'direccion' => 'nullable|string|max:255',
+        'tipo_origen' => 'nullable|string|max:50',
+    ]);
+
+    $usuario = User::findOrFail($request->id);
+    $usuario->update([
+        'name' => $request->name,
+        'apellido_paterno' => $request->apellido_paterno,
+        'apellido_materno' => $request->apellido_materno,
+        'email' => $request->email,
+        'dni' => $request->dni,
+        'telefono' => $request->telefono,
+        'sexo' => $request->sexo,
+        'estado_civil' => $request->estado_civil,
+        'fecha_nacimiento' => $request->fecha_nacimiento,
+        'nacionalidad' => $request->nacionalidad,
+        'direccion' => $request->direccion,
+        'tipo_origen' => $request->tipo_origen,
+    ]);
+
+    return redirect()->back()->with('success_password', 'Datos del usuario actualizados correctamente.');
+}
+
 }
