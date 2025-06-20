@@ -656,7 +656,7 @@
                         <th width="15%">N° Préstamo</th>
                         <th width="20%">Fecha Último Préstamo</th>
                         <th width="20%">Fecha Último Pago</th>
-                        <th width="15%">Monto Total</th>
+                        <th width="15%">Estado</th>
                        
                         <th width="10%">Acciones</th>
                     </tr>
@@ -681,7 +681,21 @@
                             <td class="loan-number"># {{ $numero_prestamo }}</td>
                             <td class="date-cell">{{ date('d/m/Y', strtotime($ultimo->fecha_inicio)) }}</td>
                             <td class="date-cell">{{ date('d/m/Y', strtotime($ultimo->fecha_fin)) }}</td>
-                            <td class="amount-cell">S/ {{ number_format($totalMonto, 2) }}</td>
+                            <td>
+    @php
+        $estado = strtolower($estados->first()); // asegúrate de comparar en minúscula
+    @endphp
+
+    @if ($estado === 'pendiente')
+        <span class="badge bg-warning text-dark">Pendiente</span>
+    @elseif ($estado === 'aprobado')
+        <span class="badge bg-primary">Aprobado</span>
+    @elseif ($estado === 'pagado')
+        <span class="badge bg-success">Pagado</span>
+    @else
+        <span class="badge bg-secondary">{{ ucfirst($estado) }}</span>
+    @endif
+</td>
                             
                             <td>
                                 <button class="btn-detail" type="button" data-bs-toggle="collapse" data-bs-target="#detalle-{{ $numero_prestamo }}">

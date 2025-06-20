@@ -620,100 +620,109 @@
 
 
 <!-- Modal Editar Usuario -->
+<!-- Modal de Edición de Usuario -->
 <div class="modal fade" id="editUserModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-lg"> {{-- Cambiado a modal-lg para más espacio --}}
+  <div class="modal-dialog modal-lg">
     <form method="POST" action="{{ route('admin.updateuser') }}">
       @csrf
       @method('PUT')
       <input type="hidden" name="id" id="edit_user_id">
-
-      <div class="modal-content">
+      <div class="modal-content shadow-lg rounded-4">
         <div class="modal-header bg-warning text-white">
-          <h5 class="modal-title">Editar Usuario</h5>
+          <h5 class="modal-title"><i class="fas fa-user-edit me-2"></i>Editar Usuario</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
 
-        <div class="modal-body row g-3">
-          <div class="col-md-6">
-            <label for="edit_name" class="form-label">Nombre</label>
-            <input type="text" class="form-control" name="name" id="edit_name" required>
-          </div>
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-6 mb-3">
+              <label for="edit_name" class="form-label"><i class="fas fa-user me-1"></i>Nombre</label>
+              <input type="text" class="form-control" name="name" id="edit_name" required>
+            </div>
 
-          <div class="col-md-6">
-            <label for="edit_apellido_paterno" class="form-label">Apellido Paterno</label>
-            <input type="text" class="form-control" name="apellido_paterno" id="edit_apellido_paterno" required>
-          </div>
+            <div class="col-md-6 mb-3">
+              <label for="edit_apellido_paterno" class="form-label"><i class="fas fa-user-tag me-1"></i>Apellido Paterno</label>
+              <input type="text" class="form-control" name="apellido_paterno" id="edit_apellido_paterno" required>
+            </div>
 
-          <div class="col-md-6">
-            <label for="edit_apellido_materno" class="form-label">Apellido Materno</label>
-            <input type="text" class="form-control" name="apellido_materno" id="edit_apellido_materno">
-          </div>
+            <div class="col-md-6 mb-3">
+              <label for="edit_apellido_materno" class="form-label">Apellido Materno</label>
+              <input type="text" class="form-control" name="apellido_materno" id="edit_apellido_materno">
+            </div>
 
-          <div class="col-md-6">
-            <label for="edit_email" class="form-label">Correo</label>
-            <input type="email" class="form-control" name="email" id="edit_email" >
-          </div>
+            <div class="col-md-6 mb-3">
+              <label for="edit_email" class="form-label"><i class="fas fa-envelope me-1"></i>Correo</label>
+              <input type="email" class="form-control" name="email" id="edit_email">
+            </div>
 
-          <div class="col-md-6">
-            <label for="edit_dni" class="form-label">DNI</label>
-            <input type="text" class="form-control" name="dni" id="edit_dni">
-          </div>
+            <div class="col-md-6 mb-3">
+              <label for="edit_dni" class="form-label"><i class="fas fa-id-card me-1"></i>DNI</label>
+              <input type="text" class="form-control" name="dni" id="edit_dni">
+            </div>
 
-          <div class="col-md-6">
-            <label for="edit_telefono" class="form-label">Teléfono</label>
-            <input type="text" class="form-control" name="telefono" id="edit_telefono">
-          </div>
+            <div class="col-md-6 mb-3">
+              <label for="edit_telefono" class="form-label"><i class="fas fa-phone me-1"></i>Teléfono</label>
+              <input type="text" class="form-control" name="telefono" id="edit_telefono">
+            </div>
 
-          <div class="col-md-6">
-            <label for="edit_sexo" class="form-label">Sexo</label>
-            <select class="form-select" name="sexo" id="edit_sexo">
-              <option value="">Seleccionar</option>
-              <option value="Masculino">Masculino</option>
-              <option value="Femenino">Femenino</option>
-            </select>
-          </div>
+            <div class="col-md-6 mb-3">
+              <label for="edit_sexo" class="form-label">Sexo</label>
+              <select class="form-select" name="sexo" id="edit_sexo">
+                <option value="">Seleccionar</option>
+                <option value="Masculino">Masculino</option>
+                <option value="Femenino">Femenino</option>
+              </select>
+            </div>
 
-          <div class="col-md-6">
-            <label for="edit_estado_civil" class="form-label">Estado Civil</label>
-            <select class="form-select" name="estado_civil" id="edit_estado_civil">
-              <option value="">Seleccionar</option>
-              <option value="Soltero/a">Soltero/a</option>
-              <option value="Casado/a">Casado/a</option>
-              <option value="Viudo/a">Viudo/a</option>
-              <option value="Divorciado/a">Divorciado/a</option>
-            </select>
-          </div>
+            <div class="col-md-6 mb-3">
+              <label for="edit_estado_civil" class="form-label">Estado Civil</label>
+              <select class="form-select" name="estado_civil" id="edit_estado_civil">
+                <option value="">Seleccionar</option>
+                <option value="Soltero/a">Soltero/a</option>
+                <option value="Casado/a">Casado/a</option>
+                <option value="Viudo/a">Viudo/a</option>
+                <option value="Divorciado/a">Divorciado/a</option>
+              </select>
+            </div>
 
-          <div class="col-md-6">
-            <label for="edit_fecha_nacimiento" class="form-label">Fecha de Nacimiento</label>
-            <input type="date" class="form-control" name="fecha_nacimiento" id="edit_fecha_nacimiento">
-          </div>
+            <div class="col-md-6 mb-3">
+              <label for="edit_fecha_nacimiento" class="form-label">Fecha de Nacimiento</label>
+              <input type="date" class="form-control" name="fecha_nacimiento" id="edit_fecha_nacimiento">
+            </div>
 
-          <div class="col-md-6">
-            <label for="edit_nacionalidad" class="form-label">Nacionalidad</label>
-            <input type="text" class="form-control" name="nacionalidad" id="edit_nacionalidad">
-          </div>
+            <div class="col-md-6 mb-3">
+              <label for="edit_nacionalidad" class="form-label">Nacionalidad</label>
+              <input type="text" class="form-control" name="nacionalidad" id="edit_nacionalidad">
+            </div>
 
-          <div class="col-md-6">
-            <label for="edit_direccion" class="form-label">Dirección</label>
-            <input type="text" class="form-control" name="direccion" id="edit_direccion">
-          </div>
+            <div class="col-md-6 mb-3">
+              <label for="edit_direccion" class="form-label"><i class="fas fa-map-marker-alt me-1"></i>Dirección</label>
+              <input type="text" class="form-control" name="direccion" id="edit_direccion">
+            </div>
 
-          <div class="col-md-6">
-            <label for="edit_tipo_origen" class="form-label">Tipo de Origen</label>
-            <input type="text" class="form-control" name="tipo_origen" id="edit_tipo_origen">
+            <div class="col-md-6 mb-3">
+              <label for="edit_tipo_origen" class="form-label">Tipo de Origen</label>
+              <input type="text" class="form-control" name="tipo_origen" id="edit_tipo_origen">
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <label for="edit_is_admin" class="form-label"><i class="fas fa-user-shield me-1"></i>¿Es administrador?</label>
+              <select class="form-select" name="is_admin" id="edit_is_admin">
+                <option value="0">No</option>
+                <option value="1">Sí</option>
+              </select>
+            </div>
           </div>
         </div>
 
-        <div class="modal-footer">
-          <button type="submit" class="btn btn-success">Guardar cambios</button>
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <div class="modal-footer border-top">
+          <button type="submit" class="btn btn-success"><i class="fas fa-save me-1"></i>Guardar cambios</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times me-1"></i>Cancelar</button>
         </div>
       </div>
     </form>
   </div>
 </div>
-
 
 <script>
     function openEditModal(usuario) {
@@ -730,6 +739,7 @@
         document.getElementById('edit_nacionalidad').value = usuario.nacionalidad;
         document.getElementById('edit_direccion').value = usuario.direccion;
         document.getElementById('edit_tipo_origen').value = usuario.tipo_origen;
+        document.getElementById('edit_is_admin').value = usuario.is_admin ? 1 : 0;
 
         var modal = new bootstrap.Modal(document.getElementById('editUserModal'));
         modal.show();

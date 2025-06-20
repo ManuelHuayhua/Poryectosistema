@@ -44,25 +44,37 @@ class PrestamoController extends Controller
     // ADMIN - Ver préstamos pendientes
  public function indexAdmin()
 {
+    // Asegurarse que el usuario sea administrador
     if (!Auth::user()->is_admin) {
         abort(403, 'Acceso no autorizado.');
     }
 
+    // Obtener préstamos
     $prestamosPendientes = Prestamo::where('estado', 'pendiente')->with('user')->get();
     $prestamosRechazados = Prestamo::where('estado', 'rechazado')->with('user')->get();
     $prestamosAprobados = Prestamo::where('estado', 'aprobado')
-    ->with('user')
-    ->whereIn(DB::raw('(numero_prestamo, item_prestamo)'), function ($query) {
-        $query->selectRaw('numero_prestamo, MAX(item_prestamo)')
-              ->from('prestamos')
-              ->groupBy('numero_prestamo');
-    })
-    ->get();
+        ->with('user')
+        ->whereIn(DB::raw('(numero_prestamo, item_prestamo)'), function ($query) {
+            $query->selectRaw('numero_prestamo, MAX(item_prestamo)')
+                  ->from('prestamos')
+                  ->groupBy('numero_prestamo');
+        })
+        ->get();
 
-    // 🔄 Traer todas las configuraciones sin filtrar por tipo
+    // Obtener todas las configuraciones
     $configuraciones = DB::table('configuraciones')->get();
 
-    return view('admin.dashboard', compact('prestamosPendientes', 'prestamosAprobados', 'prestamosRechazados', 'configuraciones'));
+    // Bandera: ¿hay préstamos pendientes?
+    $hayNuevosPrestamos = $prestamosPendientes->isNotEmpty();
+
+    // Enviar datos a la vista
+    return view('admin.dashboard', compact(
+        'prestamosPendientes',
+        'prestamosAprobados',
+        'prestamosRechazados',
+        'configuraciones',
+        'hayNuevosPrestamos' // ← variable para el modal
+    ));
 }
 
     // ADMIN - Aprobar préstamo
@@ -313,8 +325,14 @@ public function cancelar($id)
     $prestamo = Prestamo::findOrFail($id);
     $numeroPrestamo = $prestamo->numero_prestamo;
 
-    // Actualizar todos los préstamos con el mismo número a 'cancelado'
-    Prestamo::where('numero_prestamo', $numeroPrestamo)->update(['estado' => 'pagado']);
+    // Obtener la fecha actual
+    $fechaPago = now(); // Puedes usar Carbon::now() si lo prefieres
+
+    // Actualizar todos los préstamos con el mismo número a 'pagado' y registrar la fecha de pago
+    Prestamo::where('numero_prestamo', $numeroPrestamo)->update([
+        'estado' => 'pagado',
+        'fecha_pago' => $fechaPago,
+    ]);
 
     return redirect()->back()->with('success', 'El préstamo fue cancelado correctamente.');
 }

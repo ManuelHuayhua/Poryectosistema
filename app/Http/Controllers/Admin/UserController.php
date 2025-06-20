@@ -100,6 +100,7 @@ public function updateUser(Request $request)
         'nacionalidad' => 'nullable|string|max:50',
         'direccion' => 'nullable|string|max:255',
         'tipo_origen' => 'nullable|string|max:50',
+         'is_admin' => 'required|in:0,1',
     ]);
 
     $usuario = User::findOrFail($request->id);
@@ -116,6 +117,8 @@ public function updateUser(Request $request)
         'nacionalidad' => $request->nacionalidad,
         'direccion' => $request->direccion,
         'tipo_origen' => $request->tipo_origen,
+          'is_admin' => $request->is_admin,
+        
     ]);
 
     return redirect()->back()->with('success_password', 'Datos del usuario actualizados correctamente.');
