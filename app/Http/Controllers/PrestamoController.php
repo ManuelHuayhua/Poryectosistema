@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use App\Models\Penalidad;
 use App\Models\TablaUsuario;
+use App\Models\User;
 class PrestamoController extends Controller
 {
     // USUARIO - Solicita un préstamo
@@ -35,15 +36,7 @@ class PrestamoController extends Controller
         'estado' => 'pendiente',
     ]);
 
-    // Crear registro en tabla_usuario
-    TablaUsuario::create([
-        'user_id' => $user->id,
-        'prestamo_id' => $prestamo->id,
-        'numero_prestamo' => $numeroPrestamo,
-        'monto' => $request->monto,
-        'estado' => 'pendiente',
-        'fecha_prestamos' => null, // Opcional, si deseas registrar la fecha
-    ]);
+  
 
     return redirect()->back()->with('success', 'Solicitud de préstamo enviada con éxito.');
 }
@@ -78,56 +71,34 @@ public function aprobar(Request $request, $id)
     $request->validate([
         'interes' => 'required|numeric',
         'penalidad' => 'required|numeric',
+        'fecha_inicio' => 'required|date',
+        'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
     ]);
+
+    $prestamo = Prestamo::findOrFail($id);
 
     $interes = $request->input('interes');
     $penalidad = $request->input('penalidad');
     $esJunta = $request->has('es_junta');
     $tipoOrigen = $request->input('tipo_origen');
 
-    $prestamo = Prestamo::findOrFail($id);
-
     $interesDecimal = $interes / 100;
-    $penalidadDecimal = $penalidad / 100;
-
-    $monto = $prestamo->monto;
-    $interesCalculado = $monto * $interesDecimal;
-    $total = $monto + $interesCalculado;
-
-    $interesTotal = $interesCalculado;
-
-   
+    $interesCalculado = $prestamo->monto * $interesDecimal;
+    $total = $prestamo->monto + $interesCalculado;
 
     $prestamo->update([
         'interes' => $interes,
         'porcentaje_penalidad' => $penalidad,
-        'total_pagar' => $total,
         'interes_pagar' => $interesCalculado,
-        'fecha_inicio' => Carbon::now(),
-        'fecha_fin' => Carbon::now()->addDays(28),
+        'interes_total' => $interesCalculado,
+        'total_pagar' => $total,
+        'fecha_inicio' => $request->fecha_inicio,
+        'fecha_fin' => $request->fecha_fin,
         'estado' => 'aprobado',
-       
-        'interes_total' => $interesTotal,
         'n_junta' => $esJunta ? $tipoOrigen : null,
-        
     ]);
 
-    $numeroPenalizacion = $prestamo->penalidades()->count() + 1;
-    $interesDebe = $interesCalculado * $penalidadDecimal;
-
-    Penalidad::create([
-        'prestamo_id' => $prestamo->id,
-        'numero_prestamo' => $prestamo->numero_prestamo,
-        'numero_penalizacion' => $numeroPenalizacion,
-        'suma_interes' => $interesCalculado,
-        'interes_penalidad' => $penalidad,
-        'interes_debe' => $interesDebe,
-        'user_id' => $prestamo->user_id,
-        'tipo_operacion' => 'penalidad',
-
-    ]);
-
-    return redirect()->back()->with('success', "Préstamo aprobado con $interes% de interés y $penalidad% de penalidad.");
+    return redirect()->back()->with('success', "Préstamo aprobado con éxito.");
 }
 
 
@@ -346,6 +317,43 @@ public function cancelar($id)
     Prestamo::where('numero_prestamo', $numeroPrestamo)->update(['estado' => 'pagado']);
 
     return redirect()->back()->with('success', 'El préstamo fue cancelado correctamente.');
+}
+
+
+// generar prestamo para el cliente
+public function crearDesdeAdmin()
+{
+    $usuarios = User::where('is_admin', 0)->get();
+
+    return view('admin.generar_prestamo', compact('usuarios'));
+}
+
+public function storeDesdeAdmin(Request $request)
+{
+    $request->validate([
+        'user_id' => 'required|exists:users,id',
+        'monto' => 'required|numeric|min:1',
+    ]);
+
+    $user = User::findOrFail($request->user_id);
+
+    // Obtener el número de préstamo siguiente
+    $ultimoPrestamo = Prestamo::where('user_id', $user->id)
+                              ->orderBy('numero_prestamo', 'desc')
+                              ->first();
+
+    $numeroPrestamo = $ultimoPrestamo ? $ultimoPrestamo->numero_prestamo + 1 : 1;
+
+    // Crear préstamo
+    Prestamo::create([
+        'user_id' => $user->id,
+        'numero_prestamo' => $numeroPrestamo,
+        'item_prestamo' => 1,
+        'monto' => $request->monto,
+        'estado' => 'pendiente',
+    ]);
+
+    return redirect()->route('admin.prestamos.crear')->with('success', 'Préstamo registrado correctamente');
 }
 
 

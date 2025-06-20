@@ -240,7 +240,7 @@
             box-shadow: var(--shadow-soft);
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+        
         }
 
         .btn-print:hover {
@@ -670,7 +670,11 @@
                           
                         @endphp
 
-                        <tr class="fila-principal" data-numero="{{ $numero_prestamo }}" data-fecha="{{ $ultimo->fecha_inicio }}"  >
+                       <tr class="fila-principal"
+    data-numero="{{ $numero_prestamo }}"
+    data-fecha-inicio="{{ $ultimo->fecha_inicio }}"
+    data-fecha-fin="{{ $ultimo->fecha_fin }}"
+    data-estado="{{ $estados->first() }}">
                             <td>
                                 <input type="checkbox" class="checkbox-custom seleccionar-reporte" data-target="{{ $numero_prestamo }}">
                             </td>
@@ -723,22 +727,25 @@
                                                         $totalInteres += $detalle->interes;
                                                         $totalInteresPagar += $detalle->interes_pagar;
                                                     @endphp
-                                                    <tr>
-                                                        <td>{{ $detalle->id }}</td>
-                                                        <td>{{ $detalle->item_prestamo }}</td>
-                                                        <td>{{ $detalle->n_junta }}</td>
-                                                        <td>{{ date('d/m/Y', strtotime($detalle->fecha_inicio)) }}</td>
-                                                        <td>{{ date('d/m/Y', strtotime($detalle->fecha_fin)) }}</td>
-                                                        <td class="amount-cell">S/ {{ number_format($detalle->monto, 2) }}</td>
-                                                        <td class="amount-cell">S/ {{ number_format($detalle->interes_pagar, 2) }}</td>
-                                                        <td class="amount-cell"> {{ number_format($detalle->interes, 2) }}%</td>
-                                                        <td>{{ $detalle->descripcion ?: 'N/A' }}</td>
-                                                        <td>
-                                                            <span class="status-badge status-{{ $detalle->estado }}">
-                                                                {{ ucfirst($detalle->estado) }}
-                                                            </span>
-                                                        </td>
-                                                    </tr>
+                                                   <tr 
+    data-fecha-inicio="{{ $detalle->fecha_inicio }}" 
+    data-fecha-fin="{{ $detalle->fecha_fin }}"
+>
+    <td>{{ $detalle->id }}</td>
+    <td>{{ $detalle->item_prestamo }}</td>
+    <td>{{ $detalle->n_junta }}</td>
+    <td>{{ date('d/m/Y', strtotime($detalle->fecha_inicio)) }}</td>
+    <td>{{ date('d/m/Y', strtotime($detalle->fecha_fin)) }}</td>
+    <td class="amount-cell">S/ {{ number_format($detalle->monto, 2) }}</td>
+    <td class="amount-cell">S/ {{ number_format($detalle->interes_pagar, 2) }}</td>
+    <td class="amount-cell"> {{ number_format($detalle->interes, 2) }}%</td>
+    <td>{{ $detalle->descripcion ?: 'N/A' }}</td>
+    <td>
+        <span class="status-badge status-{{ $detalle->estado }}">
+            {{ ucfirst($detalle->estado) }}
+        </span>
+    </td>
+</tr>
                                                 @endforeach
                                             </tbody>
                                             <tfoot>
@@ -782,14 +789,15 @@
     });
 
     function cargarDatosOriginales() {
-        const filas = document.querySelectorAll('.fila-principal');
-        prestamosOriginales = Array.from(filas).map(fila => ({
-            elemento: fila,
-            numero: fila.dataset.numero,
-            fecha: fila.dataset.fecha,
-            estado: fila.dataset.estado
-        }));
-    }
+    const filas = document.querySelectorAll('.fila-principal');
+    prestamosOriginales = Array.from(filas).map(fila => ({
+        elemento: fila,
+        numero: fila.dataset.numero,
+        fecha_inicio: fila.dataset.fechaInicio,
+        fecha_fin: fila.dataset.fechaFin,
+        estado: fila.dataset.estado
+    }));
+}
 
     function configurarEventos() {
         // Checkbox seleccionar todos
@@ -805,53 +813,74 @@
         });
     }
 
-    function aplicarFiltros() {
-        const filtroNumero = document.getElementById('filterNumero').value.toLowerCase();
-        const filtroFechaDesde = document.getElementById('filterFechaDesde').value;
-        const filtroFechaHasta = document.getElementById('filterFechaHasta').value;
-        const filtroEstado = document.getElementById('filterEstado').value;
+function aplicarFiltros() {
+    const filtroNumero = document.getElementById('filterNumero').value.toLowerCase();
+    const filtroFechaDesde = document.getElementById('filterFechaDesde').value;
+    const filtroFechaHasta = document.getElementById('filterFechaHasta').value;
+    const filtroEstado = document.getElementById('filterEstado')?.value;
 
-        let contadorVisible = 0;
+    let contadorVisible = 0;
 
-        prestamosOriginales.forEach(prestamo => {
-            let mostrar = true;
+    prestamosOriginales.forEach(prestamo => {
+        let mostrar = true;
 
-            // Filtro por número
-            if (filtroNumero && !prestamo.numero.toLowerCase().includes(filtroNumero)) {
-                mostrar = false;
-            }
+        // Filtro por número
+        if (filtroNumero && !prestamo.numero.toLowerCase().includes(filtroNumero)) {
+            mostrar = false;
+        }
 
-            // Filtro por fecha desde
-            if (filtroFechaDesde && prestamo.fecha < filtroFechaDesde) {
-                mostrar = false;
-            }
+        // Filtro por estado
+        if (filtroEstado && prestamo.estado !== filtroEstado) {
+            mostrar = false;
+        }
 
-            // Filtro por fecha hasta
-            if (filtroFechaHasta && prestamo.fecha > filtroFechaHasta) {
-                mostrar = false;
-            }
-
-            // Filtro por estado
-            if (filtroEstado && prestamo.estado !== filtroEstado) {
-                mostrar = false;
-            }
-
-            // Mostrar/ocultar fila
+        // Filtro por fechas
+        if ((filtroFechaDesde || filtroFechaHasta) && mostrar) {
             const filaDetalle = document.getElementById(`detalle-${prestamo.numero}`);
-            if (mostrar) {
-                prestamo.elemento.style.display = '';
-                if (filaDetalle) filaDetalle.style.display = '';
-                contadorVisible++;
-            } else {
-                prestamo.elemento.style.display = 'none';
-                if (filaDetalle) filaDetalle.style.display = 'none';
-            }
-        });
+            const filasInternas = filaDetalle?.querySelectorAll('tr[data-fecha-inicio]') || [];
 
-        // Actualizar contador
-        document.getElementById('resultados-count').textContent = contadorVisible;
+            let tieneCoincidencia = false;
+
+            filasInternas.forEach(tr => {
+    const fechaInicio = new Date(tr.dataset.fechaInicio);
+    const fechaFin = new Date(tr.dataset.fechaFin);
+
+   const desde = filtroFechaDesde ? new Date(filtroFechaDesde) : null;
+let hasta = filtroFechaHasta ? new Date(filtroFechaHasta) : null;
+if (hasta) {
+  // Asegúrate que incluye todo el día
+  hasta.setHours(23, 59, 59, 999);
+}
+
+    // Comparación robusta con objetos Date
+    if (
+        (!desde || fechaFin >= desde) &&
+        (!hasta || fechaInicio <= hasta)
+    ) {
+        tieneCoincidencia = true;
     }
+});
 
+            if (!tieneCoincidencia) {
+                mostrar = false;
+            }
+        }
+
+        // Mostrar u ocultar la fila principal y su detalle
+        const filaDetalle = document.getElementById(`detalle-${prestamo.numero}`);
+        if (mostrar) {
+            prestamo.elemento.style.display = '';
+            if (filaDetalle) filaDetalle.style.display = '';
+            contadorVisible++;
+        } else {
+            prestamo.elemento.style.display = 'none';
+            if (filaDetalle) filaDetalle.style.display = 'none';
+        }
+    });
+
+    // Actualiza el contador
+    document.getElementById('resultados-count').textContent = contadorVisible;
+}
     function limpiarFiltros() {
         document.getElementById('filterNumero').value = '';
         document.getElementById('filterFechaDesde').value = '';

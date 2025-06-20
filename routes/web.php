@@ -62,6 +62,7 @@ Route::middleware(['auth', 'is_admin'])->group(function () {
 
      // Gestión de préstamos
     Route::post('/admin/prestamos/aprobar/{id}', [PrestamoController::class, 'aprobar'])->name('prestamo.aprobar');
+    Route::put('/admin/prestamos/aprobar/{id}', [PrestamoController::class, 'aprobar'])->name('prestamo.aprobar');
     Route::post('/admin/prestamos/rechazar/{id}', [PrestamoController::class, 'rechazar'])->name('prestamo.rechazar');
     Route::get('/admin/prestamos/pendientes', [PrestamoPendienteController::class, 'index'])->name('admin.prestamos.pendientes');
 
@@ -93,6 +94,11 @@ Route::get('/admin/configuraciones', [ConfiguracionController::class, 'index'])-
   Route::post('/admin/configuraciones', [ConfiguracionController::class, 'store'])->name('admin.configuraciones.store');
   Route::post('/admin/configuraciones/{id}/actualizar', [ConfiguracionController::class, 'update'])->name('admin.configuraciones.update');
 Route::delete('/admin/configuraciones/{id}/eliminar', [ConfiguracionController::class, 'destroy'])->name('admin.configuraciones.destroy');
+
+
+// admin generar prestamo
+Route::get('/admin/prestamos/crear', [PrestamoController::class, 'crearDesdeAdmin'])->name('admin.prestamos.crear');
+Route::post('/admin/prestamos', [PrestamoController::class, 'storeDesdeAdmin'])->name('admin.prestamos.store');
 
 });
 

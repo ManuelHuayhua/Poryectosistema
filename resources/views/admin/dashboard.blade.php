@@ -42,60 +42,78 @@
                     <td>S/. {{ number_format($prestamo->monto, 2) }}</td>
                     <td>{{ $prestamo->created_at->format('d/m/Y') }}</td>
                     <td>
-                      <form action="{{ route('prestamo.aprobar', $prestamo->id) }}" method="POST">
+                     <form action="{{ route('prestamo.aprobar', $prestamo->id) }}" method="POST">
     @csrf
+    @method('PUT') <!-- Esencial para que funcione correctamente -->
 
-    <!-- Selección de interés -->
-    <label for="interes">Interés:</label>
-    <select name="interes" required class="form-control">
-        @foreach ($configuraciones as $config)
-            <option value="{{ $config->interes }}">
-                {{ $config->interes }}%
-            </option>
-        @endforeach
-    </select>
+    <!-- Fecha de inicio -->
+    <div class="mb-2">
+        <label for="fecha_inicio_{{ $prestamo->id }}" class="form-label">Fecha de inicio:</label>
+        <input type="date" name="fecha_inicio" id="fecha_inicio_{{ $prestamo->id }}" class="form-control" required>
+    </div>
 
-    <!-- Selección de penalidad -->
-    <label for="penalidad" class="mt-2">Penalidad:</label>
-    <select name="penalidad" required class="form-control">
-        @foreach ($configuraciones as $config)
-            <option value="{{ $config->penalidad }}">
-                {{ $config->penalidad }}%
-            </option>
-        @endforeach
-    </select>
+    <!-- Fecha de fin -->
+    <div class="mb-2">
+        <label for="fecha_fin_{{ $prestamo->id }}" class="form-label">Fecha de fin:</label>
+        <input type="date" name="fecha_fin" id="fecha_fin_{{ $prestamo->id }}" class="form-control" required>
+    </div>
 
-    <!-- Checkbox para indicar si es junta -->
-<div class="form-check mt-2">
-    <input class="form-check-input" type="checkbox" name="es_junta" id="es_junta" value="1" onchange="toggleJuntaSelect()">
-    <label class="form-check-label" for="es_junta">
-        ¿Es junta?
-    </label>
-</div>
+    <!-- Interés -->
+    <div class="mb-2">
+        <label for="interes_{{ $prestamo->id }}">Interés:</label>
+        <select name="interes" id="interes_{{ $prestamo->id }}" class="form-control" required>
+            @foreach ($configuraciones as $config)
+                <option value="{{ $config->interes }}">{{ $config->interes }}%</option>
+            @endforeach
+        </select>
+    </div>
 
-<!-- Select de tipo_origen, oculto por defecto -->
-<div id="tipo_origen_container" class="mt-2" style="display: none;">
-    <label for="tipo_origen">Seleccione tipo de origen:</label>
-    <select name="tipo_origen" class="form-control">
-        @foreach($configuraciones as $config)
-            @if($config->tipo_origen)
-                <option value="{{ $config->tipo_origen }}">{{ $config->tipo_origen }}</option>
-            @endif
-        @endforeach
-    </select>
-</div>
+    <!-- Penalidad -->
+    <div class="mb-2">
+        <label for="penalidad_{{ $prestamo->id }}">Penalidad:</label>
+        <select name="penalidad" id="penalidad_{{ $prestamo->id }}" class="form-control" required>
+            @foreach ($configuraciones as $config)
+                <option value="{{ $config->penalidad }}">{{ $config->penalidad }}%</option>
+            @endforeach
+        </select>
+    </div>
 
-<!-- Script para mostrar u ocultar el select -->
+    <!-- Checkbox: ¿Es junta? -->
+    <div class="form-check mt-2">
+        <input class="form-check-input" type="checkbox" name="es_junta" id="es_junta_{{ $prestamo->id }}" value="1" onchange="toggleJuntaSelect({{ $prestamo->id }})">
+        <label class="form-check-label" for="es_junta_{{ $prestamo->id }}">¿Es junta?</label>
+    </div>
+
+    <!-- Select tipo_origen (oculto hasta que marquen el checkbox) -->
+    <div id="tipo_origen_container_{{ $prestamo->id }}" class="mt-2" style="display: none;">
+        <label for="tipo_origen_{{ $prestamo->id }}">Tipo de origen:</label>
+        <select name="tipo_origen" id="tipo_origen_{{ $prestamo->id }}" class="form-control">
+            @foreach($configuraciones as $config)
+                @if($config->tipo_origen)
+                    <option value="{{ $config->tipo_origen }}">{{ $config->tipo_origen }}</option>
+                @endif
+            @endforeach
+        </select>
+    </div>
+
+    <!-- Botón de aprobar -->
+    <button type="submit" class="btn btn-success mt-2">Aprobar</button>
+</form>
+
+<!-- Formulario de rechazo -->
+<form action="{{ route('prestamo.rechazar', $prestamo->id) }}" method="POST" class="mt-2">
+    @csrf
+    <button type="submit" class="btn btn-danger">Rechazar</button>
+</form>
+
 <script>
-    function toggleJuntaSelect() {
-        const checkbox = document.getElementById('es_junta');
-        const container = document.getElementById('tipo_origen_container');
+    function toggleJuntaSelect(id) {
+        const checkbox = document.getElementById('es_junta_' + id);
+        const container = document.getElementById('tipo_origen_container_' + id);
         container.style.display = checkbox.checked ? 'block' : 'none';
     }
 </script>
 
-    <button type="submit" class="btn btn-success mt-2">Aprobar</button>
-</form>
 
                        <form action="{{ route('prestamo.rechazar', $prestamo->id) }}" method="POST" class="mt-2">
     @csrf
