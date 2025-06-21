@@ -42,38 +42,65 @@ class PrestamoController extends Controller
 }
 
     // ADMIN - Ver préstamos pendientes
- public function indexAdmin()
+public function indexAdmin()
 {
-    // Asegurarse que el usuario sea administrador
     if (!Auth::user()->is_admin) {
         abort(403, 'Acceso no autorizado.');
     }
 
-    // Obtener préstamos
+    // Fechas para el filtro de vencimiento
+    $hoy = Carbon::today();
+    $limite = $hoy->copy()->addDays(10);
+
+    // Subquery para obtener el último item de cada préstamo
+    $subquery = DB::table('prestamos')
+        ->select('numero_prestamo', DB::raw('MAX(item_prestamo) as max_item'))
+        ->groupBy('numero_prestamo');
+
+    // Préstamos aprobados que vencen en los próximos 10 días (última versión de cada préstamo)
+    $prestamosPorVencer = Prestamo::joinSub($subquery, 'ultimos', function ($join) {
+            $join->on('prestamos.numero_prestamo', '=', 'ultimos.numero_prestamo')
+                 ->on('prestamos.item_prestamo', '=', 'ultimos.max_item');
+        })
+        ->where('prestamos.estado', 'aprobado')
+        ->whereBetween('prestamos.fecha_fin', [$hoy, $limite])
+        ->with('user')
+        ->get()
+        ->groupBy('numero_prestamo')  // Agrupar por préstamo real
+        ->map(function ($grupo) {
+            return $grupo->first();   // Solo la última fila por préstamo
+        });
+
+    // Otros préstamos
     $prestamosPendientes = Prestamo::where('estado', 'pendiente')->with('user')->get();
     $prestamosRechazados = Prestamo::where('estado', 'rechazado')->with('user')->get();
-    $prestamosAprobados = Prestamo::where('estado', 'aprobado')
-        ->with('user')
-        ->whereIn(DB::raw('(numero_prestamo, item_prestamo)'), function ($query) {
-            $query->selectRaw('numero_prestamo, MAX(item_prestamo)')
-                  ->from('prestamos')
-                  ->groupBy('numero_prestamo');
-        })
-        ->get();
 
-    // Obtener todas las configuraciones
+    // Préstamos aprobados (última versión por préstamo)
+    $prestamosAprobados = Prestamo::where('estado', 'aprobado')
+    ->with('user')
+    ->whereBetween('fecha_fin', [$hoy, $limite]) // ← Filtro por vencimiento
+    ->whereIn(DB::raw('(numero_prestamo, item_prestamo)'), function ($query) {
+        $query->selectRaw('numero_prestamo, MAX(item_prestamo)')
+              ->from('prestamos')
+              ->groupBy('numero_prestamo');
+    })
+    ->get();
+
+
     $configuraciones = DB::table('configuraciones')->get();
 
-    // Bandera: ¿hay préstamos pendientes?
+    // Variables para mostrar modales
     $hayNuevosPrestamos = $prestamosPendientes->isNotEmpty();
+    $hayPrestamosPorVencer = $prestamosPorVencer->isNotEmpty();
 
-    // Enviar datos a la vista
     return view('admin.dashboard', compact(
         'prestamosPendientes',
         'prestamosAprobados',
         'prestamosRechazados',
+        'prestamosPorVencer',
         'configuraciones',
-        'hayNuevosPrestamos' // ← variable para el modal
+        'hayNuevosPrestamos',
+        'hayPrestamosPorVencer'
     ));
 }
 

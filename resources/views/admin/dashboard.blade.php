@@ -130,18 +130,39 @@
 
 
   {{-- modal para identificar nuevos prestamos --}}
-  @if($hayNuevosPrestamos)
-<!-- Modal Bootstrap -->
-<div class="modal fade" id="nuevoPrestamoModal" tabindex="-1" aria-labelledby="nuevoPrestamoLabel" aria-hidden="true">
+ @if($hayNuevosPrestamos || $hayPrestamosPorVencer)
+<!-- Modal combinado para préstamos pendientes y por vencer -->
+<div class="modal fade" id="notificacionesPrestamosModal" tabindex="-1" aria-labelledby="notificacionesPrestamosLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content shadow">
-      <div class="modal-header bg-warning">
-        <h5 class="modal-title" id="nuevoPrestamoLabel"><i class="fas fa-bell"></i> Notificación de Préstamos</h5>
+      <div class="modal-header bg-info text-white">
+        <h5 class="modal-title" id="notificacionesPrestamosLabel">
+          <i class="fas fa-bell"></i> Notificaciones de Préstamos
+        </h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
       </div>
       <div class="modal-body">
-        <p class="text-dark">Tienes <strong>{{ $prestamosPendientes->count() }}</strong> solicitudes de préstamo pendientes por aprobar.</p>
-        <p>Revisa la sección <strong>"Solicitudes de Préstamos Pendientes"</strong> para aprobar o rechazar.</p>
+        @if($hayNuevosPrestamos)
+            <p class="text-dark">
+                Tienes <strong>{{ $prestamosPendientes->count() }}</strong> solicitud{{ $prestamosPendientes->count() > 1 ? 'es' : '' }} de préstamo pendiente{{ $prestamosPendientes->count() > 1 ? 's' : '' }} por aprobar.
+            </p>
+            <p>Revisa la sección <strong>"Solicitudes de Préstamos Pendientes"</strong> para aprobar o rechazar.</p>
+            <hr>
+        @endif
+
+        @if($hayPrestamosPorVencer)
+            <p class="text-danger fw-bold">
+                Hay <strong>{{ $prestamosPorVencer->count() }}</strong> préstamo{{ $prestamosPorVencer->count() > 1 ? 's' : '' }} aprobado{{ $prestamosPorVencer->count() > 1 ? 's' : '' }} que está{{ $prestamosPorVencer->count() > 1 ? 'n' : '' }} por vencer en los próximos 10 días:
+            </p>
+            <ul class="text-dark">
+                @foreach($prestamosPorVencer as $prestamo)
+                    <li>
+                        Préstamo N° <strong>{{ $prestamo->numero_prestamo }}</strong> ({{ $prestamo->user->name }}) vence el 
+                        <strong>{{ \Carbon\Carbon::parse($prestamo->fecha_fin)->format('d/m/Y') }}</strong>
+                    </li>
+                @endforeach
+            </ul>
+        @endif
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Entendido</button>
@@ -150,11 +171,10 @@
   </div>
 </div>
 
-<!-- Script para mostrar el modal automáticamente -->
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        var myModal = new bootstrap.Modal(document.getElementById('nuevoPrestamoModal'));
-        myModal.show();
+        var modal = new bootstrap.Modal(document.getElementById('notificacionesPrestamosModal'));
+        modal.show();
     });
 </script>
 @endif
@@ -167,7 +187,7 @@
 <table class="table table-bordered mt-3">
     <thead>
         <tr>
-            <th>ID</th>
+        
             <th>N° Préstamo</th>
             <th>Usuario</th>
             <th>Monto</th>
@@ -175,7 +195,8 @@
             <th>Interés a Pagar</th>
             <th>Fecha Inicio</th>
             <th>Fecha Fin</th>
-            <th>Fecha de Pago</th>
+        
+
             <th>Estado</th>
             <th>Descripción</th>
             <th>Acciones</th>
@@ -194,7 +215,7 @@
             $grupoId = $prestamo->numero_prestamo . '_' . $prestamo->item_prestamo;
         @endphp
         <tr>
-            <td>{{ $prestamo->id }}</td>
+       
             <td>{{ $prestamo->numero_prestamo }}</td>
             <td>{{ $prestamo->user->name }}</td>
             <td>S/. {{ number_format($prestamo->monto, 2) }}</td>
@@ -202,7 +223,7 @@
             <td>S/. {{ number_format($prestamo->interes_pagar, 2) }}</td>
             <td>{{ \Carbon\Carbon::parse($prestamo->fecha_inicio)->format('d/m/Y') }}</td>
             <td>{{ \Carbon\Carbon::parse($prestamo->fecha_fin)->format('d/m/Y') }}</td>
-            <td>{{ optional($prestamo->fecha_pago)->format('d/m/Y') }}</td>
+        
             <td>{{ ucfirst($prestamo->estado) }}</td>
             <td>{{ $prestamo->descripcion }}</td>
             <td>
