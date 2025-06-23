@@ -25,8 +25,8 @@ return new class extends Migration
         $table->decimal('interes_pagar', 10, 2)->nullable(); // Monto en soles del interés base
         $table->decimal('interes_penalidad', 10, 2)->default(0); // Penalidad aplicada al interés por impago
 
-        $table->decimal('penalidades_acumuladas', 10, 2)->default(0); // Penalidades acumuladas
-        $table->decimal('total_pagar', 10, 2)->nullable(); // Total a pagar (monto + interés + penalidades)
+     //   $table->decimal('penalidades_acumuladas', 10, 2)->default(0); // Penalidades acumuladas
+     //   $table->decimal('total_pagar', 10, 2)->nullable(); // Total a pagar (monto + interés + penalidades)
 
         $table->date('fecha_inicio')->nullable(); // Fecha de aprobación
         $table->date('fecha_fin')->nullable();    // Fecha de vencimiento (28 días después)

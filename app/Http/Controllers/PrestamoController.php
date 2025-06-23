@@ -54,14 +54,15 @@ public function indexAdmin()
 
     // Subquery para obtener el último item de cada préstamo
     $subquery = DB::table('prestamos')
-        ->select('numero_prestamo', DB::raw('MAX(item_prestamo) as max_item'))
-        ->groupBy('numero_prestamo');
+    ->select('numero_prestamo', 'user_id', DB::raw('MAX(item_prestamo) as max_item'))
+    ->groupBy('numero_prestamo', 'user_id');
 
     // Préstamos aprobados que vencen en los próximos 10 días (última versión de cada préstamo)
-    $prestamosPorVencer = Prestamo::joinSub($subquery, 'ultimos', function ($join) {
-            $join->on('prestamos.numero_prestamo', '=', 'ultimos.numero_prestamo')
-                 ->on('prestamos.item_prestamo', '=', 'ultimos.max_item');
-        })
+   $prestamosPorVencer = Prestamo::joinSub($subquery, 'ultimos', function ($join) {
+        $join->on('prestamos.numero_prestamo', '=', 'ultimos.numero_prestamo')
+             ->on('prestamos.item_prestamo', '=', 'ultimos.max_item')
+             ->on('prestamos.user_id', '=', 'ultimos.user_id');
+    })
         ->where('prestamos.estado', 'aprobado')
         ->whereBetween('prestamos.fecha_fin', [$hoy, $limite])
         ->with('user')
@@ -75,33 +76,85 @@ public function indexAdmin()
     $prestamosPendientes = Prestamo::where('estado', 'pendiente')->with('user')->get();
     $prestamosRechazados = Prestamo::where('estado', 'rechazado')->with('user')->get();
 
-    // Préstamos aprobados (última versión por préstamo)
-    $prestamosAprobados = Prestamo::where('estado', 'aprobado')
-    ->with('user')
-    ->whereBetween('fecha_fin', [$hoy, $limite]) // ← Filtro por vencimiento
-    ->whereIn(DB::raw('(numero_prestamo, item_prestamo)'), function ($query) {
-        $query->selectRaw('numero_prestamo, MAX(item_prestamo)')
-              ->from('prestamos')
-              ->groupBy('numero_prestamo');
+   // Todos los préstamos aprobados (última versión por préstamo)
+$todosPrestamosAprobados = Prestamo::joinSub($subquery, 'ultimos', function ($join) {
+        $join->on('prestamos.numero_prestamo', '=', 'ultimos.numero_prestamo')
+             ->on('prestamos.item_prestamo', '=', 'ultimos.max_item')
+             ->on('prestamos.user_id', '=', 'ultimos.user_id');
     })
+    ->where('prestamos.estado', 'aprobado')
+    ->with('user')
     ->get();
 
+// Filtrar solo los que vencen en los próximos 10 días
+$prestamosAprobados = $todosPrestamosAprobados->filter(function ($prestamo) use ($hoy, $limite) {
+    return $prestamo->fecha_fin >= $hoy && $prestamo->fecha_fin <= $limite;
+});
 
+    
     $configuraciones = DB::table('configuraciones')->get();
 
     // Variables para mostrar modales
     $hayNuevosPrestamos = $prestamosPendientes->isNotEmpty();
     $hayPrestamosPorVencer = $prestamosPorVencer->isNotEmpty();
 
+    // Usuarios con cumpleaños en los próximos 10 días
+
+
+    $hoy = Carbon::today();
+$diasAviso = 10;
+
+$usuariosConCumpleanos = DB::table('users')
+    ->whereNotNull('fecha_nacimiento')
+    ->get()
+    ->map(function ($usuario) use ($hoy) {
+        $cumple = Carbon::parse($usuario->fecha_nacimiento);
+        $cumpleEsteAnio = Carbon::createFromDate($hoy->year, $cumple->month, $cumple->day);
+
+        // Si ya pasó el cumpleaños este año, toma el del próximo año
+        if ($cumpleEsteAnio->lt($hoy)) {
+            $cumpleEsteAnio->addYear();
+        }
+
+        return (object)[
+            'nombre' => $usuario->name . ' ' . $usuario->apellido_paterno,
+            'fecha_nacimiento' => $cumple->format('d/m/Y'),
+            'edad' => $cumpleEsteAnio->diffInYears($cumple),
+            'dias_faltantes' => $hoy->diffInDays($cumpleEsteAnio),
+            'es_hoy' => $cumpleEsteAnio->isSameDay($hoy),
+        ];
+    })
+    ->filter(function ($usuario) use ($diasAviso) {
+        return $usuario->dias_faltantes <= $diasAviso;
+    })
+    ->sortBy('dias_faltantes')
+    ->values(); // reindexar colección
+      
+$prestamosNotificados = Prestamo::where('notificacion_pago', 1)
+    ->with('user')
+    ->get();
+
+$hayQuierenPagar = $prestamosNotificados->isNotEmpty();
+
+
+    // Mostrar modal de cumpleaños si hay usuarios con cumpleaños en los próximos 10 días
     return view('admin.dashboard', compact(
         'prestamosPendientes',
         'prestamosAprobados',
+          'todosPrestamosAprobados',
         'prestamosRechazados',
         'prestamosPorVencer',
         'configuraciones',
         'hayNuevosPrestamos',
-        'hayPrestamosPorVencer'
+        'hayPrestamosPorVencer',
+       'usuariosConCumpleanos',
+       'prestamosNotificados',
+       'hayQuierenPagar',
+    
     ));
+    
+
+    
 }
 
     // ADMIN - Aprobar préstamo
@@ -129,8 +182,8 @@ public function aprobar(Request $request, $id)
         'interes' => $interes,
         'porcentaje_penalidad' => $penalidad,
         'interes_pagar' => $interesCalculado,
-        'interes_total' => $interesCalculado,
-        'total_pagar' => $total,
+    
+       
         'fecha_inicio' => $request->fecha_inicio,
         'fecha_fin' => $request->fecha_fin,
         'estado' => 'aprobado',
@@ -162,17 +215,24 @@ public function penalidad($id)
 
     // Obtener el último item_prestamo del mismo número de préstamo
     $ultimoItem = Prestamo::where('numero_prestamo', $prestamoBase->numero_prestamo)
-        ->max('item_prestamo');
+    ->where('user_id', $prestamoBase->user_id)    
+    ->max('item_prestamo');
 
     if (!$ultimoItem) {
         return redirect()->back()->with('error', 'No hay grupo anterior para penalizar.');
     }
 
-    // Obtener el grupo completo (último item_prestamo)
-    $grupoAnterior = Prestamo::where('numero_prestamo', $prestamoBase->numero_prestamo)
-        ->where('item_prestamo', $ultimoItem)
-        ->orderBy('id')
-        ->get();
+    // Obtener el último item_prestamo del mismo número de préstamo y usuario
+$ultimoItem = Prestamo::where('numero_prestamo', $prestamoBase->numero_prestamo)
+    ->where('user_id', $prestamoBase->user_id)
+    ->max('item_prestamo');
+
+// Obtener el grupo completo del mismo usuario
+$grupoAnterior = Prestamo::where('numero_prestamo', $prestamoBase->numero_prestamo)
+    ->where('user_id', $prestamoBase->user_id)
+    ->where('item_prestamo', $ultimoItem)
+    ->orderBy('id')
+    ->get();
 
     if ($grupoAnterior->isEmpty()) {
         return redirect()->back()->with('error', 'No hay registros en el grupo anterior.');
@@ -184,6 +244,7 @@ public function penalidad($id)
 
     // Nuevo item
     $nuevoItem = $ultimoItem + 1;
+
 
     // Copiar grupo anterior
     foreach ($grupoAnterior as $registro) {
@@ -241,12 +302,14 @@ public function penalidad($id)
 }
 
 
+
 public function renovar($id)
 {
     $prestamoBase = Prestamo::findOrFail($id);
 
-    // Obtener el último item_prestamo usado
+    // Obtener el último item_prestamo usado por usuario y número de préstamo
     $ultimoItem = Prestamo::where('numero_prestamo', $prestamoBase->numero_prestamo)
+        ->where('user_id', $prestamoBase->user_id)
         ->max('item_prestamo');
 
     if (!$ultimoItem) {
@@ -256,10 +319,15 @@ public function renovar($id)
     $nuevoItem = $ultimoItem + 1;
 
     // Obtener todas las filas del último item
-    $grupoAnterior = Prestamo::where('numero_prestamo', $prestamoBase->numero_prestamo)
+     $grupoAnterior = Prestamo::where('numero_prestamo', $prestamoBase->numero_prestamo)
+        ->where('user_id', $prestamoBase->user_id)
         ->where('item_prestamo', $ultimoItem)
         ->orderBy('id')
         ->get();
+
+        if ($grupoAnterior->isEmpty()) {
+        return redirect()->back()->with('error', 'No se encontraron registros anteriores para renovar.');
+    }
 
     // Obtener fecha_inicio desde la fecha_fin del grupo anterior
     $fechaInicio = $grupoAnterior->first()->fecha_fin;
@@ -296,8 +364,9 @@ public function aplicarDiferencia(Request $request, $id)
     $filasCanceladas = explode(',', $request->input('filas_canceladas'));
 
     $nuevoItem = $item + 1;
-
-    $grupoAnterior = Prestamo::where('numero_prestamo', $grupo)
+// 🔐 Filtrar también por user_id para evitar afectar a otros usuarios
+      $grupoAnterior = Prestamo::where('numero_prestamo', $grupo)
+        ->where('user_id', $prestamoBase->user_id)
         ->where('item_prestamo', $item)
         ->orderBy('id')
         ->get();
@@ -306,9 +375,18 @@ public function aplicarDiferencia(Request $request, $id)
         return redirect()->back()->with('error', 'No se encontraron registros.');
     }
 
-    // ✅ MARCAR como "cancelado" en la tabla original
+    $primerPrestamo = $grupoAnterior->first();
+     // 🔐 Validación importante
+    if ($diferenciaMonto > $primerPrestamo->monto) {
+        return redirect()->back()->with('error', 'El monto de diferencia no puede ser mayor al monto original.');
+    }
+
+    
+    // ✅ Marcar como cancelado solo las filas del usuario
     if (!empty($filasCanceladas)) {
-        Prestamo::whereIn('id', $filasCanceladas)->update(['descripcion' => 'cancelado']);
+        Prestamo::whereIn('id', $filasCanceladas)
+            ->where('user_id', $prestamoBase->user_id)
+            ->update(['descripcion' => 'cancelado']);
     }
 
     $fechaInicio = $grupoAnterior->first()->fecha_fin;
@@ -351,15 +429,18 @@ public function cancelar($id)
 {
     $prestamo = Prestamo::findOrFail($id);
     $numeroPrestamo = $prestamo->numero_prestamo;
+    $userId = $prestamo->user_id;
 
     // Obtener la fecha actual
-    $fechaPago = now(); // Puedes usar Carbon::now() si lo prefieres
+    $fechaPago = now();
 
-    // Actualizar todos los préstamos con el mismo número a 'pagado' y registrar la fecha de pago
-    Prestamo::where('numero_prestamo', $numeroPrestamo)->update([
-        'estado' => 'pagado',
-        'fecha_pago' => $fechaPago,
-    ]);
+    // Actualizar solo los préstamos del usuario con ese número de préstamo
+    Prestamo::where('numero_prestamo', $numeroPrestamo)
+        ->where('user_id', $userId)
+        ->update([
+            'estado' => 'pagado',
+            'fecha_pago' => $fechaPago,
+        ]);
 
     return redirect()->back()->with('success', 'El préstamo fue cancelado correctamente.');
 }

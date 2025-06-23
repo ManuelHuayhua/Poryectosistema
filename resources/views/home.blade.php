@@ -228,6 +228,7 @@
             <th>Fecha Inicio</th>
             <th>Fecha Fin</th>
             <th>Fecha de Pago</th>
+            <th>¿Quiere pagar?</th>
       
         </tr>
     </thead>
@@ -245,7 +246,16 @@
                   <td>{{ \Carbon\Carbon::parse($prestamo->Inicio)->format('Y-m-d') ?? '-' }}</td>
                 <td>{{ \Carbon\Carbon::parse($prestamo->fecha_fin)->format('Y-m-d') ?? '-' }}</td>
                 <td>{{ \Carbon\Carbon::parse($prestamo->fecha_pago)->format('Y-m-d') ?? '-' }}</td>     
-             
+          <td>
+    @if(!$prestamo->notificacion_pago)
+        <form method="POST" action="{{ route('prestamos.notificar_pago', $prestamo->id) }}">
+            @csrf
+            <button type="submit" class="btn btn-sm btn-primary">Notificar</button>
+        </form>
+    @else
+        <span class="badge bg-success">✔ Notificado</span>
+    @endif
+</td>
             </tr>
         @empty
             <tr>

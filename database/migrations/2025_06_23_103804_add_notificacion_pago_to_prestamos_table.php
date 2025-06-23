@@ -13,9 +13,9 @@ return new class extends Migration
      */
     public function up()
     {
-      Schema::table('prestamos', function (Blueprint $table) {
-    $table->decimal('interes_acumulado', 10, 2)->default(0)->after('penalidades_acumuladas');
-});
+        Schema::table('prestamos', function (Blueprint $table) {
+        $table->boolean('notificacion_pago')->default(0)->after('n_junta');
+    });
     }
 
     /**
@@ -25,8 +25,8 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('prestamos', function (Blueprint $table) {
-            //
-        });
+         Schema::table('prestamos', function (Blueprint $table) {
+        $table->dropColumn('notificacion_pago');
+    });
     }
 };

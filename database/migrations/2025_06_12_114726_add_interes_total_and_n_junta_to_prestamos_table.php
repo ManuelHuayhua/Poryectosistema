@@ -14,7 +14,7 @@ return new class extends Migration
     public function up()
     {
         Schema::table('prestamos', function (Blueprint $table) {
-            $table->decimal('interes_total', 10, 2)->nullable()->after('interes_acumulado');
+          //  $table->decimal('interes_total', 10, 2)->nullable()->after('interes_acumulado');
             $table->integer('n_junta')->nullable()->after('descripcion');
         });
     }
@@ -28,7 +28,7 @@ return new class extends Migration
     public function down()
     {
         Schema::table('prestamos', function (Blueprint $table) {
-            $table->dropColumn('interes_total');
+     //       $table->dropColumn('interes_total');
             $table->dropColumn('n_junta');
         });
     }

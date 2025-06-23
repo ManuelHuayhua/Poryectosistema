@@ -28,6 +28,7 @@ class Prestamo extends Model
     'interes_total',
     'n_junta',
     'item_prestamo', // Nuevo campo agregado
+    'notificacion_pago',
 
 ];
 

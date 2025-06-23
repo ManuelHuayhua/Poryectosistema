@@ -29,7 +29,7 @@ class HomeController extends Controller
 
     // Agrupar por numero_prestamo y seleccionar el último por fecha_inicio
     $prestamos = Prestamo::where('user_id', $user->id)
-        ->orderByDesc('fecha_inicio') // o fecha_fin si prefieres
+        ->orderBy('fecha_inicio', 'asc') // o fecha_fin si prefieres
         ->get()
         ->groupBy('numero_prestamo')
         ->map(function ($grupo) {
@@ -41,4 +41,32 @@ class HomeController extends Controller
         'prestamos' => $prestamos
     ]);
 }
+
+public function notificarPago($id)
+{
+    $prestamo = Prestamo::findOrFail($id);
+
+    // Verificamos que el préstamo sea del usuario autenticado
+    if ($prestamo->user_id !== auth()->id()) {
+        abort(403, 'No autorizado');
+    }
+
+    $prestamo->notificacion_pago = 1;
+    $prestamo->save();
+
+    return redirect()->back()->with('success', 'Notificación de pago registrada.');
+}
+
+public function marcarLeido($id)
+{
+    $prestamo = Prestamo::findOrFail($id);
+
+    if ($prestamo->notificacion_pago == 1) {
+        $prestamo->notificacion_pago = 2;
+        $prestamo->save();
+    }
+
+    return redirect()->back()->with('success', 'Marcado como leído correctamente.');
+}
+
 }

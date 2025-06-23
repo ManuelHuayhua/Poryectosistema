@@ -40,6 +40,9 @@ Route::get('/home', [HomeController::class, 'index'])->name('home')->middleware(
 
 // Ruta para que el usuario pueda solicitar un préstamo
 Route::post('/solicitar-prestamo', [PrestamoController::class, 'store'])->name('prestamo.store');
+Route::post('/prestamos/{id}/notificar-pago', [App\Http\Controllers\HomeController::class, 'notificarPago'])->name('prestamos.notificar_pago');
+Route::post('/prestamo/{id}/marcar-leido', [HomeController::class, 'marcarLeido'])->name('admin.marcar_leido');
+
 
 
 Route::get('/reporteusuarios', [ReporteUserController::class, 'index'])->name('reporteusuarios.index');
