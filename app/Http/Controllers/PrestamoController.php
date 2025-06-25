@@ -9,6 +9,8 @@ use Carbon\Carbon;
 use App\Models\Penalidad;
 use App\Models\TablaUsuario;
 use App\Models\User;
+use App\Models\CajaPeriodo;
+use Illuminate\Validation\ValidationException;
 class PrestamoController extends Controller
 {
     // USUARIO - Solicita un préstamo
@@ -59,39 +61,56 @@ public function indexAdmin()
 
     // Préstamos aprobados que vencen en los próximos 10 días (última versión de cada préstamo)
    $prestamosPorVencer = Prestamo::joinSub($subquery, 'ultimos', function ($join) {
-        $join->on('prestamos.numero_prestamo', '=', 'ultimos.numero_prestamo')
-             ->on('prestamos.item_prestamo', '=', 'ultimos.max_item')
-             ->on('prestamos.user_id', '=', 'ultimos.user_id');
-    })
-        ->where('prestamos.estado', 'aprobado')
-        ->whereBetween('prestamos.fecha_fin', [$hoy, $limite])
-        ->with('user')
-        ->get()
-        ->groupBy('numero_prestamo')  // Agrupar por préstamo real
-        ->map(function ($grupo) {
-            return $grupo->first();   // Solo la última fila por préstamo
-        });
+    $join->on('prestamos.numero_prestamo', '=', 'ultimos.numero_prestamo')
+         ->on('prestamos.item_prestamo', '=', 'ultimos.max_item')
+         ->on('prestamos.user_id', '=', 'ultimos.user_id');
+})
+->where('prestamos.estado', 'aprobado')
+->whereBetween('prestamos.fecha_fin', [$hoy, $limite])
+->with('user')
+->get()
+->groupBy(function ($item) {
+    return $item->numero_prestamo . '_' . $item->user_id; // agrupación única por préstamo y usuario
+})
+->map(function ($grupo) {
+    return $grupo->first(); // en caso hayan varias versiones por usuario, solo la última
+});
 
     // Otros préstamos
     $prestamosPendientes = Prestamo::where('estado', 'pendiente')->with('user')->get();
     $prestamosRechazados = Prestamo::where('estado', 'rechazado')->with('user')->get();
 
    // Todos los préstamos aprobados (última versión por préstamo)
-$todosPrestamosAprobados = Prestamo::joinSub($subquery, 'ultimos', function ($join) {
+$todosPrestamosAprobados = Prestamo::where('estado', 'aprobado')
+    ->where(function ($q) {
+        $q->whereNull('descripcion')                // sin descripción
+          ->orWhereNotIn('descripcion', [           // o cualquier valor ≠ a los vetados
+              'cancelado',
+              'diferencia',
+              'renovar',
+          ]);
+    })
+    ->with('user')
+    ->orderBy('numero_prestamo')
+    ->orderByDesc('item_prestamo')
+    ->get();
+
+// Filtrar solo los que vencen en los próximos 10 días
+$prestamosAprobados = Prestamo::joinSub($subquery, 'ultimos', function ($join) {
         $join->on('prestamos.numero_prestamo', '=', 'ultimos.numero_prestamo')
              ->on('prestamos.item_prestamo', '=', 'ultimos.max_item')
              ->on('prestamos.user_id', '=', 'ultimos.user_id');
     })
     ->where('prestamos.estado', 'aprobado')
+    ->where(function ($q) {
+        $q->whereNull('prestamos.descripcion')
+          ->orWhereNotIn('prestamos.descripcion', ['cancelado', 'diferencia', 'renovar']);
+    })
+    ->whereBetween('prestamos.fecha_fin', [$hoy, $limite])
     ->with('user')
+    ->orderBy('prestamos.numero_prestamo')
+    ->orderByDesc('prestamos.item_prestamo')
     ->get();
-
-// Filtrar solo los que vencen en los próximos 10 días
-$prestamosAprobados = $todosPrestamosAprobados->filter(function ($prestamo) use ($hoy, $limite) {
-    // Garantizamos que trabajamos con Carbon
-    $fin = Carbon::parse($prestamo->fecha_fin)->startOfDay();
-    return $fin->between($hoy, $limite);          // inclusive
-})->values();   // re-indexa la colección
 
     
     $configuraciones = DB::table('configuraciones')->get();
@@ -163,36 +182,59 @@ $hayQuierenPagar = $prestamosNotificados->isNotEmpty();
 public function aprobar(Request $request, $id)
 {
     $request->validate([
-        'interes' => 'required|numeric',
-        'penalidad' => 'required|numeric',
+        'interes'      => 'required|numeric',
+        'penalidad'    => 'required|numeric',
         'fecha_inicio' => 'required|date',
-        'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
+        'fecha_fin'    => 'required|date|after_or_equal:fecha_inicio',
     ]);
 
     $prestamo = Prestamo::findOrFail($id);
 
-    $interes = $request->input('interes');
-    $penalidad = $request->input('penalidad');
-    $esJunta = $request->has('es_junta');
-    $tipoOrigen = $request->input('tipo_origen');
-
-    $interesDecimal = $interes / 100;
+    $interesDecimal   = $request->interes / 100;
     $interesCalculado = $prestamo->monto * $interesDecimal;
-    $total = $prestamo->monto + $interesCalculado;
+    $totalSolicitado  = $prestamo->monto + $interesCalculado;   // 👈  aquí
 
-    $prestamo->update([
-        'interes' => $interes,
-        'porcentaje_penalidad' => $penalidad,
-        'interes_pagar' => $interesCalculado,
-    
-       
-        'fecha_inicio' => $request->fecha_inicio,
-        'fecha_fin' => $request->fecha_fin,
-        'estado' => 'aprobado',
-        'n_junta' => $esJunta ? $tipoOrigen : null,
-    ]);
+    DB::transaction(function () use (
+        $prestamo, $request, $interesCalculado, $totalSolicitado
+    ) {
+        $hoy = Carbon::today();
 
-    return redirect()->back()->with('success', "Préstamo aprobado con éxito.");
+        $periodo = CajaPeriodo::whereDate('periodo_inicio', '<=', $hoy)
+                   ->whereDate('periodo_fin',    '>=', $hoy)
+                   ->lockForUpdate()
+                   ->first();
+
+        if (!$periodo) {
+            throw ValidationException::withMessages([
+                'caja' => 'No hay un periodo de caja activo para hoy.',
+            ]);
+        }
+
+        // 🔴 Comparamos contra el total
+        if ($totalSolicitado > $periodo->saldo_actual) {
+            throw ValidationException::withMessages([
+                'caja' => 'No hay suficiente saldo en caja. Disponible: S/ '
+                          . number_format($periodo->saldo_actual, 2),
+            ]);
+        }
+
+        // Restamos **solo el principal** (o el total, si lo prefieres)
+        $periodo->decrement('saldo_actual', $prestamo->monto);
+
+        $prestamo->update([
+            'interes'              => $request->interes,
+            'porcentaje_penalidad' => $request->penalidad,
+            'interes_pagar'        => $interesCalculado,
+            'fecha_inicio'         => $request->fecha_inicio,
+            'fecha_fin'            => $request->fecha_fin,
+            'estado'               => 'aprobado',
+            'n_junta'              => $request->has('es_junta')
+                                         ? $request->tipo_origen
+                                         : null,
+        ]);
+    });
+
+    return back()->with('success', 'Préstamo aprobado con éxito.');
 }
 
 
@@ -212,6 +254,8 @@ public function rechazar(Request $request, $id)
 public function penalidad($id) 
 {
     $prestamoBase = Prestamo::findOrFail($id);
+     $prestamoBase->update(['descripcion' => 'penalidad1']);
+    
     // Obtener el porcentaje penalidad del préstamo base
     $porcentajePenalidad = $prestamoBase->porcentaje_penalidad;
 
@@ -246,6 +290,7 @@ $grupoAnterior = Prestamo::where('numero_prestamo', $prestamoBase->numero_presta
 
     // Nuevo item
     $nuevoItem = $ultimoItem + 1;
+    
 
 
     // Copiar grupo anterior
@@ -283,6 +328,7 @@ $grupoAnterior = Prestamo::where('numero_prestamo', $prestamoBase->numero_presta
     // Calcular nuevo interes_pagar
     $nuevoInteresPagar = $acumulado * ($porcentajePenalidad / 100);
 
+    
     // Crear nueva penalidad
     Prestamo::create([
         'user_id' => $prestamoBase->user_id,
@@ -330,10 +376,14 @@ public function renovar($id)
         if ($grupoAnterior->isEmpty()) {
         return redirect()->back()->with('error', 'No se encontraron registros anteriores para renovar.');
     }
+  
 
     // Obtener fecha_inicio desde la fecha_fin del grupo anterior
     $fechaInicio = $grupoAnterior->first()->fecha_fin;
     $fechaFin = Carbon::parse($fechaInicio)->addDays(28);
+
+
+    $grupoAnterior->first()->update(['descripcion' => 'renovar']);
 
     foreach ($grupoAnterior as $index => $registro) {
         Prestamo::create([
@@ -346,7 +396,7 @@ public function renovar($id)
             'interes_pagar' => $registro->interes_pagar,
             'porcentaje_penalidad' => $registro->porcentaje_penalidad,
             'estado' => 'aprobado',
-            'descripcion' => $index === 0 ? 'renovar' : $registro->descripcion,
+            'descripcion' => $index === 0 ? null : $registro->descripcion,
             'fecha_inicio' => $fechaInicio,
             'fecha_fin' => $fechaFin,
             'created_at' => now(),
@@ -387,12 +437,17 @@ public function aplicarDiferencia(Request $request, $id)
     // ✅ Marcar como cancelado solo las filas del usuario
     if (!empty($filasCanceladas)) {
         Prestamo::whereIn('id', $filasCanceladas)
-            ->where('user_id', $prestamoBase->user_id)
-            ->update(['descripcion' => 'cancelado']);
+        ->where('user_id', $prestamoBase->user_id)
+        ->update(['descripcion' => 'cancelado']);
     }
 
     $fechaInicio = $grupoAnterior->first()->fecha_fin;
     $fechaFin = Carbon::parse($fechaInicio)->addDays(28);
+
+    
+    // Marcar la fila original como 'diferencia'
+    $primerPrestamo->descripcion = 'diferencia';
+    $primerPrestamo->save();
 
     foreach ($grupoAnterior as $index => $registro) {
         if (in_array($registro->id, $filasCanceladas)) {
@@ -400,12 +455,12 @@ public function aplicarDiferencia(Request $request, $id)
         }
 
         $nuevoMonto = $registro->monto;
-        $nuevaDescripcion = $registro->descripcion;
+        $descripcion  = $registro->descripcion;
 
         // Solo en la primera fila: restar el monto
         if ($index === 0) {
             $nuevoMonto = max(0, $registro->monto - $diferenciaMonto);
-            $nuevaDescripcion = 'diferencia';
+            $descripcion = '';
         }
 
         Prestamo::create([
@@ -418,7 +473,7 @@ public function aplicarDiferencia(Request $request, $id)
             'interes_pagar' => $nuevoMonto * ($registro->interes / 100),
             'porcentaje_penalidad' => $registro->porcentaje_penalidad,
             'estado' => 'aprobado',
-            'descripcion' => $nuevaDescripcion,
+            'descripcion' => $descripcion,
             'fecha_inicio' => $fechaInicio,
             'fecha_fin' => $fechaFin,
         ]);

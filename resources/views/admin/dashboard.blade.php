@@ -223,7 +223,12 @@
         </div>
     @endif
 
-  
+  {{-- En la vista, antes del accordion --}}
+@if ($errors->has('caja'))
+    <div class="alert alert-danger">
+        {{ $errors->first('caja') }}
+    </div>
+@endif
 
     {{-- Préstamos pendientes --}}
     <h4 class="mt-4">Solicitudes de Préstamos Pendientes</h4>
@@ -424,7 +429,7 @@
    {{-- Préstamos Aprobados --}}
 {{-- Préstamos Aprobados --}}
 {{-- Préstamos Aprobados --}}
-<h4 class="mt-5 text-success">Préstamos Aprobados</h4>
+<h4 class="mt-5 text-success">Préstamos proximo a Vnecer</h4>
 
 <div class="form-check mb-3">
     <input class="form-check-input" type="checkbox" id="mostrarTodosAprobados" onchange="togglePrestamosAprobados()">
@@ -437,6 +442,7 @@
     <thead>
         <tr>
             <th>N° Préstamo</th>
+            <th>Item Prestamo</th>
             <th>Usuario</th>
             <th>Monto</th>
             <th>Interés (%)</th>
@@ -482,48 +488,59 @@
             return;
         }
 
-        const usuarios = {};
-        lista.forEach(p => {
-            if (!usuarios[p.user_id]) usuarios[p.user_id] = { user: p.user, prestamos: [] };
-            usuarios[p.user_id].prestamos.push(p);
-        });
+         const usuarios = {};
+    lista.forEach(p => {
+        if (!usuarios[p.user_id]) usuarios[p.user_id] = { user: p.user, prestamos: [] };
+        usuarios[p.user_id].prestamos.push(p);
+    });
 
-        for (const userId in usuarios) {
-            const { user, prestamos } = usuarios[userId];
-            const headerRow = `<tr class="table-primary">
-                <td colspan="12" class="fw-bold">Usuario: ${user.name} ${user.apellido_paterno}</td>
+
+       for (const userId in usuarios) {
+        const { user, prestamos } = usuarios[userId];
+        tbody.innerHTML += `
+            <tr class="table-primary">
+                <td colspan="13" class="fw-bold">
+                    Usuario: ${user.name} ${user.apellido_paterno}
+                </td>
             </tr>`;
-            tbody.innerHTML += headerRow;
 
-            const grupos = {};
-            prestamos.forEach(p => {
-                if (!grupos[p.numero_prestamo]) grupos[p.numero_prestamo] = [];
-                grupos[p.numero_prestamo].push(p);
+        // 👉 agrupamos por número de préstamo
+        const grupos = {};
+        prestamos.forEach(p => {
+            if (!grupos[p.numero_prestamo]) grupos[p.numero_prestamo] = [];
+            grupos[p.numero_prestamo].push(p);
+        });
+           for (const num in grupos) {
+
+            // 1️⃣  Ordenamos versiones: última primero
+            grupos[num].sort((a, b) => b.item_prestamo - a.item_prestamo);
+
+            grupos[num].forEach((p, idx) => {
+                const esUltima = (idx === 0);                     // ← clave
+               const grupoId = `prestamo_${p.user_id}_${p.numero_prestamo}`; // usado por los checks
+
+                tbody.innerHTML += `
+                    <tr ${p.descripcion === 'cancelado' ? 'class="table-secondary"' : ''}>
+                        <td>${p.numero_prestamo}</td>
+                        <td>${p.item_prestamo}</td>
+                        <td>${user.name} ${user.apellido_paterno}</td>
+                        <td>S/. ${Number(p.monto).toFixed(2)}</td>
+                        <td>${p.interes}%</td>
+                        <td>S/. ${Number(p.interes_pagar).toFixed(2)}</td>
+                        <td>${formatDate(p.fecha_inicio)}</td>
+                        <td>${formatDate(p.fecha_fin)}</td>
+                        <td>${capitalize(p.estado)}</td>
+                        <td>${p.descripcion ?? ''}</td>
+
+                        <!-- Acciones, Diferencia y Cancelar SOLO para la última versión -->
+                        <td>${esUltima ? acciones(p.id)              : ''}</td>
+                        <td>${esUltima ? diferenciaInput(grupoId, p) : checkCancelado(grupoId, p)}</td>
+                        <td>${esUltima ? botonCancelar(p.id)         : ''}</td>
+                    </tr>`;
             });
-
-            for (const num in grupos) {
-                grupos[num].forEach((p, i) => {
-                    const grupoId = p.numero_prestamo + '_' + p.item_prestamo;
-                    tbody.innerHTML += `
-                        <tr>
-                            <td>${p.numero_prestamo}</td>
-                            <td>${user.name} ${user.apellido_paterno}</td>
-                            <td>S/. ${parseFloat(p.monto).toFixed(2)}</td>
-                            <td>${p.interes}%</td>
-                            <td>S/. ${parseFloat(p.interes_pagar).toFixed(2)}</td>
-                            <td>${formatDate(p.fecha_inicio)}</td>
-                            <td>${formatDate(p.fecha_fin)}</td>
-                            <td>${capitalize(p.estado)}</td>
-                            <td>${p.descripcion ?? ''}</td>
-                            <td>${i === 0 ? acciones(p.id) : ''}</td>
-                            <td>${i === 0 ? diferenciaInput(grupoId, p) : checkCancelado(grupoId, p)}</td>
-                            <td>${i === 0 ? botonCancelar(p.id) : ''}</td>
-                        </tr>
-                    `;
-                });
-            }
         }
     }
+}
 
     function acciones(id) {
         return `
