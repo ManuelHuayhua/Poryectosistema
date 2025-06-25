@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\PrestamoPendienteController;
 use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\Admin\ReportePrestamosController;
 use App\Http\Controllers\Admin\ConfiguracionController;
+use App\Http\Controllers\Admin\GraficoAdminController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -27,25 +28,37 @@ Route::get('/', function () {
 });
 
 
+
 Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
 Route::post('/register', [RegisterController::class, 'register']);
 
-
 Auth::routes(['register' => false]);
+
+// ---- Rutas protegidas ----
+Route::middleware('auth')->group(function () {
+  
 Route::get('/home', [HomeController::class, 'index'])->name('home')->middleware('auth');
+
 // Ruta del panel principal del usuario después de iniciar sesión
-
-
-
-
 // Ruta para que el usuario pueda solicitar un préstamo
 Route::post('/solicitar-prestamo', [PrestamoController::class, 'store'])->name('prestamo.store');
 Route::post('/prestamos/{id}/notificar-pago', [App\Http\Controllers\HomeController::class, 'notificarPago'])->name('prestamos.notificar_pago');
 Route::post('/prestamo/{id}/marcar-leido', [HomeController::class, 'marcarLeido'])->name('admin.marcar_leido');
-
-
-
 Route::get('/reporteusuarios', [ReporteUserController::class, 'index'])->name('reporteusuarios.index');
+
+
+});
+
+
+
+
+
+
+
+
+
+
+
 
 // Ruta para que el ADMIN vea todos los préstamos (pendientes, aprobados, rechazados)
 Route::get('/admin', [PrestamoController::class, 'indexAdmin'])->middleware('auth');
@@ -103,6 +116,9 @@ Route::delete('/admin/configuraciones/{id}/eliminar', [ConfiguracionController::
 Route::get('/admin/prestamos/crear', [PrestamoController::class, 'crearDesdeAdmin'])->name('admin.prestamos.crear');
 Route::post('/admin/prestamos', [PrestamoController::class, 'storeDesdeAdmin'])->name('admin.prestamos.store');
 
+//grafico-admin
+Route::get('/admin/graficos', [GraficoAdminController::class, 'index'])
+     ->name('admin.graficos');
 });
 
 

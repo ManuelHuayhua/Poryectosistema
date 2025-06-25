@@ -88,8 +88,10 @@ $todosPrestamosAprobados = Prestamo::joinSub($subquery, 'ultimos', function ($jo
 
 // Filtrar solo los que vencen en los próximos 10 días
 $prestamosAprobados = $todosPrestamosAprobados->filter(function ($prestamo) use ($hoy, $limite) {
-    return $prestamo->fecha_fin >= $hoy && $prestamo->fecha_fin <= $limite;
-});
+    // Garantizamos que trabajamos con Carbon
+    $fin = Carbon::parse($prestamo->fecha_fin)->startOfDay();
+    return $fin->between($hoy, $limite);          // inclusive
+})->values();   // re-indexa la colección
 
     
     $configuraciones = DB::table('configuraciones')->get();

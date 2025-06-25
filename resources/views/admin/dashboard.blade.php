@@ -161,16 +161,43 @@
     </div>
 
     <nav class="sidebar-nav">
-        <div class="nav-item">
-            <a href="#" class="nav-link"><i class="fas fa-home"></i><span>Inicio</span></a>
-        </div>
-        <div class="nav-item">
-            <a href="#" class="nav-link"><i class="fas fa-user-circle"></i><span>Perfil</span></a>
-        </div>
-        <div class="nav-item">
-            <a href="#" class="nav-link"><i class="fas fa-download"></i><span>Descargas</span></a>
-        </div>
-        <!-- Más links aquí -->
+        <div class="nav-item ">
+        <a href="{{ route('indexAdmin') }}" class="nav-link  active">
+            <i class="fas fa-home"></i><span>Inicio</span>
+        </a>
+    </div>
+    <div class="nav-item">
+        <a href="{{ route('admin.createuser') }}" class="nav-link">
+            <i class="fas fa-users-cog"></i><span>Usuario y Roles</span>
+        </a>
+    </div>
+    <div class="nav-item">
+        <a href="{{ route('admin.prestamos.pendientes') }}" class="nav-link">
+            <i class="fas fa-file-download"></i><span>Descargar Contrato</span>
+        </a>
+    </div>
+    <div class="nav-item">
+        <a href="{{ route('admin.configuraciones') }}" class="nav-link">
+            <i class="fas fa-cogs"></i><span>Configurar</span>
+        </a>
+    </div>
+    <div class="nav-item">
+        <a href="{{ route('admin.prestamos.crear') }}" class="nav-link">
+            <i class="fas fa-file-signature"></i><span>Generar Préstamo</span>
+        </a>
+    </div>
+    <div class="nav-item">
+        <a href="{{ route('admin.reporte.prestamos') }}" class="nav-link">
+            <i class="fas fa-chart-line"></i><span>Generar Reportes</span>
+        </a>
+    </div>
+    <div class="nav-item">
+        <a href="{{ route('admin.graficos') }}" class="nav-link">
+            <i class="fas fa-chart-bar"></i><span>Gráficos</span>
+        </a>
+    </div>
+
+    <!-- Más links aquí -->
 
         <div class="nav-item mt-auto">
             <a href="{{ route('logout') }}" class="nav-link"
@@ -196,9 +223,7 @@
         </div>
     @endif
 
-    <a href="{{ route('admin.createuser') }}" class="btn btn-primary mb-4">
-        <i class="fas fa-user-plus"></i> Crear nuevo usuario
-    </a>
+  
 
     {{-- Préstamos pendientes --}}
     <h4 class="mt-4">Solicitudes de Préstamos Pendientes</h4>

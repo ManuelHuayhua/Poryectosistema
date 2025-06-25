@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Prestamo;
-
+use Carbon\Carbon;   
 class HomeController extends Controller
 {
     /**
@@ -27,20 +27,34 @@ class HomeController extends Controller
 {
     $user = Auth::user();
 
-    // Agrupar por numero_prestamo y seleccionar el último por fecha_inicio
-    $prestamos = Prestamo::where('user_id', $user->id)
-        ->orderBy('fecha_inicio', 'asc') // o fecha_fin si prefieres
-        ->get()
-        ->groupBy('numero_prestamo')
-        ->map(function ($grupo) {
-            return $grupo->first(); // solo el último de cada grupo
-        });
+   /* === 1. Préstamos del más nuevo al más viejo ============== */
+        $prestamos = Prestamo::where('user_id', $user->id)
+            ->orderBy('fecha_inicio', 'desc')      // 1️⃣ orden principal
+            ->get()
+            ->groupBy('numero_prestamo')
+            ->map(function ($grupo) {              // 2️⃣ para cada número
+                // Toma el último registro del grupo (el más reciente)
+                return $grupo->sortByDesc('fecha_inicio')->first();
+            })
+            ->sortByDesc('fecha_inicio');          // 3️⃣ vuelve a ordenar la colección
 
-    return view('home', [
-        'user' => $user,
-        'prestamos' => $prestamos
-    ]);
-}
+        /* === 2. ¿Es su cumpleaños hoy? ============================ */
+        $cumpleaniosHoy = false;
+        if ($user->fecha_nacimiento) {
+            $cumpleaniosHoy = Carbon::parse($user->fecha_nacimiento)
+                                    ->isSameDay(Carbon::today());
+        }
+
+        /* === 3. Préstamos que vencen en <=10 días ================= */
+        $proximosVencer = Prestamo::where('user_id', $user->id)
+            ->whereBetween('fecha_fin', [Carbon::today(), Carbon::today()->addDays(10)])
+            ->orderBy('fecha_fin', 'asc')
+            ->get();
+
+        return view('home', compact(
+            'user', 'prestamos', 'cumpleaniosHoy', 'proximosVencer'
+        ));
+    }
 
 public function notificarPago($id)
 {
