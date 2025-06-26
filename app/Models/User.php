@@ -33,6 +33,13 @@ namespace App\Models;
         'password',
         'is_admin',
         'dni'   ,
+        'inicio',
+    'usuarios',
+    'des_contrato',
+    'configuracion',
+    'ge_prestamo',
+    'ge_reportes',
+    'grafica',
         ];
 
         /**

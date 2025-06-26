@@ -429,7 +429,7 @@
    {{-- Préstamos Aprobados --}}
 {{-- Préstamos Aprobados --}}
 {{-- Préstamos Aprobados --}}
-<h4 class="mt-5 text-success">Préstamos proximo a Vnecer</h4>
+<h4 class="mt-5 text-success">Préstamos proximo a Vencer</h4>
 
 <div class="form-check mb-3">
     <input class="form-check-input" type="checkbox" id="mostrarTodosAprobados" onchange="togglePrestamosAprobados()">

@@ -425,13 +425,22 @@
     </div>
 
     <!-- Tabla de préstamos -->
-    <div class="table-container fade-in">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h4 class="mb-0">
-                <i class="fas fa-list-alt text-primary me-2"></i>
-                Historial de Préstamos
-            </h4>
+   <div class="table-container fade-in">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
+        <h4 class="mb-2 mb-md-0">
+            <i class="fas fa-list-alt text-primary me-2"></i>
+            Historial de Préstamos
+        </h4>
+        <div class="d-flex align-items-center gap-2">
             <span class="badge bg-info">{{ $prestamosOrdenados->count() }} préstamos</span>
+            <button onclick="location.reload()" class="btn btn-sm btn-outline-primary" title="Actualizar página">
+                Actualizar <i class="fas fa-sync-alt"></i>
+            </button>
+        </div>
+   
+
+
+            
         </div>
         
         <div class="table-responsive">

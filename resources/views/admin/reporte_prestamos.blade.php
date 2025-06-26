@@ -879,13 +879,13 @@
                     <i class="fas fa-flag me-1"></i>Estado
                 </label>
                 <select id="estado" name="estado" class="form-control">
-                    <option value="">Todos</option>
-                    <option value="pagado" {{ request('estado') == 'pagado' ? 'selected' : '' }}>Pagado</option>
-                    <option value="aprobado" {{ request('estado') == 'aprobado' ? 'selected' : '' }}>Aprobado</option>
-                    <option value="pendiente" {{ request('estado') == 'pendiente' ? 'selected' : '' }}>Pendiente</option>
-                    <option value="rechazado" {{ request('estado') == 'rechazado' ? 'selected' : '' }}>Rechazado</option>
-                    <option value="activo" {{ request('estado') == 'activo' ? 'selected' : '' }}>Activo</option>
-                </select>
+    <option value="">Todos</option>
+    <option value="pagado"    {{ request('estado') == 'pagado'    ? 'selected' : '' }}>Pagado</option>
+    <option value="aprobado"  {{ request('estado') == 'aprobado'  ? 'selected' : '' }}>Aprobado</option>
+    <option value="pendiente" {{ request('estado') == 'pendiente' ? 'selected' : '' }}>Pendiente</option>
+    <option value="rechazado" {{ request('estado') == 'rechazado' ? 'selected' : '' }}>Rechazado</option>
+   
+</select>
             </div>
 
             <div class="col-xl-1 col-lg-2 col-md-2 col-sm-3 d-grid filter-col">
@@ -1049,6 +1049,7 @@
                                         <thead>
                                             <tr>
                                                 <th><i class="fas fa-hashtag me-1"></i>Ítem</th>
+                                                  <th><i class="fas fa-hashtag me-1"></i>Junta</th>
                                                 <th><i class="fas fa-money-bill me-1"></i>Monto</th>
                                                 <th><i class="fas fa-percentage me-1"></i>Interés</th>
                                                 <th><i class="fas fa-calculator me-1"></i>Total</th>
@@ -1062,6 +1063,7 @@
                                             @foreach($items as $prestamo)
                                                 <tr>
                                                     <td class="fw-bold">{{ $prestamo->item_prestamo }}</td>
+                                                    <td class="fw-bold">{{ $prestamo->n_junta }}</td>
                                                     <td class="text-success fw-bold">S/ {{ number_format($prestamo->monto, 2) }}</td>
                                                     <td>{{ $prestamo->interes }}%</td>
                                                     <td class="text-primary fw-bold">S/ {{ number_format($prestamo->interes_pagar, 2) }}</td>
@@ -1086,6 +1088,15 @@
                                                     <td>{{ $prestamo->descripcion ?: '—' }}</td>
                                                 </tr>
                                             @endforeach
+                                            <tfoot>
+    <tr>
+        <td colspan="4" class="text-end fw-bold">Total acumulado:</td>
+        <td class="text-primary fw-bold">
+            S/ {{ number_format($items->sum('interes_pagar'), 2) }}
+        </td>
+        <td colspan="4"></td>
+    </tr>
+</tfoot>
                                         </tbody>
                                     </table>
                                 </div>

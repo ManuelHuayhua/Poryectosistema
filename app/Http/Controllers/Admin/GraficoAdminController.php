@@ -6,11 +6,20 @@ use App\Models\Prestamo;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class GraficoAdminController extends Controller
 {
     public function index()
     {
+          if (
+        ! Auth::check() ||                // no ha iniciado sesión
+        ! Auth::user()->is_admin ||       // no es admin
+        ! Auth::user()->grafica            
+    ) {
+        abort(403, 'Acceso no autorizado.');
+    }
+
         // ① Cajas resumen
         $totalUsuarios  = User::count();               // incluye admins
         $totalClientes  = User::where('is_admin', 0)->count();

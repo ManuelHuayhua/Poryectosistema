@@ -1,15 +1,24 @@
 <?php
 
 namespace App\Http\Controllers\Admin;
-
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 class UserController extends Controller
 {
+    
     public function create()
 {
+    if (
+        ! Auth::check() ||                // no ha iniciado sesión
+        ! Auth::user()->is_admin ||       // no es admin
+        ! Auth::user()->usuarios            // admin pero sin permiso de "inicio"
+    ) {
+        abort(403, 'Acceso no autorizado.');
+    }
+
     $usuarios = User::all(); // 👈 agregamos esto
     return view('admin.createuser', compact('usuarios'));
 }
@@ -101,6 +110,13 @@ public function updateUser(Request $request)
         'direccion' => 'nullable|string|max:255',
         'tipo_origen' => 'nullable|string|max:50',
          'is_admin' => 'required|in:0,1',
+         'inicio'        => 'required|in:0,1',
+        'usuarios'      => 'required|in:0,1',
+        'des_contrato'  => 'required|in:0,1',
+        'configuracion' => 'required|in:0,1',
+        'ge_prestamo'   => 'required|in:0,1',
+        'ge_reportes'   => 'required|in:0,1',
+        'grafica'       => 'required|in:0,1',
     ]);
 
     $usuario = User::findOrFail($request->id);
@@ -118,6 +134,13 @@ public function updateUser(Request $request)
         'direccion' => $request->direccion,
         'tipo_origen' => $request->tipo_origen,
           'is_admin' => $request->is_admin,
+          'inicio'        => $request->boolean('inicio'),
+        'usuarios'      => $request->boolean('usuarios'),
+        'des_contrato'  => $request->boolean('des_contrato'),
+        'configuracion' => $request->boolean('configuracion'),
+        'ge_prestamo'   => $request->boolean('ge_prestamo'),
+        'ge_reportes'   => $request->boolean('ge_reportes'),
+        'grafica'       => $request->boolean('grafica'),
         
     ]);
 

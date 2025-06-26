@@ -593,8 +593,316 @@
                 </div>
             </div>
         </div>
+
+{{-- Alertas --}}
+@if(session('success'))
+    <div class="alert alert-success">{{ session('success') }}</div>
+@endif
+
+@if($errors->any())
+    <div class="alert alert-danger">
+        @foreach ($errors->all() as $e) <div>{{ $e }}</div> @endforeach
+    </div>
+@endif
+
+        {{-- Periodos de Caja --}}
+{{-- Header de Caja --}}
+{{-- Header de Caja --}}
+{{-- Burbuja principal: Gestión de Períodos de Caja --}}
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">
+                <i class="fas fa-cash-register me-2 text-primary"></i>
+                Gestión de Períodos de Caja
+            </h4>
+            
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#periodoModal">
+                <i class="fas fa-plus me-1"></i> Configurar Período
+            </button>
+        </div>
     </div>
 </div>
+
+{{-- 3 Burbujas informativas debajo --}}
+@php
+    $periodoActivo = $periodos->first(function($p) {
+        return now()->between($p->periodo_inicio, $p->periodo_fin);
+    });
+    $ultimoPeriodo   = $periodos->sortByDesc('periodo_fin')->first();
+
+    // Sugerir el día siguiente (si no hay períodos, queda vacío)
+    $sugerido_inicio = $ultimoPeriodo
+        ? \Carbon\Carbon::parse($ultimoPeriodo->periodo_fin)->addDay()->format('Y-m-d')
+        : '';
+@endphp
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card border-primary">
+            <div class="card-body text-center py-3">
+                <i class="fas fa-list-ol text-primary mb-2" style="font-size: 1.5rem;"></i>
+                <h6 class="card-title mb-1">Total Períodos</h6>
+                <span class="badge bg-primary fs-6">{{ $periodos->count() }}</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card border-success">
+            <div class="card-body text-center py-3">
+                <i class="fas fa-calendar-check text-success mb-2" style="font-size: 1.5rem;"></i>
+                <h6 class="card-title mb-1">Período Actual</h6>
+                @if($periodoActivo)
+                    <small class="text-success fw-semibold">
+                        {{ \Carbon\Carbon::parse($periodoActivo->periodo_inicio)->format('d/m/Y') }} - 
+                        {{ \Carbon\Carbon::parse($periodoActivo->periodo_fin)->format('d/m/Y') }}
+                    </small>
+                @else
+                    <span class="badge bg-warning">Sin período activo</span>
+                @endif
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card border-info">
+            <div class="card-body text-center py-3">
+                <i class="fas fa-wallet text-info mb-2" style="font-size: 1.5rem;"></i>
+                <h6 class="card-title mb-1">Saldo Actual</h6>
+                @if($periodoActivo)
+                    <span class="badge bg-info fs-6">S/ {{ number_format($periodoActivo->saldo_actual, 2) }}</span>
+                @else
+                    <span class="badge bg-secondary fs-6">S/ 0.00</span>
+                @endif
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- Alertas --}}
+@if(session('success'))
+    <div class="alert alert-success">{{ session('success') }}</div>
+@endif
+
+@if($errors->any())
+    <div class="alert alert-danger">
+        @foreach ($errors->all() as $e) <div>{{ $e }}</div> @endforeach
+    </div>
+@endif
+
+{{-- Tabla de Períodos --}}
+@if($periodos->isEmpty())
+    <div class="alert alert-info mt-4">Aún no se ha creado ningún período de caja.</div>
+@else
+    <div class="card mt-4">
+        <div class="card-header fw-semibold">
+            Períodos de Caja
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-striped align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Período</th>
+                        <th>Monto inicial (S/)</th>
+                        <th>Saldo actual (S/)</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach ($periodos as $i => $p)
+                        @php
+                            $activo = now()->between($p->periodo_inicio, $p->periodo_fin);
+                        @endphp
+                        <tr class="{{ $activo ? 'table-success' : '' }}">
+                            <td>{{ $i + 1 }}</td>
+                            <td>
+                                {{ \Carbon\Carbon::parse($p->periodo_inicio)->format('d/m/Y') }}
+                                –
+                                {{ \Carbon\Carbon::parse($p->periodo_fin)->format('d/m/Y') }}
+                            </td>
+                            <td>{{ number_format($p->monto_inicial, 2) }}</td>
+                            <td>{{ number_format($p->saldo_actual, 2) }}</td>
+                            <td>
+                                <span class="badge {{ $activo ? 'bg-success' : 'bg-secondary' }}">
+                                    {{ $activo ? 'Activo' : 'Cerrado' }}
+                                </span>
+                            </td>
+                            <td class="text-nowrap">
+    <!-- Botón Editar -->
+    <button class="btn btn-sm btn-warning"
+            data-bs-toggle="modal"
+            data-bs-target="#editarPeriodoModal"
+            onclick="cargarDatosPeriodo({{ $p }})">
+        <i class="fas fa-edit"></i>
+    </button>
+
+    <!-- Botón Eliminar -->
+    <button  class="btn btn-sm btn-danger"
+         data-bs-toggle="modal"
+         data-bs-target="#eliminarPeriodoModal"
+         onclick="prepararEliminar({{ $p }})">
+    <i class="fas fa-trash"></i>
+</button>
+    </form>
+</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+@endif
+
+{{-- Modal para crear período --}}
+<div class="modal fade" id="periodoModal" tabindex="-1" aria-labelledby="periodoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="periodoModalLabel">
+                    <i class="fas fa-cog me-2"></i>Configurar Período de Caja
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form action="{{ route('admin.configuracion.caja-periodo.store') }}" method="POST" id="periodoForm">
+                    @csrf
+                    <div class="mb-3">
+                        <label class="form-label">Monto inicial (S/)</label>
+                        <input type="number" step="0.01" name="monto_inicial" class="form-control" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Período inicio</label>
+                        <input type="date" name="periodo_inicio" class="form-control" required value="{{ $sugerido_inicio }}" @if($sugerido_inicio) min="{{ $sugerido_inicio }}" @endif>
+
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Período fin</label>
+                        <input type="date" name="periodo_fin" class="form-control" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" form="periodoForm" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i> Crear Período
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal editar periodo -->
+<div class="modal fade" id="editarPeriodoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <form method="POST" id="editarPeriodoForm">
+            @csrf
+            @method('PUT')
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Editar Período</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <input type="hidden" id="editar_id">
+
+                    <div class="mb-3">
+                        <label class="form-label">Monto inicial (S/)</label>
+                        <input type="number" step="0.01" name="monto_inicial" id="editar_monto_inicial" class="form-control" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Inicio</label>
+                        <input type="date" name="periodo_inicio" id="editar_periodo_inicio" class="form-control" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Fin</label>
+                        <input type="date" name="periodo_fin" id="editar_periodo_fin" class="form-control" required>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    function cargarDatosPeriodo(periodo) {
+        document.getElementById('editar_id').value = periodo.id;
+        document.getElementById('editar_monto_inicial').value = periodo.monto_inicial;
+        document.getElementById('editar_periodo_inicio').value = periodo.periodo_inicio;
+        document.getElementById('editar_periodo_fin').value = periodo.periodo_fin;
+
+        // Cambiar acción del formulario
+        document.getElementById('editarPeriodoForm').action = '/admin/configuracion/caja-periodo/' + periodo.id;
+    }
+</script>
+
+<!-- Modal eliminar período -->
+<div class="modal fade" id="eliminarPeriodoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <form method="POST" id="eliminarPeriodoForm">
+            @csrf
+            @method('DELETE')
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Eliminar Período
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <p class="mb-0">
+                        ¿Estás seguro de que deseas eliminar el período<br>
+                        <strong id="eliminar_periodo_rango"></strong>?
+                    </p>
+                    <small class="text-muted">Esta acción no se puede deshacer.</small>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-1"></i> Eliminar
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    function prepararEliminar(periodo) {
+        // Texto del rango
+        const rango = `${formatear(periodo.periodo_inicio)} – ${formatear(periodo.periodo_fin)}`;
+        document.getElementById('eliminar_periodo_rango').textContent = rango;
+
+        // Acción del formulario
+        document.getElementById('eliminarPeriodoForm').action =
+            `/admin/configuracion/caja-periodo/${periodo.id}`;
+    }
+
+    // Formatea YYYY-MM-DD a DD/MM/YYYY
+    function formatear(fechaIso) {
+        const [y, m, d] = fechaIso.split('-');
+        return `${d}/${m}/${y}`;
+    }
+</script>
+
+
 
 <!-- Modal Nueva Configuración -->
 <div class="modal fade" id="configModal" tabindex="-1">
@@ -773,6 +1081,11 @@
         });
     });
 </script>
+
+
+
+
+
 
 </body>
 </html>

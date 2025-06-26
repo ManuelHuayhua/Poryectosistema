@@ -46,7 +46,11 @@ class PrestamoController extends Controller
     // ADMIN - Ver préstamos pendientes
 public function indexAdmin()
 {
-    if (!Auth::user()->is_admin) {
+    if (
+        ! Auth::check() ||                // no ha iniciado sesión
+        ! Auth::user()->is_admin ||       // no es admin
+        ! Auth::user()->inicio            // admin pero sin permiso de "inicio"
+    ) {
         abort(403, 'Acceso no autorizado.');
     }
 
@@ -484,59 +488,85 @@ public function aplicarDiferencia(Request $request, $id)
 
 public function cancelar($id)
 {
-    $prestamo = Prestamo::findOrFail($id);
-    $numeroPrestamo = $prestamo->numero_prestamo;
-    $userId = $prestamo->user_id;
+    DB::transaction(function () use ($id) {
 
-    // Obtener la fecha actual
-    $fechaPago = now();
+        
+        // 1) Traemos la fila que el usuario marcó
+        $prestamo      = Prestamo::findOrFail($id);
+        $numero        = $prestamo->numero_prestamo;
+        $userId        = $prestamo->user_id;
+        $fechaPago     = now();      // Puedes cambiar por Carbon::now() si prefieres
 
-    // Actualizar solo los préstamos del usuario con ese número de préstamo
-    Prestamo::where('numero_prestamo', $numeroPrestamo)
-        ->where('user_id', $userId)
-        ->update([
-            'estado' => 'pagado',
-            'fecha_pago' => $fechaPago,
-        ]);
+        /* 2) Marcamos TODAS las versiones del mismo préstamo como pagadas.
+              No tocamos su descripción, así queda intacta */
+        Prestamo::where('numero_prestamo', $numero)
+                ->where('user_id', $userId)
+                ->update([
+                    'estado'     => 'pagado',
+                    'fecha_pago' => $fechaPago,
+                ]);
 
-    return redirect()->back()->with('success', 'El préstamo fue cancelado correctamente.');
+        /* 3) Solo a la fila seleccionada le cambiamos la descripción
+              (si además quieres actualizar otros campos, hazlo aquí) */
+        $prestamo->descripcion = 'cancelado';
+        $prestamo->save();          // Guarda únicamente esa fila
+    });
+
+    return back()->with('success', 'El préstamo fue cancelado correctamente.');
 }
 
 
 // generar prestamo para el cliente
 public function crearDesdeAdmin()
 {
+    if (
+        ! Auth::check() ||                // no ha iniciado sesión
+        ! Auth::user()->is_admin ||       // no es admin
+        ! Auth::user()->ge_prestamo      
+    ) {
+        abort(403, 'Acceso no autorizado.');
+    }
+
     $usuarios = User::where('is_admin', 0)->get();
 
     return view('admin.generar_prestamo', compact('usuarios'));
 }
 
-public function storeDesdeAdmin(Request $request)
+public function storeCajaPeriodo(Request $request)
 {
     $request->validate([
-        'user_id' => 'required|exists:users,id',
-        'monto' => 'required|numeric|min:1',
+        'monto_inicial'  => 'required|numeric|min:0',
+        'periodo_inicio' => 'required|date',
+        'periodo_fin'    => 'required|date|after_or_equal:periodo_inicio',
     ]);
 
-    $user = User::findOrFail($request->user_id);
+    /* ─────────────────────────────────────────────────────────────
+     |  Anti-solape: se considera conflicto sólo si ambos períodos
+     |  comparten al menos un día.  Ejemplo:
+     |      Existente: 01-06-25 → 28-06-25
+     |      Nuevo:     28-06-25 → 30-06-25   ❌  (colisión)
+     |      Nuevo:     29-06-25 → 30-06-25   ✅  (sin colisión)
+     * ────────────────────────────────────────────────────────────*/
+    $yaExiste = CajaPeriodo::where('periodo_inicio', '<',  $request->periodo_fin)  // <  fin nuevo
+                           ->where('periodo_fin',   '>',  $request->periodo_inicio) // >  inicio nuevo
+                           ->exists();
 
-    // Obtener el número de préstamo siguiente
-    $ultimoPrestamo = Prestamo::where('user_id', $user->id)
-                              ->orderBy('numero_prestamo', 'desc')
-                              ->first();
+    if ($yaExiste) {
+        return back()->withErrors(
+            'Ya existe un período que se superpone con ese rango de fechas.'
+        );
+    }
 
-    $numeroPrestamo = $ultimoPrestamo ? $ultimoPrestamo->numero_prestamo + 1 : 1;
+    DB::transaction(function () use ($request) {
+        CajaPeriodo::create([
+            'monto_inicial'  => $request->monto_inicial,
+            'saldo_actual'   => $request->monto_inicial,
+            'periodo_inicio' => $request->periodo_inicio,
+            'periodo_fin'    => $request->periodo_fin,
+        ]);
+    });
 
-    // Crear préstamo
-    Prestamo::create([
-        'user_id' => $user->id,
-        'numero_prestamo' => $numeroPrestamo,
-        'item_prestamo' => 1,
-        'monto' => $request->monto,
-        'estado' => 'pendiente',
-    ]);
-
-    return redirect()->route('admin.prestamos.crear')->with('success', 'Préstamo registrado correctamente');
+    return back()->with('success', 'Período de caja creado correctamente.');
 }
 
 

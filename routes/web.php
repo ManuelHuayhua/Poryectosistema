@@ -110,6 +110,12 @@ Route::get('/admin/configuraciones', [ConfiguracionController::class, 'index'])-
   Route::post('/admin/configuraciones', [ConfiguracionController::class, 'store'])->name('admin.configuraciones.store');
   Route::post('/admin/configuraciones/{id}/actualizar', [ConfiguracionController::class, 'update'])->name('admin.configuraciones.update');
 Route::delete('/admin/configuraciones/{id}/eliminar', [ConfiguracionController::class, 'destroy'])->name('admin.configuraciones.destroy');
+Route::post('/admin/configuracion/caja-periodo', [ConfiguracionController::class, 'storeCajaPeriodo'])->name('admin.configuracion.caja-periodo.store');
+/*  Actualizar (PUT/PATCH)  */
+Route::match( ['put', 'patch'],'/admin/configuracion/caja-periodo/{id}',[ConfiguracionController::class, 'updateCajaPeriodo'])->name('admin.configuracion.caja-periodo.update');
+/*  Eliminar (DELETE)  */
+Route::delete('/admin/configuracion/caja-periodo/{id}',[ConfiguracionController::class, 'destroyCajaPeriodo'])->name('admin.configuracion.caja-periodo.destroy');
+
 
 
 // admin generar prestamo

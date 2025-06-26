@@ -728,13 +728,47 @@
               <input type="text" class="form-control" name="tipo_origen" id="edit_tipo_origen">
             </div>
 
-            <div class="col-md-6 mb-3">
-              <label for="edit_is_admin" class="form-label"><i class="fas fa-user-shield me-1"></i>¿Es administrador?</label>
-              <select class="form-select" name="is_admin" id="edit_is_admin">
-                <option value="0">No</option>
-                <option value="1">Sí</option>
-              </select>
-            </div>
+          {{-- ========= 1. SELECT is_admin (sin cambios) ========= --}}
+<div class="col-md-6 mb-3">
+  <label for="edit_is_admin" class="form-label">
+    <i class="fas fa-user-shield me-1"></i>¿Es administrador?
+  </label>
+  <select class="form-select" name="is_admin" id="edit_is_admin">
+    <option value="0">No</option>
+    <option value="1">Sí</option>
+  </select>
+</div>
+
+{{-- ========= 2. CONTENEDOR DE PERMISOS (añadimos id y d-none) ========= --}}
+<div id="admin-permissions" class="row g-3 d-none"><!-- NUEVO -->
+  <div class="col-12">
+    <h5 class="mt-3">Permisos de administrador</h5>
+  </div>
+
+  @php
+      $flags = [
+          'inicio'        => 'Inicio',
+          'usuarios'      => 'Usuarios y Roles',
+          'des_contrato'  => 'Des. Contrato',
+          'configuracion' => 'Configuración',
+          'ge_prestamo'   => 'Generar Préstamo',
+          'ge_reportes'   => 'Generar Reportes',
+          'grafica'       => 'Gráficos',
+      ];
+  @endphp
+
+  @foreach ($flags as $key => $label)
+      <div class="col-md-4 mb-2">
+          <div class="form-check form-switch">
+              <input type="hidden" name="{{ $key }}" value="0">
+              <input class="form-check-input" type="checkbox" id="edit_{{ $key }}" name="{{ $key }}" value="1">
+              <label class="form-check-label" for="edit_{{ $key }}">{{ $label }}</label>
+          </div>
+      </div>
+  @endforeach
+</div>
+
+
           </div>
         </div>
 
@@ -748,6 +782,20 @@
 </div>
 
 <script>
+    // Mostrar u ocultar los permisos según el valor del campo is_admin
+    function toggleAdminPerms() {
+        const isAdmin = document.getElementById('edit_is_admin').value == '1';
+        const permsContainer = document.getElementById('admin-permissions');
+        permsContainer.classList.toggle('d-none', !isAdmin);
+    }
+
+    // Escuchar el cambio del select "¿Es administrador?"
+    document.addEventListener('DOMContentLoaded', function () {
+        document.getElementById('edit_is_admin')
+            .addEventListener('change', toggleAdminPerms);
+    });
+
+    // Abrir el modal con los datos del usuario
     function openEditModal(usuario) {
         document.getElementById('edit_user_id').value = usuario.id;
         document.getElementById('edit_name').value = usuario.name;
@@ -764,7 +812,20 @@
         document.getElementById('edit_tipo_origen').value = usuario.tipo_origen;
         document.getElementById('edit_is_admin').value = usuario.is_admin ? 1 : 0;
 
-        var modal = new bootstrap.Modal(document.getElementById('editUserModal'));
+        // Permisos
+        document.getElementById('edit_inicio').checked        = usuario.inicio        == 1;
+        document.getElementById('edit_usuarios').checked      = usuario.usuarios      == 1;
+        document.getElementById('edit_des_contrato').checked  = usuario.des_contrato  == 1;
+        document.getElementById('edit_configuracion').checked = usuario.configuracion == 1;
+        document.getElementById('edit_ge_prestamo').checked   = usuario.ge_prestamo   == 1;
+        document.getElementById('edit_ge_reportes').checked   = usuario.ge_reportes   == 1;
+        document.getElementById('edit_grafica').checked       = usuario.grafica       == 1;
+
+        // Mostrar u ocultar los permisos según el valor de is_admin
+        toggleAdminPerms();
+
+        // Mostrar el modal
+        const modal = new bootstrap.Modal(document.getElementById('editUserModal'));
         modal.show();
     }
 </script>
