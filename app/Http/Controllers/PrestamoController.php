@@ -162,6 +162,32 @@ $prestamosNotificados = Prestamo::where('notificacion_pago', 1)
 $hayQuierenPagar = $prestamosNotificados->isNotEmpty();
 
 
+
+// ▸ Al inicio, justo después de calcular $hoy y $limite
+$inicioHoy = Carbon::today();            // 2025-06-26 00:00:00
+$finHoy    = Carbon::today()->endOfDay(); // 2025-06-26 23:59:59
+
+$hoy = Carbon::today();   // 2025-06-26
+
+// ① Sub-query: máximo item de cada préstamo
+$maxItemPorPrestamo = DB::table('prestamos')
+    ->select('numero_prestamo', 'user_id', DB::raw('MAX(item_prestamo) as max_item'))
+    ->groupBy('numero_prestamo', 'user_id');
+
+// ② Consulta principal
+$prestamosSinIniciar = Prestamo::joinSub($maxItemPorPrestamo, 'maxi', function ($join) {
+        $join->on('prestamos.numero_prestamo', '=', 'maxi.numero_prestamo')
+             ->on('prestamos.user_id',         '=', 'maxi.user_id')
+             ->on('prestamos.item_prestamo',   '=', 'maxi.max_item');  // solo el registro “más nuevo”
+    })
+    ->where('prestamos.estado', 'aprobado')
+    ->where('maxi.max_item', 1)                       // ← descarta si existe item 2, 3…
+    ->whereDate('prestamos.fecha_inicio', '>=', $hoy) // hoy o futuro
+    ->with('user')
+    ->orderBy('prestamos.fecha_inicio')               // primero los más cercanos a iniciar
+    ->orderBy('prestamos.numero_prestamo')
+    ->get();
+
     // Mostrar modal de cumpleaños si hay usuarios con cumpleaños en los próximos 10 días
     return view('admin.dashboard', compact(
         'prestamosPendientes',
@@ -175,12 +201,37 @@ $hayQuierenPagar = $prestamosNotificados->isNotEmpty();
        'usuariosConCumpleanos',
        'prestamosNotificados',
        'hayQuierenPagar',
-    
+       'prestamosSinIniciar',
+
     ));
     
 
     
 }
+
+public function actualizarMonto(Request $request, $id)
+{
+    if (!Auth::check() || !Auth::user()->is_admin) {
+        abort(403, 'Acceso no autorizado.');
+    }
+
+    $datos = $request->validate([
+        'monto' => ['required', 'numeric', 'min:0.01'],
+    ]);
+
+    $prestamo        = Prestamo::findOrFail($id);
+    $prestamo->monto = $datos['monto'];
+    $prestamo->save();
+
+    return back()->with('success', 'Monto actualizado correctamente.');
+}
+
+
+
+
+
+
+
 
     // ADMIN - Aprobar préstamo
 public function aprobar(Request $request, $id)
@@ -222,21 +273,33 @@ public function aprobar(Request $request, $id)
             ]);
         }
 
-        // Restamos **solo el principal** (o el total, si lo prefieres)
-        $periodo->decrement('saldo_actual', $prestamo->monto);
+       // 1️⃣  Restar el monto aprobado
+    $periodo->decrement('saldo_actual', $prestamo->monto);
 
-        $prestamo->update([
-            'interes'              => $request->interes,
-            'porcentaje_penalidad' => $request->penalidad,
-            'interes_pagar'        => $interesCalculado,
-            'fecha_inicio'         => $request->fecha_inicio,
-            'fecha_fin'            => $request->fecha_fin,
-            'estado'               => 'aprobado',
-            'n_junta'              => $request->has('es_junta')
-                                         ? $request->tipo_origen
-                                         : null,
-        ]);
-    });
+    // 2️⃣  Recargar el modelo para tener el nuevo saldo
+    $periodo->refresh();   // ahora $periodo->saldo_actual es el saldo_resultante
+
+    // 3️⃣  Registrar el movimiento
+    $periodo->movimientos()->create([
+        'monto'            => $prestamo->monto,          // lo que salió de caja
+        'saldo_resultante' => $periodo->saldo_actual,
+        'tipo'             => 'egreso',
+        'descripcion'      => 'Préstamo aprobado',       // o "monto del préstamo"
+    ]);
+
+    // 4️⃣  Actualizar el préstamo
+    $prestamo->update([
+        'interes'              => $request->interes,
+        'porcentaje_penalidad' => $request->penalidad,
+        'interes_pagar'        => $interesCalculado,
+        'fecha_inicio'         => $request->fecha_inicio,
+        'fecha_fin'            => $request->fecha_fin,
+        'estado'               => 'aprobado',
+        'n_junta'              => $request->has('es_junta')
+                                   ? $request->tipo_origen
+                                   : null,
+    ]);
+});
 
     return back()->with('success', 'Préstamo aprobado con éxito.');
 }
@@ -357,159 +420,291 @@ $grupoAnterior = Prestamo::where('numero_prestamo', $prestamoBase->numero_presta
 
 public function renovar($id)
 {
+    /* ────────────────────── 1. Validaciones previas ────────────────────── */
+
+    // 1️⃣ Traer el préstamo base
     $prestamoBase = Prestamo::findOrFail($id);
 
-    // Obtener el último item_prestamo usado por usuario y número de préstamo
+    // 2️⃣ Último item del mismo usuario y número de préstamo
     $ultimoItem = Prestamo::where('numero_prestamo', $prestamoBase->numero_prestamo)
-        ->where('user_id', $prestamoBase->user_id)
-        ->max('item_prestamo');
+                  ->where('user_id',        $prestamoBase->user_id)
+                  ->max('item_prestamo');
 
     if (!$ultimoItem) {
-        return redirect()->back()->with('error', 'No hay datos para renovar.');
+        return back()->with('error', 'No hay datos para renovar.');
     }
 
-    $nuevoItem = $ultimoItem + 1;
+    // 3️⃣ Grupo de registros del último item
+    $grupoAnterior = Prestamo::where('numero_prestamo', $prestamoBase->numero_prestamo)
+                    ->where('user_id',        $prestamoBase->user_id)
+                    ->where('item_prestamo',  $ultimoItem)
+                    ->orderBy('id')
+                    ->get();
 
-    // Obtener todas las filas del último item
-     $grupoAnterior = Prestamo::where('numero_prestamo', $prestamoBase->numero_prestamo)
-        ->where('user_id', $prestamoBase->user_id)
-        ->where('item_prestamo', $ultimoItem)
-        ->orderBy('id')
-        ->get();
-
-        if ($grupoAnterior->isEmpty()) {
-        return redirect()->back()->with('error', 'No se encontraron registros anteriores para renovar.');
+    if ($grupoAnterior->isEmpty()) {
+        return back()->with('error', 'No se encontraron registros anteriores para renovar.');
     }
-  
 
-    // Obtener fecha_inicio desde la fecha_fin del grupo anterior
-    $fechaInicio = $grupoAnterior->first()->fecha_fin;
-    $fechaFin = Carbon::parse($fechaInicio)->addDays(28);
+    /* ──────────────────── 2. Datos derivados para la renovación ──────────────────── */
 
+    $fechaInicio    = $grupoAnterior->first()->fecha_fin;             // nueva fecha_inicio
+    $fechaFin       = Carbon::parse($fechaInicio)->addDays(28);       // nueva fecha_fin
+    $interesACobrar = $grupoAnterior->first()->interes_pagar;         // interés del grupo
+    $nuevoItem      = $ultimoItem + 1;                                // siguiente item_prestamo
 
-    $grupoAnterior->first()->update(['descripcion' => 'renovar']);
+    /* ───────────── 3. Verificar que exista un período de caja activo ───────────── */
 
-    foreach ($grupoAnterior as $index => $registro) {
-        Prestamo::create([
-            'user_id' => $registro->user_id,
-            'numero_prestamo' => $registro->numero_prestamo,
-            'item_prestamo' => $nuevoItem,
-            'n_junta'=>$registro->n_junta,
-            'monto' => $registro->monto,
-            'interes' => $registro->interes,
-            'interes_pagar' => $registro->interes_pagar,
-            'porcentaje_penalidad' => $registro->porcentaje_penalidad,
-            'estado' => 'aprobado',
-            'descripcion' => $index === 0 ? null : $registro->descripcion,
-            'fecha_inicio' => $fechaInicio,
-            'fecha_fin' => $fechaFin,
-            'created_at' => now(),
-            'updated_at' => now(),
+    $hoy     = Carbon::today();
+    $periodo = CajaPeriodo::whereDate('periodo_inicio', '<=', $hoy)
+               ->whereDate('periodo_fin',    '>=', $hoy)
+               ->first();                         // 👈 sin “Fail”
+
+    if (!$periodo) {
+        return back()->with(
+            'error',
+            'No existe un período de caja activo que cubra la fecha ' . $hoy->format('d/m/Y') . '.'
+        );
+    }
+
+    /* ────────────────────────── 4. Transacción ────────────────────────── */
+
+    DB::transaction(function () use (
+        $periodo,
+        $grupoAnterior,
+        $fechaInicio,
+        $fechaFin,
+        $interesACobrar,
+        $nuevoItem
+    ) {
+        /* ---------- Caja ---------- */
+        $periodo->lockForUpdate();                       // 🔒 bloquea la fila mientras dure la tx
+        $periodo->increment('saldo_actual', $interesACobrar);
+
+        $periodo->movimientos()->create([
+            'monto'            => $interesACobrar,
+            'saldo_resultante' => $periodo->saldo_actual,
+            'tipo'             => 'ingreso',
+            'descripcion'      => 'Renovación de préstamo',
         ]);
-    }
 
-    return redirect()->back()->with('success', 'Préstamo renovado correctamente.');
+        /* ---------- Préstamos ---------- */
+        $grupoAnterior->first()->update(['descripcion' => 'renovar']);
+
+        foreach ($grupoAnterior as $index => $registro) {
+            Prestamo::create([
+                'user_id'             => $registro->user_id,
+                'numero_prestamo'     => $registro->numero_prestamo,
+                'item_prestamo'       => $nuevoItem,
+                'n_junta'             => $registro->n_junta,
+                'monto'               => $registro->monto,
+                'interes'             => $registro->interes,
+                'interes_pagar'       => $registro->interes_pagar,
+                'porcentaje_penalidad'=> $registro->porcentaje_penalidad,
+                'estado'              => 'aprobado',
+                'descripcion'         => $index === 0 ? null : $registro->descripcion,
+                'fecha_inicio'        => $fechaInicio,
+                'fecha_fin'           => $fechaFin,
+            ]);
+        }
+    });
+
+    return back()->with('success', 'Préstamo renovado correctamente.');
 }
 
 public function aplicarDiferencia(Request $request, $id)
 {
-    $prestamoBase = Prestamo::findOrFail($id);
-    $diferenciaMonto = floatval($request->input('diferencia_monto'));
-    $grupo = $request->input('grupo');
-    $item = $request->input('item');
-    $filasCanceladas = explode(',', $request->input('filas_canceladas'));
+    /* ───────── 1. Datos de entrada ───────── */
 
-    $nuevoItem = $item + 1;
-// 🔐 Filtrar también por user_id para evitar afectar a otros usuarios
-      $grupoAnterior = Prestamo::where('numero_prestamo', $grupo)
-        ->where('user_id', $prestamoBase->user_id)
-        ->where('item_prestamo', $item)
-        ->orderBy('id')
-        ->get();
+    $prestamoBase     = Prestamo::findOrFail($id);
+    $diferenciaMonto  = (float) $request->input('diferencia_monto');
+    $grupo            = $request->input('grupo');        // número de préstamo
+    $item             = (int)  $request->input('item');
+    $filasCanceladas  = array_filter(                    // elimina IDs vacíos
+        explode(',', $request->input('filas_canceladas')),
+        fn ($v) => trim($v) !== ''
+    );
+
+    /* ───────── 2. Grupo original ───────── */
+
+    $grupoAnterior = Prestamo::where('numero_prestamo', $grupo)
+                    ->where('user_id',       $prestamoBase->user_id)
+                    ->where('item_prestamo', $item)
+                    ->orderBy('id')
+                    ->get();
 
     if ($grupoAnterior->isEmpty()) {
-        return redirect()->back()->with('error', 'No se encontraron registros.');
+        return back()->with('error', 'No se encontraron registros.');
     }
 
     $primerPrestamo = $grupoAnterior->first();
-     // 🔐 Validación importante
+
     if ($diferenciaMonto > $primerPrestamo->monto) {
-        return redirect()->back()->with('error', 'El monto de diferencia no puede ser mayor al monto original.');
+        return back()->with('error', 'El monto de diferencia no puede ser mayor al monto original.');
     }
 
-    
-    // ✅ Marcar como cancelado solo las filas del usuario
-    if (!empty($filasCanceladas)) {
-        Prestamo::whereIn('id', $filasCanceladas)
-        ->where('user_id', $prestamoBase->user_id)
-        ->update(['descripcion' => 'cancelado']);
+    /* ───────── 3. Verificar período de caja activo ───────── */
+
+    $hoy     = Carbon::today();
+    $periodo = CajaPeriodo::whereDate('periodo_inicio', '<=', $hoy)
+               ->whereDate('periodo_fin', '>=', $hoy)
+               ->first();          // 👉 sin “Fail”
+
+    if (!$periodo) {
+        return back()->with(
+            'error',
+            'No existe un período de caja activo para la fecha ' . $hoy->format('d/m/Y') . '.'
+        );
     }
 
-    $fechaInicio = $grupoAnterior->first()->fecha_fin;
-    $fechaFin = Carbon::parse($fechaInicio)->addDays(28);
+    /* ───────── 4. Transacción ───────── */
 
-    
-    // Marcar la fila original como 'diferencia'
-    $primerPrestamo->descripcion = 'diferencia';
-    $primerPrestamo->save();
+    DB::transaction(function () use (
+        $periodo,
+        $grupoAnterior,
+        $primerPrestamo,
+        $prestamoBase,
+        $diferenciaMonto,
+        $filasCanceladas
+    ) {
+        /* 4.1 — Caja */
+        $periodo->lockForUpdate();           // 🔒
+        $interesBase       = $primerPrestamo->interes_pagar;
+        $interesCancelados = $filasCanceladas
+                             ? Prestamo::whereIn('id', $filasCanceladas)
+                               ->where('user_id', $prestamoBase->user_id)
+                               ->sum('interes_pagar')
+                             : 0;
+        $totalIngresoCaja  = $diferenciaMonto + $interesBase + $interesCancelados;
 
-    foreach ($grupoAnterior as $index => $registro) {
-        if (in_array($registro->id, $filasCanceladas)) {
-            continue; // Saltar filas canceladas
-        }
+        $periodo->increment('saldo_actual', $totalIngresoCaja);
 
-        $nuevoMonto = $registro->monto;
-        $descripcion  = $registro->descripcion;
-
-        // Solo en la primera fila: restar el monto
-        if ($index === 0) {
-            $nuevoMonto = max(0, $registro->monto - $diferenciaMonto);
-            $descripcion = '';
-        }
-
-        Prestamo::create([
-            'user_id' => $registro->user_id,
-            'numero_prestamo' => $registro->numero_prestamo,
-            'item_prestamo' => $nuevoItem,
-            'n_junta'=>$registro->n_junta,
-            'monto' => $nuevoMonto,
-            'interes' => $registro->interes,
-            'interes_pagar' => $nuevoMonto * ($registro->interes / 100),
-            'porcentaje_penalidad' => $registro->porcentaje_penalidad,
-            'estado' => 'aprobado',
-            'descripcion' => $descripcion,
-            'fecha_inicio' => $fechaInicio,
-            'fecha_fin' => $fechaFin,
+        $periodo->movimientos()->create([
+            'monto'            => $totalIngresoCaja,
+            'saldo_resultante' => $periodo->saldo_actual,
+            'tipo'             => 'ingreso',
+            'descripcion'      => 'Aplicación de diferencia',
         ]);
-    }
 
-    return redirect()->back()->with('success', 'Diferencia aplicada correctamente.');
+        /* 4.2 — Préstamos */
+
+        // a) Marcar filas canceladas
+        if ($filasCanceladas) {
+            Prestamo::whereIn('id', $filasCanceladas)
+                ->where('user_id', $prestamoBase->user_id)
+                ->update(['descripcion' => 'cancelado']);
+        }
+
+        // b) Nuevo item_prestamo
+        $nuevoItem    = $primerPrestamo->item_prestamo + 1;
+        $fechaInicio  = $primerPrestamo->fecha_fin;
+        $fechaFin     = Carbon::parse($fechaInicio)->addDays(28);
+
+        // Marcar la fila base
+        $primerPrestamo->update(['descripcion' => 'diferencia']);
+
+        foreach ($grupoAnterior as $index => $registro) {
+            if (in_array($registro->id, $filasCanceladas)) {
+                continue; // saltar filas canceladas
+            }
+
+            $nuevoMonto  = $registro->monto;
+            $descripcion = $registro->descripcion;
+
+            if ($index === 0) {                     // sólo la primera recibe la diferencia
+                $nuevoMonto  = max(0, $registro->monto - $diferenciaMonto);
+                $descripcion = '';                  // limpia descripción
+            }
+
+            Prestamo::create([
+                'user_id'              => $registro->user_id,
+                'numero_prestamo'      => $registro->numero_prestamo,
+                'item_prestamo'        => $nuevoItem,
+                'n_junta'              => $registro->n_junta,
+                'monto'                => $nuevoMonto,
+                'interes'              => $registro->interes,
+                'interes_pagar'        => $nuevoMonto * ($registro->interes / 100),
+                'porcentaje_penalidad' => $registro->porcentaje_penalidad,
+                'estado'               => 'aprobado',
+                'descripcion'          => $descripcion,
+                'fecha_inicio'         => $fechaInicio,
+                'fecha_fin'            => $fechaFin,
+            ]);
+        }
+    });
+
+    return back()->with('success', 'Diferencia aplicada correctamente.');
 }
 
 public function cancelar($id)
 {
-    DB::transaction(function () use ($id) {
+    /* ───────── 1. Datos base del préstamo ───────── */
 
-        
-        // 1) Traemos la fila que el usuario marcó
-        $prestamo      = Prestamo::findOrFail($id);
-        $numero        = $prestamo->numero_prestamo;
-        $userId        = $prestamo->user_id;
-        $fechaPago     = now();      // Puedes cambiar por Carbon::now() si prefieres
+    $prestamo = Prestamo::findOrFail($id);
+    $numero   = $prestamo->numero_prestamo;
+    $userId   = $prestamo->user_id;
+    $fechaPago = now();
 
-        /* 2) Marcamos TODAS las versiones del mismo préstamo como pagadas.
-              No tocamos su descripción, así queda intacta */
+    /* ───────── 2. Verificar período de caja activo ───────── */
+
+    $hoy     = Carbon::today();
+    $periodo = CajaPeriodo::whereDate('periodo_inicio', '<=', $hoy)
+               ->whereDate('periodo_fin',    '>=', $hoy)
+               ->first();          // 👉 sin “Fail”
+
+    if (!$periodo) {
+        return back()->with(
+            'error',
+            'No existe un período de caja activo para la fecha ' . $hoy->format('d/m/Y') . '.'
+        );
+    }
+
+    /* ───────── 3. Transacción ───────── */
+
+    DB::transaction(function () use (
+        $prestamo, $numero, $userId, $fechaPago, $periodo
+    ) {
+
+        /* 3.1 — Calcular montos */
+$capital     = $prestamo->monto;          // monto de ESTA fila
+$interesBase = $prestamo->interes_pagar;  // interés de ESTA fila
+
+/* ► 2. Otras penalidades: solo su interes_pagar */
+$interesPenalidades = Prestamo::where('numero_prestamo', $numero)
+    ->where('user_id', $userId)
+    ->whereIn('descripcion', ['penalidad', 'penalidad1', 'penalidad2'])
+    ->where('id', '!=', $prestamo->id)   // excluye ESTA fila
+    ->sum('interes_pagar');
+
+/* ► 3. Total a ingresar en caja */
+$totalIngresoCaja = $capital + $interesBase + $interesPenalidades;
+
+        /* 3.2 — Caja */
+
+        $periodoBloqueado = CajaPeriodo::whereKey($periodo->id)
+                            ->lockForUpdate()
+                            ->first();             // 🔒 bloqueado
+
+        $periodoBloqueado->increment('saldo_actual', $totalIngresoCaja);
+
+        $periodoBloqueado->movimientos()->create([
+            'monto'            => $totalIngresoCaja,
+            'saldo_resultante' => $periodoBloqueado->saldo_actual,
+            'tipo'             => 'ingreso',
+            'descripcion'      => 'Cancelación de préstamo',
+        ]);
+
+        /* 3.3 — Actualizar préstamos */
+
+        // Marcar todas las filas de ese préstamo como pagadas
         Prestamo::where('numero_prestamo', $numero)
-                ->where('user_id', $userId)
-                ->update([
-                    'estado'     => 'pagado',
-                    'fecha_pago' => $fechaPago,
-                ]);
+            ->where('user_id', $userId)
+            ->update([
+                'estado'     => 'pagado',
+                'fecha_pago' => $fechaPago,
+            ]);
 
-        /* 3) Solo a la fila seleccionada le cambiamos la descripción
-              (si además quieres actualizar otros campos, hazlo aquí) */
-        $prestamo->descripcion = 'cancelado';
-        $prestamo->save();          // Guarda únicamente esa fila
+        // Marcar la fila original como “cancelado”
+        $prestamo->update(['descripcion' => 'cancelado']);
     });
 
     return back()->with('success', 'El préstamo fue cancelado correctamente.');
@@ -531,6 +726,48 @@ public function crearDesdeAdmin()
 
     return view('admin.generar_prestamo', compact('usuarios'));
 }
+
+public function storeDesdeAdmin(Request $request)   // ← pon el nombre que usarás en la ruta
+{
+    // 1. Verificación de permisos (igual que en crearDesdeAdmin)
+    if (
+        !Auth::check() ||
+        !Auth::user()->is_admin ||
+        !Auth::user()->ge_prestamo
+    ) {
+        abort(403, 'Acceso no autorizado.');
+    }
+
+    // 2. Validar entrada
+    $request->validate([
+        'user_id' => 'required|exists:users,id',
+        'monto'   => 'required|numeric|min:1',
+    ]);
+
+    // 3. Usuario al que se le generará el préstamo
+    $user = User::findOrFail($request->user_id);
+
+    // 4. Calcular número de préstamo correlativo para ese usuario
+    $ultimoPrestamo = Prestamo::where('user_id', $user->id)
+                              ->orderByDesc('numero_prestamo')
+                              ->first();
+
+    $numeroPrestamo = $ultimoPrestamo ? $ultimoPrestamo->numero_prestamo + 1 : 1;
+
+    // 5. Crear el préstamo (puedes envolver en DB::transaction si registras caja)
+    Prestamo::create([
+        'user_id'         => $user->id,
+        'numero_prestamo' => $numeroPrestamo,
+        'item_prestamo'   => 1,
+        'monto'           => $request->monto,
+        'estado'          => 'pendiente',
+    ]);
+
+    // 6. Redirigir (usa back() si prefieres)
+    return redirect()->back()    // o ->route('admin.prestamos.create')
+           ->with('success', 'Préstamo generado correctamente para '.$user->name.'.');
+}
+
 
 public function storeCajaPeriodo(Request $request)
 {

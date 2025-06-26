@@ -81,7 +81,14 @@ Route::middleware(['auth', 'is_admin'])->group(function () {
     Route::put('/admin/prestamos/aprobar/{id}', [PrestamoController::class, 'aprobar'])->name('prestamo.aprobar');
     Route::post('/admin/prestamos/rechazar/{id}', [PrestamoController::class, 'rechazar'])->name('prestamo.rechazar');
     Route::get('/admin/prestamos/pendientes', [PrestamoPendienteController::class, 'index'])->name('admin.prestamos.pendientes');
+// aprobados solo hoy para actulizar monto
 
+Route::patch(
+    '/admin/prestamos/{id}/monto',
+    [PrestamoController::class, 'actualizarMonto']
+)->name('admin.prestamos.actualizarMonto');
+
+ 
     // Gestión de usuarios
     Route::get('/admin/createuser', [UserController::class, 'create'])->name('admin.createuser');
     Route::post('/admin/createuser', [UserController::class, 'store'])->name('admin.storeuser');
@@ -115,7 +122,11 @@ Route::post('/admin/configuracion/caja-periodo', [ConfiguracionController::class
 Route::match( ['put', 'patch'],'/admin/configuracion/caja-periodo/{id}',[ConfiguracionController::class, 'updateCajaPeriodo'])->name('admin.configuracion.caja-periodo.update');
 /*  Eliminar (DELETE)  */
 Route::delete('/admin/configuracion/caja-periodo/{id}',[ConfiguracionController::class, 'destroyCajaPeriodo'])->name('admin.configuracion.caja-periodo.destroy');
-
+// Ver detalles de un período de caja
+Route::post(
+    '/admin/configuracion/caja-periodo/{periodo}/ingresar',
+    [ConfiguracionController::class, 'ingresarFondos']
+)->name('admin.configuracion.caja-periodo.ingresar');
 
 
 // admin generar prestamo

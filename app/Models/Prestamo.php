@@ -49,4 +49,9 @@ class Prestamo extends Model
     return $this->hasMany(Penalidad::class);
 }
 
+public function scopeAprobados($query)
+{
+    return $query->where('estado', 'aprobado');
+}
+
 }

@@ -710,6 +710,7 @@
                         <th>Saldo actual (S/)</th>
                         <th>Estado</th>
                         <th>Acciones</th>
+                        <th>Ingresar</th>
                     </tr>
                 </thead>
 
@@ -750,6 +751,20 @@
 </button>
     </form>
 </td>
+<td class="text-nowrap">
+    {{-- Botones que ya tenías … --}}
+
+    {{-- Nuevo botón: Ingresar fondos (sólo si el período está activo) --}}
+    @if($activo)
+<button class="btn btn-sm btn-success"
+        data-bs-toggle="modal"
+        data-bs-target="#ingresoModal"
+        onclick="prepararIngreso({{ $p->id }})">
+    <i class="fas fa-plus-circle"></i>
+</button>
+@endif
+</td>
+
                         </tr>
                     @endforeach
                 </tbody>
@@ -848,6 +863,59 @@
         document.getElementById('editarPeriodoForm').action = '/admin/configuracion/caja-periodo/' + periodo.id;
     }
 </script>
+
+
+
+<!-- Modal  ingresar mas monto -->
+<div class="modal fade" id="ingresoModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form id="ingresoForm" method="POST">
+      @csrf
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <i class="fas fa-hand-holding-usd me-2"></i>Registrar ingreso
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Monto (S/)</label>
+            <input id="ingreso_monto" name="monto" type="number"
+                   step="0.01" class="form-control" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Descripción</label>
+            <input id="ingreso_descripcion" name="descripcion"
+                   class="form-control" placeholder="Ingreso desde caja">
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary"
+                  data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save me-1"></i>Guardar
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+<script>
+function prepararIngreso(id) {
+    // Coloca la URL correcta en el form
+    document.getElementById('ingresoForm').action =
+        `/admin/configuracion/caja-periodo/${id}/ingresar`;
+
+    // Limpia campos
+    document.getElementById('ingreso_monto').value = '';
+    document.getElementById('ingreso_descripcion').value = '';
+}
+</script>
+
 
 <!-- Modal eliminar período -->
 <div class="modal fade" id="eliminarPeriodoModal" tabindex="-1" aria-hidden="true">

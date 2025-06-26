@@ -138,4 +138,24 @@ public function destroyCajaPeriodo($id)
 }
 
 
+public function ingresarFondos(Request $request, CajaPeriodo $periodo)
+{
+    $request->validate([
+        'monto'       => 'required|numeric|min:0.01',
+        'descripcion' => 'nullable|string|max:255',
+    ]);
+
+    // (Opcional) bloquear si el periodo ya terminó
+    if (! now()->between($periodo->periodo_inicio, $periodo->periodo_fin)) {
+        return back()->withErrors('El período ya está cerrado.');
+    }
+
+    $periodo->registrarMovimiento(
+        $request->monto,
+        'ingreso',
+        $request->descripcion ?: 'Ingreso desde caja'
+    );
+
+    return back()->with('success', 'Ingreso registrado correctamente.');
+}
 }
