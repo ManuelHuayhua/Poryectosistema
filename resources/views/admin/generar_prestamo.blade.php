@@ -395,6 +395,11 @@
             <i class="fas fa-home"></i><span>Inicio</span>
         </a>
     </div>
+     <div class="nav-item">
+        <a href="{{ route('admin.graficos') }}" class="nav-link">
+            <i class="fas fa-chart-bar"></i><span>Gráficos</span>
+        </a>
+    </div>
     <div class="nav-item">
         <a href="{{ route('admin.createuser') }}" class="nav-link">
             <i class="fas fa-users-cog"></i><span>Usuario y Roles</span>
@@ -420,11 +425,7 @@
             <i class="fas fa-chart-line"></i><span>Generar Reportes</span>
         </a>
     </div>
-    <div class="nav-item">
-        <a href="{{ route('admin.graficos') }}" class="nav-link">
-            <i class="fas fa-chart-bar"></i><span>Gráficos</span>
-        </a>
-    </div>
+   
 
 
         <div class="nav-item mt-auto">
@@ -486,47 +487,54 @@
 </div>
 
             <!-- Formulario simplificado -->
-            <div class="form-container">
-                <form action="{{ route('admin.prestamos.store') }}" method="POST">
-                    @csrf
+            <div class="container my-4">
+  <form action="{{ route('admin.prestamos.store') }}" method="POST" class="row g-3 align-items-end">
+    @csrf
 
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="user_id" class="form-label">
-                                <i class="fas fa-user-search"></i>
-                                Buscar Usuario
-                            </label>
-                            <select name="user_id" id="user_id" class="form-select" required>
-                                <option value="">Escribe nombre o DNI...</option>
-                                @foreach($usuarios as $usuario)
-                                    <option value="{{ $usuario->id }}">
-                                        {{ $usuario->name }} {{ $usuario->apellido_paterno }} - DNI: {{ $usuario->dni }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
+    <!-- ── Usuario ───────────────────────────────────────────── -->
+    <div class="col-12 col-md-4">
+      <label for="user_id" class="form-label">
+        <i class="fas fa-user-search me-1"></i>Buscar usuario
+      </label>
+      <select name="user_id"
+              id="user_id"
+              class="form-select"
+              required>
+        <option value="">Escribe nombre o DNI…</option>
+        @foreach($usuarios as $usuario)
+          <option value="{{ $usuario->id }}">
+            {{ $usuario->name }} {{ $usuario->apellido_paterno }} – DNI: {{ $usuario->dni }}
+          </option>
+        @endforeach
+      </select>
+    </div>
 
-                        <div class="form-group">
-                            <label for="monto" class="form-label">
-                                <i class="fas fa-dollar-sign"></i>
-                                Monto del Préstamo
-                            </label>
-                            <div class="input-group">
-                                <span class="input-group-text">S/.</span>
-                                <input type="number" name="monto" id="monto" class="form-control" 
-                                       min="1" step="0.01" placeholder="0.00" required>
-                            </div>
-                        </div>
+    <!-- ── Monto ─────────────────────────────────────────────── -->
+    <div class="col-12 col-md-4">
+      <label for="monto" class="form-label">
+        <i class="fas fa-dollar-sign me-1"></i>Monto del préstamo
+      </label>
+      <div class="input-group">
+        <span class="input-group-text">S/</span>
+        <input type="number"
+               name="monto"
+               id="monto"
+               class="form-control"
+               min="1"
+               step="0.01"
+               placeholder="0.00"
+               required>
+      </div>
+    </div>
 
-                        <div class="form-group">
-                            <button type="submit" class="btn btn-generate">
-                                <i class="fas fa-plus-circle me-2"></i>
-                                Generar Préstamo
-                            </button>
-                        </div>
-                    </div>
-                </form>
-            </div>
+    <!-- ── Botón ─────────────────────────────────────────────── -->
+    <div class="col-12 col-md-4 d-grid">
+      <button type="submit" class="btn btn-primary btn-lg">
+        <i class="fas fa-plus-circle me-2"></i>Generar préstamo
+      </button>
+    </div>
+  </form>
+</div>
         </div>
     </div>
 </div>

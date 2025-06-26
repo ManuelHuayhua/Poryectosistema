@@ -10,6 +10,7 @@ use App\Models\Penalidad;
 use App\Models\TablaUsuario;
 use App\Models\User;
 use App\Models\CajaPeriodo;
+use App\Models\CajaMovimiento;
 use Illuminate\Validation\ValidationException;
 class PrestamoController extends Controller
 {
@@ -54,9 +55,18 @@ public function indexAdmin()
         abort(403, 'Acceso no autorizado.');
     }
 
+    
     // Fechas para el filtro de vencimiento
     $hoy = Carbon::today();
     $limite = $hoy->copy()->addDays(10);
+
+   
+
+    /* ---------- PERIODO ACTUAL ---------- */
+    $periodoActual = CajaPeriodo::whereDate('periodo_inicio', '<=', $hoy)
+        ->whereDate('periodo_fin', '>=', $hoy)
+        ->latest('periodo_inicio')          // si hubiera varios, toma el más nuevo
+        ->first();                          // → null si no existe
 
     // Subquery para obtener el último item de cada préstamo
     $subquery = DB::table('prestamos')
@@ -202,6 +212,7 @@ $prestamosSinIniciar = Prestamo::joinSub($maxItemPorPrestamo, 'maxi', function (
        'prestamosNotificados',
        'hayQuierenPagar',
        'prestamosSinIniciar',
+       'periodoActual',
 
     ));
     
@@ -215,17 +226,72 @@ public function actualizarMonto(Request $request, $id)
         abort(403, 'Acceso no autorizado.');
     }
 
-    $datos = $request->validate([
+    $validated = $request->validate([
         'monto' => ['required', 'numeric', 'min:0.01'],
     ]);
 
-    $prestamo        = Prestamo::findOrFail($id);
-    $prestamo->monto = $datos['monto'];
-    $prestamo->save();
+    DB::transaction(function () use ($validated, $id) {
 
-    return back()->with('success', 'Monto actualizado correctamente.');
+        /* ──────────────────────────────
+         * 1) Bloqueamos el préstamo …
+         * ────────────────────────────── */
+        $prestamo = Prestamo::lockForUpdate()->findOrFail($id);
+
+        $montoAnterior = $prestamo->monto;
+        $montoNuevo    = $validated['monto'];
+        $diferencia    = bcsub($montoNuevo, $montoAnterior, 2);   // - 2 decimales
+
+        // Si no cambió nada, salimos rápido
+        if (bccomp($diferencia, '0', 2) === 0) {
+            return;   // no hay nada que registrar
+        }
+
+        /* ──────────────────────────────
+         * 2) Localizamos el período activo y lo bloqueamos
+         * ────────────────────────────── */
+        $hoy     = Carbon::today();
+        $periodo = CajaPeriodo::whereDate('periodo_inicio', '<=', $hoy)
+                    ->whereDate('periodo_fin', '>=', $hoy)
+                    ->lockForUpdate()
+                    ->firstOrFail();             // ← lanza 404 si no existe
+
+        /* ──────────────────────────────
+         * 3) Ajustamos el saldo_actual
+         * ────────────────────────────── */
+        if ($diferencia < 0) {                       // se redujo el monto ⇒ entra dinero
+            $periodo->saldo_actual = bcadd($periodo->saldo_actual, abs($diferencia), 2);
+            $tipoMovimiento        = 'ingreso';
+        } else {                                     // se incrementó el monto ⇒ sale dinero
+            $periodo->saldo_actual = bcsub($periodo->saldo_actual, $diferencia, 2);
+            $tipoMovimiento        = 'egreso';
+        }
+        $periodo->save();
+
+        /* ──────────────────────────────
+         * 4) Registramos el movimiento
+         * ────────────────────────────── */
+        CajaMovimiento::create([
+            'caja_periodo_id' => $periodo->id,
+            'monto'           => abs($diferencia),
+            'saldo_resultante'=> $periodo->saldo_actual,
+            'tipo'            => $tipoMovimiento,
+            'descripcion'     => "Ajuste préstamo #{$prestamo->numero_prestamo}",
+        ]);
+
+        /* ──────────────────────────────
+         * 5) Actualizamos el préstamo
+         * ────────────────────────────── */
+        $prestamo->monto = $montoNuevo;
+        $prestamo->interes_pagar = round(
+            $montoNuevo * ($prestamo->interes / 100),
+            2
+        );
+        // Si manejas total_pagar, penalidades, etc. recalcúlalos aquí.
+        $prestamo->save();
+    });
+
+    return back()->with('success', 'Monto del préstamo actualizado y movimiento de caja registrado.');
 }
-
 
 
 

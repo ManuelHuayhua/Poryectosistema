@@ -426,6 +426,11 @@
             <i class="fas fa-home"></i><span>Inicio</span>
         </a>
     </div>
+     <div class="nav-item">
+        <a href="{{ route('admin.graficos') }}" class="nav-link">
+            <i class="fas fa-chart-bar"></i><span>Gráficos</span>
+        </a>
+    </div>
     <div class="nav-item">
         <a href="{{ route('admin.createuser') }}" class="nav-link">
             <i class="fas fa-users-cog"></i><span>Usuario y Roles</span>
@@ -451,11 +456,7 @@
             <i class="fas fa-chart-line"></i><span>Generar Reportes</span>
         </a>
     </div>
-    <div class="nav-item">
-        <a href="{{ route('admin.graficos') }}" class="nav-link">
-            <i class="fas fa-chart-bar"></i><span>Gráficos</span>
-        </a>
-    </div>
+   
 
 
         <div class="nav-item mt-auto">
@@ -1018,50 +1019,55 @@ function prepararIngreso(id) {
 </div>
 
 <!-- Modal Editar Configuración -->
-<div class="modal fade" id="editModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Editar Configuración</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form id="editForm" method="POST">
-                @csrf
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-12 mb-3">
-                            <div class="form-floating">
-                                <input type="text" class="form-control" id="edit_tipo_origen" name="tipo_origen" placeholder="Tipo Origen" required>
-                                <label for="edit_tipo_origen"><i class="fas fa-tag me-2"></i>Tipo Origen</label>
-                            </div>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <div class="form-floating">
-                                <input type="number" step="0.01" class="form-control" id="edit_interes" name="interes" placeholder="Interés" required>
-                                <label for="edit_interes"><i class="fas fa-percentage me-2"></i>Interés (%)</label>
-                            </div>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <div class="form-floating">
-                                <input type="number" step="0.01" class="form-control" id="edit_penalidad" name="penalidad" placeholder="Penalidad" required>
-                                <label for="edit_penalidad"><i class="fas fa-exclamation-triangle me-2"></i>Penalidad (%)</label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="fas fa-times me-2"></i>Cancelar
-                    </button>
-                    <button type="submit" class="btn btn-warning">
-                        <i class="fas fa-save me-2"></i>Actualizar Configuración
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+    
+      <div class="modal-header">
+        <h5 class="modal-title" id="editModalLabel">
+          <i class="fas fa-edit me-2"></i>Editar Configuración
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
 
+      <form id="editForm" method="POST">
+        @csrf
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-md-12 mb-3">
+              <div class="form-floating">
+                <input type="text" class="form-control" id="edit_tipo_origen" name="tipo_origen" placeholder="Tipo Origen" required>
+                <label for="edit_tipo_origen"><i class="fas fa-tag me-2"></i>Tipo Origen</label>
+              </div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <div class="form-floating">
+                <input type="number" step="0.01" class="form-control" id="edit_interes" name="interes" placeholder="Interés" required>
+                <label for="edit_interes"><i class="fas fa-percentage me-2"></i>Interés (%)</label>
+              </div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <div class="form-floating">
+                <input type="number" step="0.01" class="form-control" id="edit_penalidad" name="penalidad" placeholder="Penalidad" required>
+                <label for="edit_penalidad"><i class="fas fa-exclamation-triangle me-2"></i>Penalidad (%)</label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times me-2"></i>Cancelar
+          </button>
+          <button type="submit" class="btn btn-warning">
+            <i class="fas fa-save me-2"></i>Actualizar Configuración
+          </button>
+        </div>
+      </form>
+      
+    </div>
+  </div>
+</div>
 <!-- Modal Confirmar Eliminación -->
 <div class="modal fade" id="deleteModal" tabindex="-1">
     <div class="modal-dialog">
@@ -1103,9 +1109,19 @@ function prepararIngreso(id) {
     document.getElementById('edit_interes').value = interes;
     document.getElementById('edit_penalidad').value = penalidad;
 
-    const editModal = new bootstrap.Modal(document.getElementById('editModal'));
+    const modalEl = document.getElementById('editModal');
+    const editModal = bootstrap.Modal.getOrCreateInstance(modalEl);
     editModal.show();
 }
+
+// Asegurar limpieza de backdrop si por algún motivo se queda
+document.addEventListener('DOMContentLoaded', function () {
+    const editModalEl = document.getElementById('editModal');
+    editModalEl.addEventListener('hidden.bs.modal', function () {
+        const backdrops = document.querySelectorAll('.modal-backdrop');
+        backdrops.forEach(b => b.remove());
+    });
+});
 
     function deleteConfig(id, tipo_origen) {
     const deleteUrl = `/admin/configuraciones/${id}/eliminar`;

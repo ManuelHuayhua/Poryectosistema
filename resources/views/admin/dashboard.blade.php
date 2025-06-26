@@ -1112,6 +1112,11 @@
                 <i class="fas fa-home"></i><span>Inicio</span>
             </a>
         </div>
+         <div class="nav-item">
+            <a href="{{ route('admin.graficos') }}" class="nav-link">
+                <i class="fas fa-chart-bar"></i><span>Gráficos</span>
+            </a>
+        </div>
         <div class="nav-item">
             <a href="{{ route('admin.createuser') }}" class="nav-link">
                 <i class="fas fa-users-cog"></i><span>Usuario y Roles</span>
@@ -1137,11 +1142,7 @@
                 <i class="fas fa-chart-line"></i><span>Generar Reportes</span>
             </a>
         </div>
-        <div class="nav-item">
-            <a href="{{ route('admin.graficos') }}" class="nav-link">
-                <i class="fas fa-chart-bar"></i><span>Gráficos</span>
-            </a>
-        </div>
+       
 
         <div class="nav-item mt-auto">
             <a href="{{ route('logout') }}" class="nav-link"
@@ -1158,41 +1159,135 @@
 
 <!-- Contenido principal -->
 <div class="main-content">
- <div class="container-fluid px-3 px-md-4 py-4">
-  <!-- Header Section -->
-  <div class="row mb-4">
-    <div class="col-12">
-      <div class="d-flex align-items-center mb-3">
-        <i class="fas fa-user-circle text-primary me-2 fs-4"></i>
-        <h2 class="mb-0 text-dark">Bienvenido, {{ Auth::user()->name }}</h2>
-      </div>
-      
-      @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-          <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
-          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-      @endif
+  <div class="container-fluid px-3 px-md-4 py-4">
+        <!-- Header Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center mb-3">
+                    <i class="fas fa-user-circle text-primary me-2 fs-4"></i>
+                    <h2 class="mb-0 text-dark">Bienvenido, {{ Auth::user()->name }}</h2>
+                </div>
+                
+                @if(session('success'))
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                @endif
 
-      @if ($errors->has('caja'))
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-          <i class="fas fa-exclamation-triangle me-2"></i>{{ $errors->first('caja') }}
-          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                @if ($errors->has('caja'))
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>{{ $errors->first('caja') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                @endif
+            </div>
         </div>
-      @endif
-    </div>
-  </div>
+        
+        <!-- PERIODO ACTUAL MAS MONTO -->
+        <div class="row">
+            @if($periodoActual)
+                <div class="col-12 col-sm-6 col-lg-4">
+                    <div class="card shadow-sm mb-4 h-100">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title mb-3">
+                                <i class="fas fa-cash-register me-2 text-primary"></i>
+                                Periodo de Caja Activo
+                            </h5>
 
+                            <div class="mb-3 flex-grow-1">
+                                <p class="mb-2 text-muted">
+                                    <i class="fas fa-calendar-alt me-2"></i>
+                                    <small class="d-block d-sm-inline">
+                                        {{ $periodoActual->periodo_inicio->format('d/m/Y') }}
+                                        <span class="d-none d-sm-inline">&mdash;</span>
+                                        <span class="d-block d-sm-inline mt-1 mt-sm-0">
+                                            {{ $periodoActual->periodo_fin->format('d/m/Y') }}
+                                        </span>
+                                    </small>
+                                </p>
+                            </div>
+
+                            <div class="mt-auto">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div class="flex-grow-1">
+                                        <p class="mb-0 fs-5 fw-bold">
+                                            <i class="fas fa-wallet me-2 text-success"></i>
+                                            <span id="saldoTexto" style="display: none;">
+                                                S/ {{ number_format($periodoActual->saldo_actual, 2) }}
+                                            </span>
+                                            <span id="saldoOculto">
+                                                S/ ••••••
+                                            </span>
+                                        </p>
+                                    </div>
+                                    <button type="button" 
+                                            id="toggleSaldo" 
+                                            class="btn btn-link btn-sm p-1 ms-2 text-secondary"
+                                            title="Mostrar/Ocultar saldo">
+                                        <i id="iconoOjo" class="fas fa-eye-slash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @else
+                <div class="col-12 col-sm-6 col-lg-4">
+                    <div class="alert alert-warning mb-4 d-flex align-items-center">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <span>No hay un periodo de caja abierto en este momento.</span>
+                    </div>
+                </div>
+            @endif
+        </div>
+   
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const toggleBtn = document.getElementById('toggleSaldo');
+    const saldoTexto = document.getElementById('saldoTexto');
+    const saldoOculto = document.getElementById('saldoOculto');
+    const iconoOjo = document.getElementById('iconoOjo');
+    
+    let saldoVisible = false;
+    
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', function() {
+            saldoVisible = !saldoVisible;
+            
+            if (saldoVisible) {
+                saldoTexto.style.display = 'inline';
+                saldoOculto.style.display = 'none';
+                iconoOjo.className = 'fas fa-eye';
+                toggleBtn.title = 'Ocultar saldo';
+            } else {
+                saldoTexto.style.display = 'none';
+                saldoOculto.style.display = 'inline';
+                iconoOjo.className = 'fas fa-eye-slash';
+                toggleBtn.title = 'Mostrar saldo';
+            }
+        });
+    }
+});
+</script>
+  <br>
   <!-- Title Section -->
   <div class="row mb-3">
     <div class="col-12">
-      <div class="d-flex align-items-center">
-        <i class="fas fa-clock text-warning me-2 fs-5"></i>
-        <h4 class="mb-0 text-secondary">Solicitudes de Préstamos Pendientes</h4>
-        @if(!$prestamosPendientes->isEmpty())
-          <span class="badge bg-warning text-dark ms-2">{{ $prestamosPendientes->count() }}</span>
-        @endif
-      </div>
+      <div class="d-flex align-items-center justify-content-between flex-wrap">
+  <div class="d-flex align-items-center">
+    <i class="fas fa-clock text-warning me-2 fs-5"></i>
+    <h4 class="mb-0 text-secondary">Solicitudes de Préstamos Pendientes</h4>
+    @if(!$prestamosPendientes->isEmpty())
+      <span class="badge bg-warning text-dark ms-2">{{ $prestamosPendientes->count() }}</span>
+    @endif
+  </div>
+  
+  <button class="btn btn-outline-primary btn-sm mt-2 mt-md-0 ms-md-3" onclick="location.reload()">
+    <i class="fas fa-sync-alt me-1"></i> Actualizar
+  </button>
+</div>
     </div>
   </div>
 
@@ -1668,32 +1763,55 @@
         <label class="form-check-label" for="mostrarTodosAprobados">
           <i class="fas fa-list me-1"></i>Mostrar todos los préstamos
         </label>
-      </div>
+      </div>    
     </div>
   </div>
 
   <!-- NUEVA SECCIÓN DE BÚSQUEDA -->
-  <div class="search-container">
-    <div class="search-inputs">
-      <div class="search-group">
-        <label for="searchName">
-          <i class="fas fa-user me-1"></i>Buscar por nombre:
-        </label>
-        <input type="text" id="searchName" placeholder="Ingrese nombre del cliente..." onkeyup="filterPrestamos()">
-      </div>
-      
-      <div class="search-group">
-        <label for="searchLoanNumber">
-          <i class="fas fa-hashtag me-1"></i>Buscar por N° préstamo:
-        </label>
-        <input type="text" id="searchLoanNumber" placeholder="Ingrese número de préstamo..." onkeyup="filterPrestamos()">
-      </div>
-      
-      <button type="button" class="clear-search" onclick="clearSearch()">
+<div class="container-fluid mb-3">
+  <div class="row g-3 align-items-end">
+    
+    <!-- Buscar por nombre -->
+    <div class="col-12 col-md-5">
+      <label for="searchName" class="form-label">
+        <i class="fas fa-user me-1"></i>Buscar por nombre:
+      </label>
+      <input
+        type="text"
+        id="searchName"
+        class="form-control"
+        placeholder="Ingrese nombre del cliente..."
+        onkeyup="filterPrestamos()"
+      >
+    </div>
+
+    <!-- Buscar por N° préstamo -->
+    <div class="col-12 col-md-5">
+      <label for="searchLoanNumber" class="form-label">
+        <i class="fas fa-hashtag me-1"></i>Buscar por N° préstamo:
+      </label>
+      <input
+        type="text"
+        id="searchLoanNumber"
+        class="form-control"
+        placeholder="Ingrese número de préstamo..."
+        onkeyup="filterPrestamos()"
+      >
+    </div>
+
+    <!-- Botón Limpiar -->
+    <div class="col-12 col-md-2 d-grid">
+      <button
+        type="button"
+        class="btn btn-outline-secondary clear-search"
+        onclick="clearSearch()"
+      >
         <i class="fas fa-times me-1"></i>Limpiar
       </button>
     </div>
+
   </div>
+</div>
 
   <div class="prestamos-body" id="prestamosContainer">
     <!-- El contenido se genera dinámicamente con JavaScript -->

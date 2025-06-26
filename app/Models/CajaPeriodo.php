@@ -1,21 +1,26 @@
 <?php
 
 namespace App\Models;
-
+use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 class CajaPeriodo extends Model
 {
     protected $table = 'caja_periodo';
-
-  
-
-    protected $fillable = [
+    
+     protected $fillable = [
         'monto_inicial',
         'saldo_actual',
         'periodo_inicio',
         'periodo_fin',
+    ];
+
+    protected $dates = [
+        'periodo_inicio',
+        'periodo_fin',
+        'created_at',
+        'updated_at',
     ];
 
     // Relación con préstamos (si Prestamo tiene un campo caja_periodo_id)

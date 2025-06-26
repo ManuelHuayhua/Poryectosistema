@@ -80,9 +80,9 @@ public function storeCajaPeriodo(Request $request)
     ]);
 
     // ✔️ Evitar solapes reales (sin contar bordes)
-    $yaExiste = CajaPeriodo::where('periodo_inicio', '<',  $request->periodo_fin)
-                           ->where('periodo_fin',   '>',  $request->periodo_inicio)
-                           ->exists();
+    $yaExiste = CajaPeriodo::where('periodo_inicio', '<', $request->periodo_fin)
+                       ->where('periodo_fin',   '>', $request->periodo_inicio)
+                       ->exists();
 
     if ($yaExiste) {
         return back()->withErrors('Ya existe un período que se superpone con ese rango de fechas.');

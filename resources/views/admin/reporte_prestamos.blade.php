@@ -783,6 +783,11 @@
         </a>
     </div>
     <div class="nav-item">
+        <a href="{{ route('admin.graficos') }}" class="nav-link">
+            <i class="fas fa-chart-bar"></i><span>Gráficos</span>
+        </a>
+    </div>
+    <div class="nav-item">
         <a href="{{ route('admin.createuser') }}" class="nav-link">
             <i class="fas fa-users-cog"></i><span>Usuario y Roles</span>
         </a>
@@ -807,11 +812,7 @@
             <i class="fas fa-chart-line"></i><span>Generar Reportes</span>
         </a>
     </div>
-    <div class="nav-item">
-        <a href="{{ route('admin.graficos') }}" class="nav-link">
-            <i class="fas fa-chart-bar"></i><span>Gráficos</span>
-        </a>
-    </div>
+    
 
         <div class="nav-item mt-auto">
             <a href="{{ route('logout') }}" class="nav-link"
