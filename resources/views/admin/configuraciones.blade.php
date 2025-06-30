@@ -477,16 +477,23 @@
     <div class="container-fluid">
         <!-- Header de la página -->
         <div class="page-header animate-fade-in">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h1 class="page-title"><i class="fas fa-cogs me-3"></i>Configuraciones</h1>
-                    <p class="page-subtitle">Gestiona las configuraciones del sistema</p>
-                </div>
-                <button class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#configModal">
-                    <i class="fas fa-plus me-2"></i>Nueva Configuración
-                </button>
-            </div>
-        </div>
+  <div class="row align-items-center">
+    <!-- Título -->
+    <div class="col-12 col-md-8 mb-3 mb-md-0">
+      <h1 class="page-title">
+        <i class="fas fa-cogs me-2"></i>Configuraciones
+      </h1>
+      <p class="page-subtitle">Gestiona las configuraciones del sistema</p>
+    </div>
+
+    <!-- Botón -->
+    <div class="col-12 col-md-4 text-md-end">
+      <button class="btn btn-primary btn-lg w-100 w-md-auto" data-bs-toggle="modal" data-bs-target="#configModal">
+        <i class="fas fa-plus me-2"></i>Nueva Configuración
+      </button>
+    </div>
+  </div>
+</div>
 
         <!-- Estadísticas -->
         <div class="row mb-4">
@@ -611,18 +618,24 @@
 {{-- Header de Caja --}}
 {{-- Burbuja principal: Gestión de Períodos de Caja --}}
 <div class="card mb-4">
-    <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center">
-            <h4 class="mb-0">
-                <i class="fas fa-cash-register me-2 text-primary"></i>
-                Gestión de Períodos de Caja
-            </h4>
-            
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#periodoModal">
-                <i class="fas fa-plus me-1"></i> Configurar Período
-            </button>
-        </div>
+  <div class="card-body">
+    <div class="row align-items-center">
+      <!-- Título -->
+      <div class="col-12 col-md-8 mb-3 mb-md-0">
+        <h4 class="mb-0">
+          <i class="fas fa-cash-register me-2 text-primary"></i>
+          Gestión de Períodos de Caja
+        </h4>
+      </div>
+
+      <!-- Botón -->
+      <div class="col-12 col-md-4 text-md-end">
+        <button type="button" class="btn btn-primary w-100 w-md-auto" data-bs-toggle="modal" data-bs-target="#periodoModal">
+          <i class="fas fa-plus me-1"></i> Configurar Período
+        </button>
+      </div>
     </div>
+  </div>
 </div>
 
 {{-- 3 Burbujas informativas debajo --}}

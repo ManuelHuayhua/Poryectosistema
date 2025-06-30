@@ -12,6 +12,9 @@ use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\Admin\ReportePrestamosController;
 use App\Http\Controllers\Admin\ConfiguracionController;
 use App\Http\Controllers\Admin\GraficoAdminController;
+use App\Http\Controllers\Admin\AporteController;
+use App\Http\Controllers\Admin\PagoReporteController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -136,6 +139,22 @@ Route::post('/admin/prestamos', [PrestamoController::class, 'storeDesdeAdmin'])-
 //grafico-admin
 Route::get('/admin/graficos', [GraficoAdminController::class, 'index'])
      ->name('admin.graficos');
+
+
+
+     // reportes de pagos
+Route::get('/admin/aportes', [AporteController::class, 'index'])
+     ->name('aportes.index');
+Route::post('/admin/aportes', [AporteController::class, 'store'])->name('aportes.store');
+
+/* Guardar pago desde el mismo blade */
+Route::post('/pago-reportes/generar-por-periodo',
+    [PagoReporteController::class, 'generarPorPeriodo']
+)->name('pago-reportes.generar-por-periodo');
+
+//pagar aportes
+Route::post('/admin/pago-reportes/pagar', [PagoReporteController::class, 'pagar'])
+     ->name('pago-reportes.pagar');
 });
 
 

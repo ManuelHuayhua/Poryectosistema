@@ -50,4 +50,20 @@ class CajaPeriodo extends Model
     }
 
 
+     public function pagos()
+    {
+        return $this->hasMany(PagoReporte::class);
+    }
+
+
+
+
+    public function scopeVigente($query)
+    {
+        $hoy = Carbon::today();
+        return $query
+            ->whereDate('periodo_inicio', '<=', $hoy)
+            ->whereDate('periodo_fin',    '>=', $hoy);
+    }
+
 }
