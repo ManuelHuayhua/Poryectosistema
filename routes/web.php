@@ -151,6 +151,8 @@ Route::post('/admin/aportes', [AporteController::class, 'store'])->name('aportes
 Route::post('/pago-reportes/generar-por-periodo',
     [PagoReporteController::class, 'generarPorPeriodo']
 )->name('pago-reportes.generar-por-periodo');
+Route::resource('aportes', AporteController::class);
+
 
 //pagar aportes
 Route::post('/admin/pago-reportes/pagar', [PagoReporteController::class, 'pagar'])
