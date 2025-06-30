@@ -11,6 +11,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <style>
+              
         :root {
             --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             --sidebar-bg: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
@@ -295,6 +296,21 @@
             border-color: #667eea;
             border-left: 2px solid #667eea;
         }
+
+          /* funciona para que el menu se despligue en movile */
+               .sidebar {
+    overflow-y: auto;            /* permite el scroll vertical */
+    -webkit-overflow-scrolling: touch; /* scroll suave en iOS */
+}
+
+/* Opción 2: fija el header y desplaza solo los enlaces */
+.sidebar-nav {
+    max-height: calc(100vh - 200px); /* ajusta 160 px al alto real del header */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+
 
         /* Responsive mejorado */
         @media (max-width: 768px) {

@@ -98,6 +98,17 @@
             padding: 2rem;
             transition: margin-left 0.3s ease;
         }
+        .sidebar {
+    overflow-y: auto;            /* permite el scroll vertical */
+    -webkit-overflow-scrolling: touch; /* scroll suave en iOS */
+}
+
+/* Opción 2: fija el header y desplaza solo los enlaces */
+.sidebar-nav {
+    max-height: calc(100vh - 160px); /* ajusta 160 px al alto real del header */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
 
         /* Responsive */
         @media (max-width: 768px) {

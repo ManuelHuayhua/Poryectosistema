@@ -40,6 +40,7 @@ namespace App\Models;
     'ge_prestamo',
     'ge_reportes',
     'grafica',
+    'aporte',
         ];
 
         /**

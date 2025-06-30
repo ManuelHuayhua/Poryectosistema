@@ -11,6 +11,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <style>
+
+         
         :root {
             --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             --sidebar-bg: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
@@ -251,6 +253,20 @@
             color: #6c757d;
             cursor: pointer;
         }
+
+          /* funciona para que el menu se despligue en movile */
+               .sidebar {
+    overflow-y: auto;            /* permite el scroll vertical */
+    -webkit-overflow-scrolling: touch; /* scroll suave en iOS */
+}
+
+/* Opción 2: fija el header y desplaza solo los enlaces */
+.sidebar-nav {
+    max-height: calc(100vh - 200px); /* ajusta 160 px al alto real del header */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
 
         /* Responsive */
         @media (max-width: 768px) {
@@ -755,6 +771,7 @@
           'ge_prestamo'   => 'Generar Préstamo',
           'ge_reportes'   => 'Generar Reportes',
           'grafica'       => 'Gráficos',
+          'aporte'        => 'Aportes',  
       ];
   @endphp
 
@@ -821,6 +838,7 @@
         document.getElementById('edit_ge_prestamo').checked   = usuario.ge_prestamo   == 1;
         document.getElementById('edit_ge_reportes').checked   = usuario.ge_reportes   == 1;
         document.getElementById('edit_grafica').checked       = usuario.grafica       == 1;
+        document.getElementById('edit_aporte').checked = usuario.aporte == 1; // ⬅️ NUEVO
 
         // Mostrar u ocultar los permisos según el valor de is_admin
         toggleAdminPerms();

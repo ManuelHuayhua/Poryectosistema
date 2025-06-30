@@ -104,6 +104,7 @@ public function updateCajaPeriodo(Request $request, $id)
 {
     $request->validate([
         'monto_inicial'  => 'required|numeric|min:0',
+        'saldo_actual'   => 'required|numeric|min:0',   // NUEVO
         'periodo_inicio' => 'required|date',
         'periodo_fin'    => 'required|date|after_or_equal:periodo_inicio',
     ]);
@@ -121,6 +122,7 @@ public function updateCajaPeriodo(Request $request, $id)
 
     $periodo->update([
         'monto_inicial'  => $request->monto_inicial,
+        'saldo_actual'   => $request->saldo_actual, 
         'periodo_inicio' => $request->periodo_inicio,
         'periodo_fin'    => $request->periodo_fin,
     ]);

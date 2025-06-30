@@ -11,6 +11,9 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <style>
+
+           
+
         :root {
             --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             --sidebar-bg: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
@@ -355,6 +358,20 @@
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
+             /* funciona para que el menu se despligue en movile */
+               .sidebar {
+    overflow-y: auto;            /* permite el scroll vertical */
+    -webkit-overflow-scrolling: touch; /* scroll suave en iOS */
+}
+
+/* Opción 2: fija el header y desplaza solo los enlaces */
+.sidebar-nav {
+    max-height: calc(100vh - 200px); /* ajusta 160 px al alto real del header */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
 
         /* Responsive */
         @media (max-width: 768px) {
@@ -750,11 +767,17 @@
                             <td class="text-nowrap">
     <!-- Botón Editar -->
     <button class="btn btn-sm btn-warning"
-            data-bs-toggle="modal"
-            data-bs-target="#editarPeriodoModal"
-            onclick="cargarDatosPeriodo({{ $p }})">
-        <i class="fas fa-edit"></i>
-    </button>
+        data-bs-toggle="modal"
+        data-bs-target="#editarPeriodoModal"
+        onclick="cargarDatosPeriodo({
+            id: {{ $p->id }},
+            monto_inicial: '{{ $p->monto_inicial }}',
+            saldo_actual: '{{ $p->saldo_actual }}',
+            periodo_inicio: '{{ \Carbon\Carbon::parse($p->periodo_inicio)->format('Y-m-d') }}',
+            periodo_fin: '{{ \Carbon\Carbon::parse($p->periodo_fin)->format('Y-m-d') }}'
+        })">
+    <i class="fas fa-edit"></i>
+</button>
 
     <!-- Botón Eliminar -->
     <button  class="btn btn-sm btn-danger"
@@ -843,10 +866,18 @@
                     <input type="hidden" id="editar_id">
 
                     <div class="mb-3">
-                        <label class="form-label">Monto inicial (S/)</label>
-                        <input type="number" step="0.01" name="monto_inicial" id="editar_monto_inicial" class="form-control" required>
-                    </div>
+    <label class="form-label">Monto inicial (S/)</label>
+    <input type="number" step="0.01"
+           name="monto_inicial" id="editar_monto_inicial"
+           class="form-control" required>
+</div>
 
+<div class="mb-3"><!-- NUEVO -->
+    <label class="form-label">Saldo actual (S/)</label>
+    <input type="number" step="0.01"
+           name="saldo_actual" id="editar_saldo_actual"
+           class="form-control" required>
+</div>
                     <div class="mb-3">
                         <label class="form-label">Inicio</label>
                         <input type="date" name="periodo_inicio" id="editar_periodo_inicio" class="form-control" required>
@@ -870,6 +901,7 @@
     function cargarDatosPeriodo(periodo) {
         document.getElementById('editar_id').value = periodo.id;
         document.getElementById('editar_monto_inicial').value = periodo.monto_inicial;
+        document.getElementById('editar_saldo_actual').value  = periodo.saldo_actual;  
         document.getElementById('editar_periodo_inicio').value = periodo.periodo_inicio;
         document.getElementById('editar_periodo_fin').value = periodo.periodo_fin;
 

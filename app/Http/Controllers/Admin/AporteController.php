@@ -7,10 +7,21 @@ use Illuminate\Http\Request;
 use App\Models\PagoReporte;
 use App\Models\CajaPeriodo;
 use App\Models\Aporte;
+use Illuminate\Support\Facades\Auth;
 class AporteController extends Controller
+
 {
 public function index(Request $request)
 {
+
+    if (
+        ! Auth::check() ||                // no ha iniciado sesión
+        ! Auth::user()->is_admin ||       // no es admin
+        ! Auth::user()->aporte            // admin pero sin permiso de "inicio"
+    ) {
+        abort(403, 'Acceso no autorizado.');
+    }
+
     // ① Datos base que ya tenías
     $aportes   = Aporte::all();
     $periodos  = CajaPeriodo::orderByDesc('periodo_inicio')->get();   // <-- ordenado

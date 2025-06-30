@@ -10,6 +10,8 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <style>
+
+        
         :root {
             --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             --sidebar-bg: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
@@ -382,6 +384,20 @@
         .section-highlight {
             animation: highlightSection 2s ease-in-out;
         }
+
+
+           /* funciona para que el menu se despligue en movile */
+               .sidebar {
+    overflow-y: auto;            /* permite el scroll vertical */
+    -webkit-overflow-scrolling: touch; /* scroll suave en iOS */
+}
+
+/* Opción 2: fija el header y desplaza solo los enlaces */
+.sidebar-nav {
+    max-height: calc(100vh - 200px); /* ajusta 160 px al alto real del header */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
         
         @keyframes highlightSection {
             0% { box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.7); }

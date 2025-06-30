@@ -117,6 +117,7 @@ public function updateUser(Request $request)
         'ge_prestamo'   => 'required|in:0,1',
         'ge_reportes'   => 'required|in:0,1',
         'grafica'       => 'required|in:0,1',
+        'aporte'  => 'required|in:0,1',  
     ]);
 
     $usuario = User::findOrFail($request->id);
@@ -141,6 +142,7 @@ public function updateUser(Request $request)
         'ge_prestamo'   => $request->boolean('ge_prestamo'),
         'ge_reportes'   => $request->boolean('ge_reportes'),
         'grafica'       => $request->boolean('grafica'),
+        'aporte'  => $request->boolean('aporte'),
         
     ]);
 

@@ -14,7 +14,13 @@ class GraficoAdminController extends Controller
 {
 public function index(Request $request)
 {
-
+ if (
+        ! Auth::check() ||                // no ha iniciado sesión
+        ! Auth::user()->is_admin ||       // no es admin
+        ! Auth::user()->grafica            // admin pero sin permiso de "inicio"
+    ) {
+        abort(403, 'Acceso no autorizado.');
+    }
     
     /* 1️⃣ Validar fechas (opcional pero recomendable) */
     $request->validate([
