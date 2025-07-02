@@ -140,7 +140,8 @@ public function pagar(Request $request)
             CajaMovimiento::create([
                 'caja_periodo_id'  => $periodoId,
                 'monto'            => $totalDia,
-                'concepto'         => "Ingresos del $fecha",
+                'descripcion'         => "aporteingresado",
+
                 // saldo_resultante después del incremento
                 'saldo_resultante' => CajaPeriodo::find($periodoId)->saldo_actual,
             ]);

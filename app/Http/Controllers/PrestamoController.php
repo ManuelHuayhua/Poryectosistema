@@ -198,6 +198,14 @@ $prestamosSinIniciar = Prestamo::joinSub($maxItemPorPrestamo, 'maxi', function (
     ->orderBy('prestamos.numero_prestamo')
     ->get();
 
+
+     // ─── ÚLTIMO “aporteingresado” ────────────────────────────────────────────────
+    $ultimoAporteMonto = CajaMovimiento::where('descripcion', 'aporteingresado')
+        ->latest()          // ordena por created_at DESC
+        ->value('monto');   // trae solo el valor del campo 'monto'
+                           // → devuelve null si no existe ningún registro
+
+
     // Mostrar modal de cumpleaños si hay usuarios con cumpleaños en los próximos 10 días
     return view('admin.dashboard', compact(
         'prestamosPendientes',
@@ -213,6 +221,7 @@ $prestamosSinIniciar = Prestamo::joinSub($maxItemPorPrestamo, 'maxi', function (
        'hayQuierenPagar',
        'prestamosSinIniciar',
        'periodoActual',
+       'ultimoAporteMonto',
 
     ));
     
