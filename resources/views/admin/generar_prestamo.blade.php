@@ -492,7 +492,7 @@
         </div>
 
         <div class="col-12 col-md-6 d-flex flex-column flex-md-row justify-content-md-end gap-2">
-            <a href="{{ route('admin.prestamos.pendientes') }}" class="btn btn-light text-primary border-primary">
+            <a href="{{ route('indexAdmin') }}" class="btn btn-light text-primary border-primary">
                 <i class="fas fa-file-download me-2"></i> 4. Descargar Contrato
             </a>
             <a href="{{ route('indexAdmin') }}" class="btn btn-primary">

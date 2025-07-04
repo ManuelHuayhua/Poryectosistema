@@ -342,12 +342,16 @@
                                 Ya tengo cuenta
                             </a>
                         @else
-                            <a href="{{ url('/home') }}" class="w-full sm:w-auto btn-glow pulse-glow bg-gradient-to-r from-green-400 to-blue-500 text-white px-8 sm:px-10 lg:px-12 py-4 sm:py-5 lg:py-6 rounded-full text-lg sm:text-xl font-black shadow-2xl transform hover:scale-105 transition-all duration-300">
-                                <svg class="inline-block w-5 h-5 lg:w-6 lg:h-6 mr-2 lg:mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
-                                </svg>
-                                IR A MI CUENTA
-                            </a>
+                           <a href="{{ auth()->user()->is_admin ? url('/admin') : url('/home') }}"
+   class="w-full sm:w-auto btn-glow pulse-glow bg-gradient-to-r from-green-400 to-blue-500 text-white
+          px-8 sm:px-10 lg:px-12 py-4 sm:py-5 lg:py-6 rounded-full text-lg sm:text-xl font-black shadow-2xl
+          transform hover:scale-105 transition-all duration-300">
+    <svg class="inline-block w-5 h-5 lg:w-6 lg:h-6 mr-2 lg:mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+    </svg>
+    IR A MI CUENTA
+</a>
                         @endguest
                     @endif
                 </div>
