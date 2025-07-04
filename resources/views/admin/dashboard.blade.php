@@ -1161,7 +1161,12 @@
             </a>
         </div>
        
-
+ <div class="nav-item">
+            <a href="{{ route('reporte.general') }}" class="nav-link">
+                <i class="fas fa-chart-line"></i><span>Reporte General</span>
+        </a>
+        </div>
+        
         <div class="nav-item mt-auto">
             <a href="{{ route('logout') }}" class="nav-link"
                 onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
