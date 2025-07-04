@@ -9,7 +9,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
+    
     <style>
         :root {
             --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -38,6 +38,8 @@
             z-index: 1000;
             transition: all 0.3s ease;
             color: white;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         .sidebar-header {
@@ -73,6 +75,9 @@
 
         .sidebar-nav {
             padding: 1rem 0;
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         .nav-item {
@@ -106,7 +111,6 @@
             min-height: 100vh;
         }
 
-        /* Estilos mejorados para el contenido */
         .page-header {
             background: white;
             border-radius: 15px;
@@ -264,19 +268,6 @@
             background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
             color: #1e40af;
         }
-          /* funciona para que el menu se despligue en movile */
-               .sidebar {
-    overflow-y: auto;            /* permite el scroll vertical */
-    -webkit-overflow-scrolling: touch; /* scroll suave en iOS */
-}
-
-/* Opción 2: fija el header y desplaza solo los enlaces */
-.sidebar-nav {
-    max-height: calc(100vh - 200px); /* ajusta 160 px al alto real del header */
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-}
-
 
         /* Responsive */
         @media (max-width: 768px) {
@@ -284,16 +275,13 @@
                 transform: translateX(-100%);
                 width: 100%;
             }
-
             .sidebar.show {
                 transform: translateX(0);
             }
-
             .main-content {
                 margin-left: 0;
                 padding: 1rem;
             }
-
             .mobile-menu-toggle {
                 display: block;
                 position: fixed;
@@ -308,20 +296,16 @@
                 cursor: pointer;
                 box-shadow: var(--card-shadow);
             }
-
             .page-header {
                 padding: 1.5rem;
                 margin-top: 4rem;
             }
-
             .page-title {
                 font-size: 1.5rem;
             }
-
             .form-card {
                 padding: 1.5rem;
             }
-
             .table-responsive {
                 font-size: 0.9rem;
             }
@@ -333,17 +317,18 @@
             }
         }
 
-        /* Estilos de impresión */
+        /* Estilos de impresión mejorados */
         @media print {
             body {
-                font-family: 'Times New Roman', serif;
-                margin: 0;
-                padding: 0;
-                font-size: 12px;
-                line-height: 1.4;
+                font-family: 'Times New Roman', serif !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                font-size: 12px !important;
+                line-height: 1.4 !important;
                 background: white !important;
+                color: black !important;
             }
-
+            
             /* Ocultar todo excepto el contrato */
             .sidebar,
             .mobile-menu-toggle,
@@ -351,7 +336,7 @@
             .main-content > *:not(#formato-contrato) {
                 display: none !important;
             }
-
+            
             /* Mostrar solo el contrato */
             #formato-contrato {
                 display: block !important;
@@ -362,28 +347,35 @@
                 max-width: none !important;
                 width: 100% !important;
                 height: auto !important;
+                font-family: 'Times New Roman', serif !important;
             }
-
+            
             .main-content {
                 margin-left: 0 !important;
                 padding: 0 !important;
             }
-
+            
             @page {
                 margin: 1.5cm;
                 size: A4;
             }
+            
+            /* Asegurar que el texto del contrato sea negro */
+            #formato-contrato * {
+                color: black !important;
+                background: white !important;
+            }
         }
     </style>
 </head>
-<body>
 
+<body>
 <!-- Botón para móviles -->
 <button class="mobile-menu-toggle" onclick="toggleSidebar()">
     <i class="fas fa-bars"></i>
 </button>
 
-<!-- Sidebar (mantenido intacto) -->
+<!-- Sidebar -->
 <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
         <div class="user-avatar">
@@ -392,47 +384,42 @@
         <div class="user-name">{{ Auth::user()->name }}</div>
         <div class="user-welcome">¡Bienvenido de nuevo!</div>
     </div>
-
     <nav class="sidebar-nav">
         <div class="nav-item">
-        <a href="{{ route('indexAdmin') }}" class="nav-link">
-            <i class="fas fa-home"></i><span>Inicio</span>
-        </a>
-    </div>
-     <div class="nav-item">
-        <a href="{{ route('admin.graficos') }}" class="nav-link">
-            <i class="fas fa-chart-bar"></i><span>Gráficos</span>
-        </a>
-    </div>
-    <div class="nav-item">
-        <a href="{{ route('admin.createuser') }}" class="nav-link">
-            <i class="fas fa-users-cog"></i><span>Usuario y Roles</span>
-        </a>
-    </div>
-    <div class="nav-item">
-        <a href="{{ route('admin.prestamos.pendientes') }}" class="nav-link active">
-            <i class="fas fa-file-download"></i><span>Descargar Contrato</span>
-        </a>
-    </div>
-    <div class="nav-item">
-        <a href="{{ route('admin.configuraciones') }}" class="nav-link">
-            <i class="fas fa-cogs"></i><span>Configurar</span>
-        </a>
-    </div>
-    <div class="nav-item">
-        <a href="{{ route('admin.prestamos.crear') }}" class="nav-link">
-            <i class="fas fa-file-signature"></i><span>Generar Préstamo</span>
-        </a>
-    </div>
-    <div class="nav-item">
-        <a href="{{ route('admin.reporte.prestamos') }}" class="nav-link">
-            <i class="fas fa-chart-line"></i><span>Generar Reportes</span>
-        </a>
-    </div>
-   
-
-        <!-- Más links aquí -->
-
+            <a href="{{ route('indexAdmin') }}" class="nav-link">
+                <i class="fas fa-home"></i><span>Inicio</span>
+            </a>
+        </div>
+        <div class="nav-item">
+            <a href="{{ route('admin.graficos') }}" class="nav-link">
+                <i class="fas fa-chart-bar"></i><span>Gráficos</span>
+            </a>
+        </div>
+        <div class="nav-item">
+            <a href="{{ route('admin.createuser') }}" class="nav-link">
+                <i class="fas fa-users-cog"></i><span>Usuario y Roles</span>
+            </a>
+        </div>
+        <div class="nav-item">
+            <a href="{{ route('admin.prestamos.pendientes') }}" class="nav-link active">
+                <i class="fas fa-file-download"></i><span>Descargar Contrato</span>
+            </a>
+        </div>
+        <div class="nav-item">
+            <a href="{{ route('admin.configuraciones') }}" class="nav-link">
+                <i class="fas fa-cogs"></i><span>Configurar</span>
+            </a>
+        </div>
+        <div class="nav-item">
+            <a href="{{ route('admin.prestamos.crear') }}" class="nav-link">
+                <i class="fas fa-file-signature"></i><span>Generar Préstamo</span>
+            </a>
+        </div>
+        <div class="nav-item">
+            <a href="{{ route('admin.reporte.prestamos') }}" class="nav-link">
+                <i class="fas fa-chart-line"></i><span>Generar Reportes</span>
+            </a>
+        </div>
         <div class="nav-item mt-auto">
             <a href="{{ route('logout') }}" class="nav-link"
                 onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
@@ -446,84 +433,146 @@
     </nav>
 </div>
 
-<!-- Contenido principal mejorado -->
+<!-- Contenido principal -->
 <div class="main-content">
-    <!-- Header de la página -->
-    <div class="page-header no-print">
-        <h1 class="page-title">
-            <i class="fas fa-money-bill-wave"></i>
-            Préstamos Pendientes
-        </h1>
-    </div>
-
-    <!-- Formulario de datos del prestamista -->
-    <div class="form-card no-print">
+    <!-- Sección de Filtros -->
+    <div class="form-card no-print" style="margin-bottom: 2rem;">
         <div class="form-card-header">
-            <i class="form-card-icon fas fa-user-tie"></i>
-            <h3 class="form-card-title">Datos del Prestamista</h3>
+            <i class="fas fa-filter form-card-icon"></i>
+            <h5 class="form-card-title">Filtros de Búsqueda</h5>
+            <button class="btn btn-outline-secondary btn-sm ms-auto" onclick="limpiarFiltros()">
+                <i class="fas fa-eraser me-1"></i>Limpiar Filtros
+            </button>
         </div>
         
-        <div class="row g-3">
-            <div class="col-md-6">
-                <label for="nombre-prestamista" class="form-label">
-                    <i class="fas fa-user me-2"></i>Nombre del Prestamista
+        <div class="row">
+            <!-- Filtro por Usuario -->
+            <div class="col-lg-3 col-md-6 mb-3">
+                <label for="filtro-usuario" class="form-label">
+                    <i class="fas fa-user me-1"></i>Usuario
                 </label>
-                <input type="text" id="nombre-prestamista" class="form-control" placeholder="Nombre completo">
+                <input type="text" id="filtro-usuario" class="form-control" 
+                       placeholder="Buscar por nombre o apellido..." 
+                       onkeyup="aplicarFiltros()">
             </div>
-            <div class="col-md-6">
-                <label for="dni-prestamista" class="form-label">
-                    <i class="fas fa-id-card me-2"></i>DNI del Prestamista
+            
+            <!-- Filtro por DNI -->
+            <div class="col-lg-2 col-md-6 mb-3">
+                <label for="filtro-dni" class="form-label">
+                    <i class="fas fa-id-card me-1"></i>DNI
                 </label>
-                <input type="text" id="dni-prestamista" class="form-control" placeholder="12345678">
+                <input type="text" id="filtro-dni" class="form-control" 
+                       placeholder="DNI..." 
+                       onkeyup="aplicarFiltros()">
+            </div>
+            
+            <!-- Filtro por Número de Préstamo -->
+            <div class="col-lg-2 col-md-6 mb-3">
+                <label for="filtro-numero" class="form-label">
+                    <i class="fas fa-hashtag me-1"></i>N° Préstamo
+                </label>
+                <input type="text" id="filtro-numero" class="form-control" 
+                       placeholder="Número..." 
+                       onkeyup="aplicarFiltros()">
+            </div>
+            
+            <!-- Filtro por Estado -->
+            <div class="col-lg-2 col-md-6 mb-3">
+                <label for="filtro-estado" class="form-label">
+                    <i class="fas fa-info-circle me-1"></i>Estado
+                </label>
+                <select id="filtro-estado" class="form-select" onchange="aplicarFiltros()">
+                    <option value="">Todos los estados</option>
+                    <option value="aprobado">Aprobado</option>
+                   
+                    <option value="pagado">Pagado</option>
+                    
+                  
+                </select>
+            </div>
+            
+            <!-- Filtro por Interés -->
+            <div class="col-lg-3 col-md-6 mb-3">
+                <label for="filtro-interes" class="form-label">
+                    <i class="fas fa-percentage me-1"></i>Interés
+                </label>
+                <select id="filtro-interes" class="form-select" onchange="aplicarFiltros()">
+                    <option value="">Todos los intereses</option>
+                    <option value="5">5%</option>
+                    <option value="10">10%</option>
+                    <option value="15">15%</option>
+                    <option value="20">20%</option>
+                    <option value="25">25%</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="row">
+            <!-- Rango de Monto -->
+            <div class="col-lg-3 col-md-6 mb-3">
+                <label class="form-label">
+                    <i class="fas fa-money-bill me-1"></i>Rango de Monto
+                </label>
+                <div class="row">
+                    <div class="col-6">
+                        <input type="number" id="filtro-monto-min" class="form-control" 
+                               placeholder="Mínimo" onkeyup="aplicarFiltros()">
+                    </div>
+                    <div class="col-6">
+                        <input type="number" id="filtro-monto-max" class="form-control" 
+                               placeholder="Máximo" onkeyup="aplicarFiltros()">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Rango de Fecha Inicio -->
+            <div class="col-lg-3 col-md-6 mb-3">
+                <label class="form-label">
+                    <i class="fas fa-calendar-alt me-1"></i>Fecha Inicio
+                </label>
+                <div class="row">
+                    <div class="col-6">
+                        <input type="date" id="filtro-fecha-inicio-desde" class="form-control" 
+                               onchange="aplicarFiltros()">
+                    </div>
+                    <div class="col-6">
+                        <input type="date" id="filtro-fecha-inicio-hasta" class="form-control" 
+                               onchange="aplicarFiltros()">
+                    </div>
+                </div>
+                <small class="text-muted">Desde - Hasta</small>
+            </div>
+            
+            <!-- Rango de Fecha Fin -->
+            <div class="col-lg-3 col-md-6 mb-3">
+                <label class="form-label">
+                    <i class="fas fa-calendar-check me-1"></i>Fecha Fin
+                </label>
+                <div class="row">
+                    <div class="col-6">
+                        <input type="date" id="filtro-fecha-fin-desde" class="form-control" 
+                               onchange="aplicarFiltros()">
+                    </div>
+                    <div class="col-6">
+                        <input type="date" id="filtro-fecha-fin-hasta" class="form-control" 
+                               onchange="aplicarFiltros()">
+                    </div>
+                </div>
+                <small class="text-muted">Desde - Hasta</small>
+            </div>
+            
+            <!-- Contador de resultados -->
+            <div class="col-lg-3 col-md-6 mb-3 d-flex align-items-end">
+                <div class="w-100">
+                    <div class="alert alert-info mb-0 py-2">
+                        <i class="fas fa-search me-2"></i>
+                        <span id="contador-resultados">Mostrando todos los préstamos</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-
-    <!-- Formulario de condiciones del préstamo -->
-    <div class="form-card no-print">
-        <div class="form-card-header">
-            <i class="form-card-icon fas fa-calculator"></i>
-            <h3 class="form-card-title">Condiciones del Préstamo</h3>
-        </div>
-        
-        <div class="row g-3">
-            <div class="col-md-3">
-                <label for="interes" class="form-label">
-                    <i class="fas fa-percentage me-2"></i>Interés (%)
-                </label>
-                <input type="number" id="interes" class="form-control" placeholder="5" value="5">
-            </div>
-            <div class="col-md-3">
-                <label for="penalidad" class="form-label">
-                    <i class="fas fa-exclamation-circle me-2"></i>Penalidad (%)
-                </label>
-                <input type="number" id="penalidad" class="form-control" placeholder="2" value="2">
-            </div>
-            <div class="col-md-3">
-                <label for="dias-plazo" class="form-label">
-                    <i class="fas fa-calendar-alt me-2"></i>Días de plazo
-                </label>
-                <input type="number" id="dias-plazo" class="form-control" placeholder="28" value="28">
-            </div>
-            <div class="col-md-3">
-                <label for="fecha-inicio" class="form-label">
-                    <i class="fas fa-calendar-check me-2"></i>Fecha de Inicio
-                </label>
-                <input type="date" id="fecha-inicio" class="form-control">
-            </div>
-        </div>
-        
-        <div class="row g-3 mt-2">
-            <div class="col-md-6">
-                <label for="fecha-fin" class="form-label">
-                    <i class="fas fa-calendar-times me-2"></i>Fecha de Vencimiento
-                </label>
-                <input type="date" id="fecha-fin" class="form-control" readonly>
-            </div>
-        </div>
-    </div>
-
-    <!-- Tabla de préstamos con tu lógica PHP original -->
+    <!-- Tabla de préstamos -->
     @if($prestamos->isEmpty())
         <div class="alert alert-info">
             <i class="fas fa-info-circle me-2"></i>
@@ -534,12 +583,15 @@
             <div class="table-header">
                 <h3 class="table-title">
                     <i class="fas fa-list"></i>
-                    Lista de Préstamos Pendientes
+                    Lista de Préstamos Aprobados
                 </h3>
+                <button class="btn btn-outline-light btn-sm" onclick="exportarFiltrados()">
+                    <i class="fas fa-file-export me-1"></i>Exportar Filtrados
+                </button>
             </div>
             
             <div class="table-responsive">
-                <table class="table table-hover">
+                <table class="table table-hover" id="tabla-prestamos">
                     <thead>
                         <tr>
                             <th><i class="fas fa-hashtag me-2"></i>#</th>
@@ -547,25 +599,41 @@
                             <th><i class="fas fa-file-invoice me-2"></i>N° Préstamo</th>
                             <th><i class="fas fa-money-bill me-2"></i>Monto</th>
                             <th><i class="fas fa-calendar me-2"></i>Fecha Inicio</th>
+                            <th><i class="fas fa-calendar me-2"></i>Fecha Fin</th>
+                            <th><i class="fas fa-percentage me-2"></i>Interés</th>
                             <th><i class="fas fa-info-circle me-2"></i>Estado</th>
                             <th><i class="fas fa-cogs me-2"></i>Acción</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach ($prestamos as $index => $prestamo)
-                            <tr>
+                            <tr data-dni="{{ $prestamo->user->dni ?? '' }}">
                                 <td>{{ $index + 1 }}</td>
                                 <td>{{ $prestamo->user->name }} {{ $prestamo->user->apellido_paterno }}</td>
                                 <td><span class="badge bg-primary">{{ $prestamo->numero_prestamo }}</span></td>
                                 <td><strong>S/ {{ number_format($prestamo->monto, 2) }}</strong></td>
-                                <td>{{ $prestamo->fecha_inicio }}</td>
-                                <td><span class="badge bg-warning text-dark">{{ ucfirst($prestamo->estado) }}</span></td>
+                                <td>{{ \Carbon\Carbon::parse($prestamo->fecha_inicio)->format('d/m/Y') }}</td>
+                                <td>{{ \Carbon\Carbon::parse($prestamo->fecha_fin)->format('d/m/Y') }}</td>
+                                <td>{{ $prestamo->interes }}%</td>
+                                <td><span class="badge bg-success">{{ ucfirst($prestamo->estado) }}</span></td>
                                 <td>
-                                    <button 
+                                    <button
                                         class="btn btn-primary btn-sm"
-                                        onclick="generarContrato({{ $prestamo->id }}, '{{ $prestamo->user->name }}', '{{ $prestamo->user->apellido_paterno }}', '{{ $prestamo->user->apellido_materno }}', '{{ $prestamo->user->nacionalidad }}', '{{ $prestamo->user->fecha_nacimiento }}', '{{ $prestamo->user->direccion }}', '{{ $prestamo->user->celular }}', '{{ $prestamo->numero_prestamo }}', '{{ $prestamo->monto }}', '{{ $prestamo->user->dni }}')"
+                                        onclick="generarContrato(
+                                            '{{ $prestamo->user->name }}',
+                                            '{{ $prestamo->user->apellido_paterno ?? '' }}',
+                                            '{{ $prestamo->user->apellido_materno ?? '' }}',
+                                            '{{ $prestamo->user->dni ?? '' }}',
+                                            '{{ $prestamo->numero_prestamo }}',
+                                            {{ $prestamo->monto }},
+                                            '{{ $prestamo->fecha_inicio }}',
+                                            '{{ $prestamo->fecha_fin }}',
+                                            {{ $prestamo->interes }},
+                                            {{ $prestamo->porcentaje_penalidad ?? 2 }},
+                                            {{ $prestamo->interes_pagar ?? ($prestamo->monto * $prestamo->interes / 100) }}
+                                        )"
                                     >
-                                        <i class="fas fa-download me-1"></i>Descargar
+                                        <i class="fas fa-download me-1"></i>Descargar Contrato
                                     </button>
                                 </td>
                             </tr>
@@ -575,114 +643,104 @@
             </div>
         </div>
     @endif
-</div>
 
-<!-- Tu contrato original mantenido exactamente igual -->
-<div id="formato-contrato" class="container" style="display: none; max-width: 800px; margin: 0 auto; padding: 40px; font-family: 'Times New Roman', serif; line-height: 1.6;">
-    
-    <!-- Encabezado -->
-    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
-        <h1 style="font-size: 24px; font-weight: bold; margin: 0; text-align: center; flex-grow: 1;">
-            CONTRATO DE PRÉSTAMO
-        </h1>
-    </div>
-    <div style="text-align: right; margin-left: 20px;">
-        <strong>Fecha:</strong> <span id="fecha-contrato"></span>
-    </div>
+    <!-- Formato del contrato (oculto inicialmente) -->
+    <div id="formato-contrato" class="container" style="display: none; max-width: 800px; margin: 0 auto; padding: 40px; font-family: 'Times New Roman', serif; line-height: 1.6;">
+        <!-- Encabezado -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
+            <h1 style="font-size: 24px; font-weight: bold; margin: 0; text-align: center; flex-grow: 1; text-transform: uppercase;">
+                CONTRATO DE PRÉSTAMO
+            </h1>
+        </div>
+        <div style="text-align: right; margin-bottom: 20px;">
+            <strong>Fecha:</strong> <span id="fecha-contrato"></span>
+        </div>
 
-    <!-- Información de las partes -->
-    <div style="margin-bottom: 25px;">
-        <h3 style="font-size: 16px; font-weight: bold; margin-bottom: 15px;">LAS PARTES:</h3>
-
-        <div style="display: flex; justify-content: space-between;">
-            <!-- Prestamista a la izquierda -->
-            <div style="width: 48%;">
-                <strong>PRESTAMISTA:</strong><br>
-                Nombre: <span id="nombre-prestamista-contrato"></span><br>
-                DNI: <span id="dni-prestamista-contrato"></span>
+        <!-- Información de las partes -->
+        <div style="margin-bottom: 25px;">
+            <h3 style="font-size: 16px; font-weight: bold; margin-bottom: 15px; text-decoration: underline;">LAS PARTES:</h3>
+            <div style="margin-bottom: 15px;">
+                <strong>PRESTAMISTA:</strong> Banquito
             </div>
-
-            <!-- Prestatario a la derecha -->
-            <div style="width: 48%;">
-                <strong>PRESTATARIO:</strong><br>
-                Nombre: <span id="nombre-prestatario"></span><br>
-                DNI: <span id="dni-prestatario"></span>
+            <div>
+                <strong>PRESTATARIO:</strong> <span id="nombre-prestatario"></span>, DNI: <span id="dni-prestatario"></span>
             </div>
         </div>
-    </div>
 
-    <!-- Cláusulas -->
-    <div style="margin-bottom: 30px;">
-        <h3 style="font-size: 16px; font-weight: bold; margin-bottom: 15px;">CLÁUSULAS:</h3>
+        <!-- Cláusulas -->
+        <div style="margin-bottom: 30px;">
+            <h3 style="font-size: 16px; font-weight: bold; margin-bottom: 15px; text-decoration: underline;">CLÁUSULAS:</h3>
+            
+            <div style="margin-bottom: 15px; text-align: justify;">
+                <strong>1. MONTO DEL PRÉSTAMO:</strong><br>
+                El Prestamista otorga al Prestatario la suma de <strong>S/ <span id="monto-numeros"></span></strong>
+                (<span id="monto-letras"></span>) (en adelante, el "Principal").
+            </div>
 
-        <div style="margin-bottom: 15px;">
-            <strong>1. MONTO DEL PRÉSTAMO:</strong><br>
-            El Prestamista otorga al Prestatario la suma de <strong>S/ <span id="monto-numeros"></span></strong> 
-            (<span id="monto-letras"></span>) (en adelante, el "Principal").
+            <div style="margin-bottom: 15px; text-align: justify;">
+                <strong>2. PLAZO:</strong><br>
+                Duración: <strong><span id="plazo-texto"></span></strong>, desde <strong><span id="fecha-inicio-contrato"></span></strong>
+                hasta <strong><span id="fecha-vencimiento-contrato"></span></strong>.
+            </div>
+
+            <div style="margin-bottom: 15px; text-align: justify;">
+                <strong>3. INTERÉS:</strong><br>
+                Tasa fija del <strong><span id="tasa-interes"></span>%</strong> sobre el Principal.<br>
+                Interés total: <strong>S/ <span id="monto-interes"></span></strong> (Principal × <span id="factor-interes"></span>).
+            </div>
+
+            <div style="margin-bottom: 15px; text-align: justify;">
+                <strong>4. PAGO TOTAL AL VENCIMIENTO:</strong><br>
+                - Principal: <strong>S/ <span id="principal-pago"></span></strong><br>
+                - Interés: <strong>S/ <span id="interes-pago"></span></strong><br>
+                - <strong>Total: S/ <span id="total-pago"></span></strong>
+            </div>
+
+            <div style="margin-bottom: 15px; text-align: justify;">
+                <strong>5. FECHA LÍMITE:</strong><br>
+                Pago máximo hasta: <strong><span id="fecha-limite"></span></strong> (inclusive).
+            </div>
         </div>
 
-        <div style="margin-bottom: 15px;">
-            <strong>2. PLAZO:</strong><br>
-            Duración: <strong><span id="plazo-texto"></span></strong>, desde <strong><span id="fecha-inicio-contrato"></span></strong> 
-            hasta <strong><span id="fecha-vencimiento-contrato"></span></strong>.
+        <!-- Nota sobre penalidad -->
+        <div style="margin-bottom: 30px; padding: 15px; border: 2px solid #333; background-color: #f9f9f9; border-radius: 5px;">
+            <strong>NOTA IMPORTANTE:</strong> En caso de mora, se aplicará una penalidad del <strong><span id="penalidad-texto"></span>%</strong>
+            que se calcula exclusivamente sobre el interés. El vencimiento es de <strong><span id="dias-vencimiento"></span> días naturales</strong>
+            a partir de la fecha de firma del presente contrato.
         </div>
 
-        <div style="margin-bottom: 15px;">
-            <strong>3. INTERÉS:</strong><br>
-            Tasa fija del <strong><span id="tasa-interes"></span>%</strong> sobre el Principal.<br>
-            Interés total: <strong>S/ <span id="monto-interes"></span></strong> (Principal × <span id="factor-interes"></span>).
-        </div>
-
-        <div style="margin-bottom: 15px;">
-            <strong>4. PAGO TOTAL AL VENCIMIENTO:</strong><br>
-            - Principal: S/ <span id="principal-pago"></span><br>
-            - Interés: S/ <span id="interes-pago"></span><br>
-            - <strong>Total: S/ <span id="total-pago"></span></strong>
-        </div>
-
-        <div style="margin-bottom: 15px;">
-            <strong>5. FECHA LÍMITE:</strong><br>
-            Pago máximo hasta: <strong><span id="fecha-limite"></span></strong> (inclusive).
-        </div>
-    </div>
-
-    <!-- Nota sobre penalidad -->
-    <div style="margin-bottom: 30px; padding: 10px; border: 1px solid #ccc; background-color: #f9f9f9;">
-        <strong>NOTA IMPORTANTE:</strong> En caso de mora, se aplicará una penalidad del <strong><span id="penalidad-texto"></span>%</strong> 
-        que se calcula exclusivamente sobre el interés. El vencimiento es de <strong><span id="dias-vencimiento"></span> días naturales</strong> 
-        a partir de la fecha de firma del presente contrato.
-    </div>
-
-    <!-- Firmas -->
-    <div style="display: flex; justify-content: space-between; margin-top: 60px;">
-        <div style="text-align: center; width: 45%;">
-            <div style="border-bottom: 1px solid #000; margin-bottom: 10px; height: 50px;"></div>
-            <strong>PRESTAMISTA</strong><br>
-            <span id="firma-prestamista"></span><br>
-            DNI: <span id="dni-firma-prestamista"></span>
-        </div>
-        <div style="text-align: center; width: 45%;">
-            <div style="border-bottom: 1px solid #000; margin-bottom: 10px; height: 50px;"></div>
-            <strong>PRESTATARIO</strong><br>
-            <span id="firma-prestatario"></span><br>
-            DNI: <span id="dni-firma-prestatario"></span>
+        <!-- Firmas -->
+        <div style="display: flex; justify-content: space-between; margin-top: 60px;">
+            <div style="text-align: center; width: 45%;">
+                <div style="border-bottom: 2px solid #000; margin-bottom: 10px; height: 60px;"></div>
+                <strong>PRESTAMISTA</strong><br>
+                Banquito
+            </div>
+            <div style="text-align: center; width: 45%;">
+                <div style="border-bottom: 2px solid #000; margin-bottom: 10px; height: 60px;"></div>
+                <strong>PRESTATARIO</strong><br>
+                <span id="firma-prestatario"></span><br>
+                DNI: <span id="dni-firma-prestatario"></span>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- Tu JavaScript original mantenido exactamente igual -->
 <script>
-    // Función para convertir números a letras (básica)
+    // Función para convertir números a letras
     function numeroALetras(numero) {
         const unidades = ['', 'uno', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve'];
         const decenas = ['', '', 'veinte', 'treinta', 'cuarenta', 'cincuenta', 'sesenta', 'setenta', 'ochenta', 'noventa'];
         const centenas = ['', 'ciento', 'doscientos', 'trescientos', 'cuatrocientos', 'quinientos', 'seiscientos', 'setecientos', 'ochocientos', 'novecientos'];
+        const especiales = ['diez', 'once', 'doce', 'trece', 'catorce', 'quince', 'dieciséis', 'diecisiete', 'dieciocho', 'diecinueve'];
         
         if (numero === 0) return 'cero';
         if (numero === 100) return 'cien';
+        if (numero === 1000) return 'mil';
         
         let resultado = '';
         
+        // Miles
         if (numero >= 1000) {
             const miles = Math.floor(numero / 1000);
             if (miles === 1) {
@@ -693,18 +751,22 @@
             numero %= 1000;
         }
         
+        // Centenas
         if (numero >= 100) {
-            resultado += centenas[Math.floor(numero / 100)] + ' ';
+            const cent = Math.floor(numero / 100);
+            resultado += centenas[cent] + ' ';
             numero %= 100;
         }
         
+        // Decenas y unidades
         if (numero >= 20) {
-            resultado += decenas[Math.floor(numero / 10)];
-            if (numero % 10 !== 0) {
-                resultado += ' y ' + unidades[numero % 10];
+            const dec = Math.floor(numero / 10);
+            const uni = numero % 10;
+            resultado += decenas[dec];
+            if (uni > 0) {
+                resultado += ' y ' + unidades[uni];
             }
         } else if (numero >= 10) {
-            const especiales = ['diez', 'once', 'doce', 'trece', 'catorce', 'quince', 'dieciséis', 'diecisiete', 'dieciocho', 'diecinueve'];
             resultado += especiales[numero - 10];
         } else if (numero > 0) {
             resultado += unidades[numero];
@@ -713,61 +775,9 @@
         return resultado.trim();
     }
 
-    // Función para calcular fecha fin automáticamente
-    document.getElementById('fecha-inicio').addEventListener('change', function() {
-        const fechaInicio = new Date(this.value);
-        const diasPlazo = parseInt(document.getElementById('dias-plazo').value) || 28;
-        
-        if (!isNaN(fechaInicio.getTime())) {
-            const fechaFin = new Date(fechaInicio);
-            fechaFin.setDate(fechaFin.getDate() + diasPlazo);
-            
-            document.getElementById('fecha-fin').value = fechaFin.toISOString().split('T')[0];
-        }
-    });
-
-    // Función para calcular fecha fin cuando cambian los días
-    document.getElementById('dias-plazo').addEventListener('change', function() {
-        const fechaInicioValue = document.getElementById('fecha-inicio').value;
-        if (fechaInicioValue) {
-            const fechaInicio = new Date(fechaInicioValue);
-            const diasPlazo = parseInt(this.value) || 28;
-            
-            const fechaFin = new Date(fechaInicio);
-            fechaFin.setDate(fechaFin.getDate() + diasPlazo);
-            
-            document.getElementById('fecha-fin').value = fechaFin.toISOString().split('T')[0];
-        }
-    });
-
-    // Establecer fecha de inicio por defecto (hoy)
-    document.addEventListener('DOMContentLoaded', function() {
-        const hoy = new Date();
-        document.getElementById('fecha-inicio').value = hoy.toISOString().split('T')[0];
-        
-        // Calcular fecha fin automáticamente
-        const diasPlazo = parseInt(document.getElementById('dias-plazo').value) || 28;
-        const fechaFin = new Date(hoy);
-        fechaFin.setDate(fechaFin.getDate() + diasPlazo);
-        document.getElementById('fecha-fin').value = fechaFin.toISOString().split('T')[0];
-    });
-
-    function generarContrato(id, nombre, apePaterno, apeMaterno, nacionalidad, nacimiento, direccion, celular, numero, monto, dni) {
-        // Validar campos requeridos
-        const nombrePrestamista = document.getElementById("nombre-prestamista").value;
-        const dniPrestamista = document.getElementById("dni-prestamista").value;
-        const fechaInicio = document.getElementById("fecha-inicio").value;
-        const fechaFin = document.getElementById("fecha-fin").value;
-        
-        if (!nombrePrestamista || !dniPrestamista || !fechaInicio || !fechaFin) {
-            alert("Por favor, complete todos los campos requeridos (Nombre del prestamista, DNI del prestamista, fechas).");
-            return;
-        }
-
-        const interes = parseFloat(document.getElementById("interes").value) || 5;
-        const penalidad = parseFloat(document.getElementById("penalidad").value) || 2;
-        const diasPlazo = parseInt(document.getElementById("dias-plazo").value) || 28;
-
+    // Función principal para generar el contrato
+    function generarContrato(nombre, apePaterno, apeMaterno, dni, numeroPrestamo, monto, fechaInicio, fechaFin, interes, penalidad, interesPagar) {
+        // Fecha actual
         const fechaHoy = new Date();
         const fechaFormateada = fechaHoy.toLocaleDateString('es-PE', {
             year: 'numeric',
@@ -778,7 +788,7 @@
 
         // Calcular montos
         const montoNumerico = parseFloat(monto);
-        const montoInteres = montoNumerico * (interes / 100);
+        const montoInteres = parseFloat(interesPagar);
         const montoTotal = montoNumerico + montoInteres;
 
         // Formatear fechas
@@ -794,17 +804,17 @@
             day: 'numeric'
         });
 
+        // Calcular duración
+        const inicio = new Date(fechaInicio);
+        const fin = new Date(fechaFin);
+        const duracionDias = Math.ceil((fin - inicio) / (1000 * 60 * 60 * 24));
+        const duracionSemanas = Math.ceil(duracionDias / 7);
+
         // Llenar datos del contrato
         document.getElementById("fecha-contrato").textContent = fechaFormateada;
-        
-        // Prestamista
-        document.getElementById("nombre-prestamista-contrato").textContent = nombrePrestamista;
-        document.getElementById("dni-prestamista-contrato").textContent = dniPrestamista;
-        document.getElementById("firma-prestamista").textContent = nombrePrestamista;
-        document.getElementById("dni-firma-prestamista").textContent = dniPrestamista;
-        
+
         // Prestatario
-        const nombreCompleto = `${nombre} ${apePaterno} ${apeMaterno}`;
+        const nombreCompleto = `${nombre} ${apePaterno} ${apeMaterno}`.trim();
         document.getElementById("nombre-prestatario").textContent = nombreCompleto;
         document.getElementById("dni-prestatario").textContent = dni;
         document.getElementById("firma-prestatario").textContent = nombreCompleto;
@@ -813,9 +823,11 @@
         // Montos
         document.getElementById("monto-numeros").textContent = montoNumerico.toFixed(2);
         document.getElementById("monto-letras").textContent = numeroALetras(Math.floor(montoNumerico)) + " soles";
-        
+
         // Plazo
-        const plazoTexto = diasPlazo === 28 ? "cuatro (4) semanas" : `${diasPlazo} días`;
+        const plazoTexto = duracionSemanas === 4 ? "cuatro (4) semanas" : 
+                          duracionSemanas === 1 ? "una (1) semana" : 
+                          `${duracionSemanas} semanas`;
         document.getElementById("plazo-texto").textContent = plazoTexto;
         document.getElementById("fecha-inicio-contrato").textContent = fechaInicioFormateada;
         document.getElementById("fecha-vencimiento-contrato").textContent = fechaFinFormateada;
@@ -833,25 +845,252 @@
 
         // Penalidad y días
         document.getElementById("penalidad-texto").textContent = penalidad;
-        document.getElementById("dias-vencimiento").textContent = diasPlazo;
+        document.getElementById("dias-vencimiento").textContent = duracionDias;
 
-        // Mostrar contrato e imprimir
+        // Mostrar contrato y preparar para imprimir
         document.getElementById("formato-contrato").style.display = "block";
+        
+        // Scroll al contrato
+        document.getElementById("formato-contrato").scrollIntoView({ 
+            behavior: 'smooth' 
+        });
+
+        // Activar impresión automáticamente después de un breve delay
         setTimeout(() => {
             window.print();
-        }, 100);
+        }, 500);
     }
 
+    // Función para toggle del sidebar en móviles
     function toggleSidebar() {
         document.getElementById('sidebar').classList.toggle('show');
     }
 
+    // Interceptar Ctrl+P para mostrar mensaje si no hay contrato visible
     document.addEventListener("keydown", function(e) {
         if (e.ctrlKey && e.key === "p") {
-            e.preventDefault();
-            alert("Primero haz clic en 'Descargar' para generar el contrato.");
+            const contrato = document.getElementById("formato-contrato");
+            if (contrato.style.display === "none" || !contrato.style.display) {
+                e.preventDefault();
+                alert("Primero haz clic en 'Descargar Contrato' para generar el contrato.");
+            }
+            // Si el contrato está visible, permitir la impresión normal
         }
     });
+
+    // Función para ocultar el contrato y volver a la tabla
+    function volverATabla() {
+        document.getElementById("formato-contrato").style.display = "none";
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Agregar botón para volver (opcional)
+    document.addEventListener('DOMContentLoaded', function() {
+        const contrato = document.getElementById("formato-contrato");
+        if (contrato) {
+            const botonVolver = document.createElement('button');
+            botonVolver.innerHTML = '<i class="fas fa-arrow-left me-2"></i>Volver a la lista';
+            botonVolver.className = 'btn btn-secondary no-print';
+            botonVolver.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 1000;';
+            botonVolver.onclick = volverATabla;
+            contrato.appendChild(botonVolver);
+        }
+    });
+
+    // Variables globales para filtros
+    let prestamosOriginales = [];
+    let prestamosFiltrados = [];
+
+    // Inicializar filtros cuando se carga la página
+    document.addEventListener('DOMContentLoaded', function() {
+        // Guardar datos originales de la tabla
+        const filas = document.querySelectorAll('#tabla-prestamos tbody tr');
+        prestamosOriginales = Array.from(filas).map(fila => {
+            const celdas = fila.querySelectorAll('td');
+            return {
+                elemento: fila,
+                usuario: celdas[1].textContent.trim().toLowerCase(),
+                numeroPrestamo: celdas[2].textContent.trim().toLowerCase(),
+                monto: parseFloat(celdas[3].textContent.replace(/[^\d.-]/g, '')),
+                fechaInicio: celdas[4].textContent.trim(),
+                fechaFin: celdas[5].textContent.trim(),
+                interes: parseInt(celdas[6].textContent.replace('%', '')),
+                estado: celdas[7].textContent.trim().toLowerCase(),
+                dni: fila.dataset.dni || '' // Asumiendo que agregas data-dni a las filas
+            };
+        });
+        
+        prestamosFiltrados = [...prestamosOriginales];
+        actualizarContador();
+    });
+
+    // Función principal para aplicar todos los filtros
+    function aplicarFiltros() {
+        const filtros = {
+            usuario: document.getElementById('filtro-usuario').value.toLowerCase().trim(),
+            dni: document.getElementById('filtro-dni').value.toLowerCase().trim(),
+            numero: document.getElementById('filtro-numero').value.toLowerCase().trim(),
+            estado: document.getElementById('filtro-estado').value.toLowerCase(),
+            interes: document.getElementById('filtro-interes').value,
+            montoMin: parseFloat(document.getElementById('filtro-monto-min').value) || 0,
+            montoMax: parseFloat(document.getElementById('filtro-monto-max').value) || Infinity,
+            fechaInicioDesde: document.getElementById('filtro-fecha-inicio-desde').value,
+            fechaInicioHasta: document.getElementById('filtro-fecha-inicio-hasta').value,
+            fechaFinDesde: document.getElementById('filtro-fecha-fin-desde').value,
+            fechaFinHasta: document.getElementById('filtro-fecha-fin-hasta').value
+        };
+        
+        prestamosFiltrados = prestamosOriginales.filter(prestamo => {
+            // Filtro por usuario (nombre y apellidos)
+            if (filtros.usuario && !prestamo.usuario.includes(filtros.usuario)) {
+                return false;
+            }
+            
+            // Filtro por DNI
+            if (filtros.dni && !prestamo.dni.includes(filtros.dni)) {
+                return false;
+            }
+            
+            // Filtro por número de préstamo
+            if (filtros.numero && !prestamo.numeroPrestamo.includes(filtros.numero)) {
+                return false;
+            }
+            
+            // Filtro por estado
+            if (filtros.estado && !prestamo.estado.includes(filtros.estado)) {
+                return false;
+            }
+            
+            // Filtro por interés
+            if (filtros.interes && prestamo.interes !== parseInt(filtros.interes)) {
+                return false;
+            }
+            
+            // Filtro por rango de monto
+            if (prestamo.monto < filtros.montoMin || prestamo.monto > filtros.montoMax) {
+                return false;
+            }
+            
+            // Filtro por rango de fecha inicio
+            if (filtros.fechaInicioDesde || filtros.fechaInicioHasta) {
+                const fechaInicio = new Date(convertirFecha(prestamo.fechaInicio));
+                if (filtros.fechaInicioDesde && fechaInicio < new Date(filtros.fechaInicioDesde)) {
+                    return false;
+                }
+                if (filtros.fechaInicioHasta && fechaInicio > new Date(filtros.fechaInicioHasta)) {
+                    return false;
+                }
+            }
+            
+            // Filtro por rango de fecha fin
+            if (filtros.fechaFinDesde || filtros.fechaFinHasta) {
+                const fechaFin = new Date(convertirFecha(prestamo.fechaFin));
+                if (filtros.fechaFinDesde && fechaFin < new Date(filtros.fechaFinDesde)) {
+                    return false;
+                }
+                if (filtros.fechaFinHasta && fechaFin > new Date(filtros.fechaFinHasta)) {
+                    return false;
+                }
+            }
+            
+            return true;
+        });
+        
+        // Mostrar/ocultar filas según filtros
+        prestamosOriginales.forEach(prestamo => {
+            if (prestamosFiltrados.includes(prestamo)) {
+                prestamo.elemento.style.display = '';
+            } else {
+                prestamo.elemento.style.display = 'none';
+            }
+        });
+        
+        actualizarContador();
+        
+        // Efecto visual para indicar que se aplicaron filtros
+        const tabla = document.querySelector('.table-card');
+        tabla.style.transform = 'scale(0.98)';
+        setTimeout(() => {
+            tabla.style.transform = 'scale(1)';
+        }, 150);
+    }
+
+    // Función para convertir fecha de formato dd/mm/yyyy a yyyy-mm-dd
+    function convertirFecha(fechaTexto) {
+        const partes = fechaTexto.split('/');
+        if (partes.length === 3) {
+            return `${partes[2]}-${partes[1].padStart(2, '0')}-${partes[0].padStart(2, '0')}`;
+        }
+        return fechaTexto;
+    }
+
+    // Función para limpiar todos los filtros
+    function limpiarFiltros() {
+        document.getElementById('filtro-usuario').value = '';
+        document.getElementById('filtro-dni').value = '';
+        document.getElementById('filtro-numero').value = '';
+        document.getElementById('filtro-estado').value = '';
+        document.getElementById('filtro-interes').value = '';
+        document.getElementById('filtro-monto-min').value = '';
+        document.getElementById('filtro-monto-max').value = '';
+        document.getElementById('filtro-fecha-inicio-desde').value = '';
+        document.getElementById('filtro-fecha-inicio-hasta').value = '';
+        document.getElementById('filtro-fecha-fin-desde').value = '';
+        document.getElementById('filtro-fecha-fin-hasta').value = '';
+        
+        // Mostrar todas las filas
+        prestamosOriginales.forEach(prestamo => {
+            prestamo.elemento.style.display = '';
+        });
+        
+        prestamosFiltrados = [...prestamosOriginales];
+        actualizarContador();
+        
+        // Efecto visual
+        const filtrosCard = document.querySelector('.form-card');
+        filtrosCard.style.backgroundColor = '#e8f5e8';
+        setTimeout(() => {
+            filtrosCard.style.backgroundColor = '';
+        }, 500);
+    }
+
+    // Función para actualizar el contador de resultados
+    function actualizarContador() {
+        const contador = document.getElementById('contador-resultados');
+        const total = prestamosOriginales.length;
+        const mostrados = prestamosFiltrados.length;
+        
+        if (mostrados === total) {
+            contador.textContent = `Mostrando todos los préstamos (${total})`;
+            contador.parentElement.className = 'alert alert-info mb-0 py-2';
+        } else {
+            contador.textContent = `Mostrando ${mostrados} de ${total} préstamos`;
+            contador.parentElement.className = 'alert alert-success mb-0 py-2';
+        }
+    }
+
+    // Función para exportar resultados filtrados (bonus)
+    function exportarFiltrados() {
+        if (prestamosFiltrados.length === 0) {
+            alert('No hay resultados para exportar');
+            return;
+        }
+        
+        let csv = 'Usuario,Número Préstamo,Monto,Fecha Inicio,Fecha Fin,Interés,Estado\n';
+        
+        prestamosFiltrados.forEach(prestamo => {
+            const celdas = prestamo.elemento.querySelectorAll('td');
+            csv += `"${celdas[1].textContent}","${celdas[2].textContent}","${celdas[3].textContent}","${celdas[4].textContent}","${celdas[5].textContent}","${celdas[6].textContent}","${celdas[7].textContent}"\n`;
+        });
+        
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `prestamos_filtrados_${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+    }
 </script>
 
 </body>

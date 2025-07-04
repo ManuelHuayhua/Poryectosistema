@@ -904,14 +904,7 @@
 </select>
             </div>
 
-            <div class="col-xl-1 col-lg-2 col-md-2 col-sm-3 d-grid filter-col">
-                <div class="filter-buttons d-flex gap-1">
-                    <button class="btn btn-primary flex-fill" type="submit">
-                        <i class="fas fa-search me-1"></i>
-                        <span class="d-none d-md-inline">Filtrar</span>
-                    </button>
-                </div>
-            </div>
+            
             
             <div class="col-xl-1 col-lg-2 col-md-2 col-sm-3 d-grid filter-col">
                 <a href="{{ route('admin.reporte.prestamos') }}" class="btn btn-secondary">
@@ -1304,4 +1297,196 @@
             this.style.transform = 'translateY(0)';
         });
     });
+</script>
+
+<script>
+    // Función para filtrar préstamos
+function filtrarPrestamos() {
+    const dni = document.getElementById('dni').value.toLowerCase().trim();
+    const nombre = document.getElementById('nombre').value.toLowerCase().trim();
+    const fechaDesde = document.getElementById('desde').value;
+    const fechaHasta = document.getElementById('hasta').value;
+    const estado = document.getElementById('estado').value.toLowerCase();
+    
+    // Obtener todas las tarjetas de clientes
+    const clientCards = document.querySelectorAll('.client-card');
+    let clientesVisibles = 0;
+    
+    clientCards.forEach(clientCard => {
+        let clienteVisible = false;
+        
+        // Obtener datos del cliente
+        const clientInfo = clientCard.querySelector('.client-info');
+        const clienteDni = clientInfo.querySelector('.client-info-item:nth-child(1) .fw-bold').textContent.toLowerCase();
+        const clienteNombre = clientInfo.querySelector('.client-info-item:nth-child(2) .fw-bold').textContent.toLowerCase();
+        const clienteApellido = clientInfo.querySelector('.client-info-item:nth-child(3) .fw-bold').textContent.toLowerCase();
+        
+        // Verificar filtros de cliente
+        const cumpleDni = !dni || clienteDni.includes(dni);
+        const cumpleNombre = !nombre || clienteNombre.includes(nombre) || clienteApellido.includes(nombre);
+        
+        if (cumpleDni && cumpleNombre) {
+            // Obtener todos los préstamos del cliente
+            const loanItems = clientCard.querySelectorAll('.loan-item');
+            let prestamosVisibles = 0;
+            
+            loanItems.forEach(loanItem => {
+                let prestamoVisible = false;
+                
+                // Obtener datos del préstamo
+                const estadoPrestamo = loanItem.querySelector('.status-badge').textContent.toLowerCase().trim();
+                const periodoTexto = loanItem.querySelector('.loan-summary-item:nth-child(3) .loan-summary-value').textContent;
+                
+                // Extraer fechas del período (formato: dd/mm/yyyy - dd/mm/yyyy)
+                const fechas = periodoTexto.split(' - ');
+                let fechaInicio = null;
+                let fechaFin = null;
+                
+                if (fechas.length === 2) {
+                    // Convertir formato dd/mm/yyyy a yyyy-mm-dd para comparación
+                    const fechaInicioPartes = fechas[0].trim().split('/');
+                    const fechaFinPartes = fechas[1].trim().split('/');
+                    
+                    if (fechaInicioPartes.length === 3 && fechaFinPartes.length === 3) {
+                        fechaInicio = `${fechaInicioPartes[2]}-${fechaInicioPartes[1].padStart(2, '0')}-${fechaInicioPartes[0].padStart(2, '0')}`;
+                        fechaFin = `${fechaFinPartes[2]}-${fechaFinPartes[1].padStart(2, '0')}-${fechaFinPartes[0].padStart(2, '0')}`;
+                    }
+                }
+                
+                // Verificar filtro de estado
+                const cumpleEstado = !estado || estadoPrestamo.includes(estado);
+                
+                // Verificar filtro de fechas
+                let cumpleFechas = true;
+                if (fechaDesde || fechaHasta) {
+                    if (fechaInicio && fechaFin) {
+                        if (fechaDesde && fechaHasta) {
+                            // Verificar que el préstamo esté dentro del rango
+                            cumpleFechas = (fechaInicio >= fechaDesde && fechaInicio <= fechaHasta) ||
+                                         (fechaFin >= fechaDesde && fechaFin <= fechaHasta) ||
+                                         (fechaInicio <= fechaDesde && fechaFin >= fechaHasta);
+                        } else if (fechaDesde) {
+                            // Solo fecha desde
+                            cumpleFechas = fechaFin >= fechaDesde;
+                        } else if (fechaHasta) {
+                            // Solo fecha hasta
+                            cumpleFechas = fechaInicio <= fechaHasta;
+                        }
+                    } else {
+                        cumpleFechas = false;
+                    }
+                }
+                
+                // Mostrar/ocultar préstamo
+                if (cumpleEstado && cumpleFechas) {
+                    loanItem.style.display = 'block';
+                    prestamosVisibles++;
+                    prestamoVisible = true;
+                } else {
+                    loanItem.style.display = 'none';
+                }
+            });
+            
+            // Mostrar cliente solo si tiene préstamos visibles
+            if (prestamosVisibles > 0) {
+                clientCard.style.display = 'block';
+                clientesVisibles++;
+                clienteVisible = true;
+            } else {
+                clientCard.style.display = 'none';
+            }
+        } else {
+            clientCard.style.display = 'none';
+        }
+    });
+    
+    // Mostrar mensaje si no hay resultados
+    mostrarMensajeResultados(clientesVisibles);
+}
+
+// Función para mostrar mensaje de resultados
+function mostrarMensajeResultados(clientesVisibles) {
+    // Remover mensaje anterior si existe
+    const mensajeAnterior = document.getElementById('mensaje-resultados');
+    if (mensajeAnterior) {
+        mensajeAnterior.remove();
+    }
+    
+    if (clientesVisibles === 0) {
+        const mensaje = document.createElement('div');
+        mensaje.id = 'mensaje-resultados';
+        mensaje.className = 'alert alert-info text-center';
+        mensaje.style.borderRadius = '20px';
+        mensaje.style.background = 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)';
+        mensaje.style.border = 'none';
+        mensaje.style.color = '#2c3e50';
+        mensaje.style.fontWeight = '600';
+        mensaje.innerHTML = `
+            <i class="fas fa-search me-2"></i>
+            No se encontraron préstamos que coincidan con los filtros aplicados.
+            <br><small class="mt-2 d-block">Intenta ajustar los criterios de búsqueda.</small>
+        `;
+        
+        // Insertar después de los controles de impresión
+        const printControls = document.querySelector('.print-controls');
+        printControls.insertAdjacentElement('afterend', mensaje);
+    }
+}
+
+// Función para limpiar filtros
+function limpiarFiltros() {
+    document.getElementById('dni').value = '';
+    document.getElementById('nombre').value = '';
+    document.getElementById('desde').value = '';
+    document.getElementById('hasta').value = '';
+    document.getElementById('estado').value = '';
+    
+    // Mostrar todos los elementos
+    document.querySelectorAll('.client-card').forEach(card => {
+        card.style.display = 'block';
+    });
+    
+    document.querySelectorAll('.loan-item').forEach(item => {
+        item.style.display = 'block';
+    });
+    
+    // Remover mensaje de resultados si existe
+    const mensaje = document.getElementById('mensaje-resultados');
+    if (mensaje) {
+        mensaje.remove();
+    }
+}
+
+// Event listeners para filtros en tiempo real
+document.getElementById('dni').addEventListener('input', filtrarPrestamos);
+document.getElementById('nombre').addEventListener('input', filtrarPrestamos);
+document.getElementById('desde').addEventListener('change', filtrarPrestamos);
+document.getElementById('hasta').addEventListener('change', filtrarPrestamos);
+document.getElementById('estado').addEventListener('change', filtrarPrestamos);
+
+// Prevenir envío del formulario y usar filtrado JavaScript
+document.querySelector('.filter-row').addEventListener('submit', function(e) {
+    e.preventDefault();
+    filtrarPrestamos();
+});
+
+// Event listener para el botón limpiar
+document.querySelector('a[href*="admin.reporte.prestamos"]').addEventListener('click', function(e) {
+    e.preventDefault();
+    limpiarFiltros();
+});
+
+// Aplicar filtros al cargar la página si hay valores en los campos
+document.addEventListener('DOMContentLoaded', function() {
+    // Verificar si hay filtros aplicados desde el servidor
+    const tieneFilters = document.getElementById('dni').value || 
+                        document.getElementById('nombre').value || 
+                        document.getElementById('desde').value || 
+                        document.getElementById('hasta').value || 
+                        document.getElementById('estado').value;
+    
+    if (tieneFilters) {
+        filtrarPrestamos();
+    }
+});
 </script>

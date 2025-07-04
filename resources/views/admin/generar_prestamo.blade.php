@@ -650,11 +650,23 @@ $('form').on('submit', function(e) {
     modal.show();
 });
 // Cuando se hace clic en "Sí, Generar"
-$('#confirmSubmit').on('click', function() {
+$('#confirmSubmit').on('click', function () {
     if (formToSubmit) {
+        // Desactiva el botón para impedir nuevos clics
+        $(this)
+          .prop('disabled', true)
+          .html('<span class="spinner-border spinner-border-sm me-2"></span>Generando…');
+
         formToSubmit.submit();
     }
 });
+
+$('#confirmModal').on('hidden.bs.modal', function () {
+    $('#confirmSubmit')
+      .prop('disabled', false)
+      .html('Sí, Generar');
+});
+
 
         // Formatear monto automáticamente
         $('#monto').on('blur', function() {

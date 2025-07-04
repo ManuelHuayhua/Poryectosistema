@@ -54,4 +54,8 @@ public function scopeAprobados($query)
     return $query->where('estado', 'aprobado');
 }
 
+public function scopeIniciales($query)
+{
+    return $query->where('item_prestamo', 1);
+}
 }

@@ -10,16 +10,18 @@ class PrestamoPendienteController extends Controller
 {
       public function index()
     {
-         if (
-        ! Auth::check() ||                // no ha iniciado sesión
-        ! Auth::user()->is_admin ||       // no es admin
-        ! Auth::user()->des_contrato            // admin pero sin permiso de "inicio"
-    ) {
-        abort(403, 'Acceso no autorizado.');
-    }
+        if (
+            !Auth::check() ||
+            !Auth::user()->is_admin ||
+            !Auth::user()->des_contrato
+        ) {
+            abort(403, 'Acceso no autorizado.');
+        }
 
         $prestamos = Prestamo::with('user')
-            ->where('estado', 'pendiente')
+            ->whereNotIn('estado', ['rechazado', 'pendiente']) // excluir rechazado y pendiente
+            ->iniciales()                                      // filtro personalizado item_prestamo = 1
+            ->orderBy('fecha_inicio', 'desc')                    // ordenar por fecha de creación (últimos primeros)
             ->get();
 
         return view('admin.prestamos_pendientes', compact('prestamos'));

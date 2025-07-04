@@ -1324,223 +1324,222 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
   <br>
-  <!-- Title Section -->
-  <div class="row mb-3">
-    <div class="col-12">
-      <div class="d-flex align-items-center justify-content-between flex-wrap">
-  <div class="d-flex align-items-center">
-    <i class="fas fa-clock text-warning me-2 fs-5"></i>
-    <h4 class="mb-0 text-secondary">Solicitudes de Préstamos Pendientes</h4>
-    @if(!$prestamosPendientes->isEmpty())
-      <span class="badge bg-warning text-dark ms-2">{{ $prestamosPendientes->count() }}</span>
-    @endif
-  </div>
-  
-  <button class="btn btn-outline-primary btn-sm mt-2 mt-md-0 ms-md-3" onclick="location.reload()">
-    <i class="fas fa-sync-alt me-1"></i> Actualizar
-  </button>
-</div>
+<!-- Title Section -->
+<div class="row mb-3">
+  <div class="col-12">
+    <div class="d-flex align-items-center justify-content-between flex-wrap">
+      <div class="d-flex align-items-center">
+        <i class="fas fa-clock text-warning me-2 fs-5"></i>
+        <h4 class="mb-0 text-secondary">Solicitudes de Préstamos Pendientes</h4>
+        @if(!$prestamosPendientes->isEmpty())
+          <span class="badge bg-warning text-dark ms-2">{{ $prestamosPendientes->count() }}</span>
+        @endif
+      </div>
+      <button class="btn btn-outline-primary btn-sm mt-2 mt-md-0 ms-md-3" onclick="location.reload()">
+        <i class="fas fa-sync-alt me-1"></i> Actualizar
+      </button>
     </div>
   </div>
+</div>
 
-  <!-- Content Section -->
-  <div class="row">
-    <div class="col-12">
-      @if($prestamosPendientes->isEmpty())
-        <div class="text-center py-5">
-          <i class="fas fa-inbox text-muted" style="font-size: 4rem;"></i>
-          <div class="alert alert-info border-0 mt-3 mx-auto" style="max-width: 400px;">
-            <h5 class="alert-heading">
-              <i class="fas fa-info-circle me-2"></i>Sin préstamos pendientes
-            </h5>
-            <p class="mb-0">No hay solicitudes de préstamos esperando aprobación en este momento.</p>
-          </div>
+<!-- Content Section -->
+<div class="row">
+  <div class="col-12">
+    @if($prestamosPendientes->isEmpty())
+      <div class="text-center py-5">
+        <i class="fas fa-inbox text-muted" style="font-size: 4rem;"></i>
+        <div class="alert alert-info border-0 mt-3 mx-auto" style="max-width: 400px;">
+          <h5 class="alert-heading">
+            <i class="fas fa-info-circle me-2"></i>Sin préstamos pendientes
+          </h5>
+          <p class="mb-0">No hay solicitudes de préstamos esperando aprobación en este momento.</p>
         </div>
-      @else
-        <div class="accordion" id="accordionPrestamos">
-          @foreach($prestamosPendientes as $index => $prestamo)
-            <div class="accordion-item border-0 shadow-sm mb-3 rounded">
-              <h2 class="accordion-header" id="heading{{ $prestamo->id }}">
-                <button class="accordion-button collapsed bg-light rounded-top" type="button" 
-                        data-bs-toggle="collapse" data-bs-target="#collapse{{ $prestamo->id }}" 
-                        aria-expanded="false" aria-controls="collapse{{ $prestamo->id }}">
-                  <div class="w-100">
-                    <div class="row align-items-center">
-                      <div class="col-md-6 col-12 mb-2 mb-md-0">
-                        <div class="d-flex align-items-center">
-                          <span class="badge bg-primary me-2">#{{ $prestamo->numero_prestamo }}</span>
-                          <strong class="text-truncate">{{ $prestamo->user->name }}</strong>
-                        </div>
+      </div>
+    @else
+      <div class="accordion" id="accordionPrestamos">
+        @foreach($prestamosPendientes as $index => $prestamo)
+          <div class="accordion-item border-0 shadow-sm mb-3 rounded">
+            <h2 class="accordion-header" id="heading{{ $prestamo->id }}">
+              <button class="accordion-button collapsed bg-light rounded-top" type="button"
+                       data-bs-toggle="collapse" data-bs-target="#collapse{{ $prestamo->id }}"
+                       aria-expanded="false" aria-controls="collapse{{ $prestamo->id }}">
+                <div class="w-100">
+                  <div class="row align-items-center">
+                    <div class="col-md-6 col-12 mb-2 mb-md-0">
+                      <div class="d-flex align-items-center">
+                        <span class="badge bg-primary me-2">#{{ $prestamo->numero_prestamo }}</span>
+                        <strong class="text-truncate">{{ $prestamo->user->name }}</strong>
                       </div>
-                      <div class="col-md-3 col-6">
-                        <div class="text-success fw-bold">
-                          <i class="fas fa-dollar-sign me-1"></i>
-                          S/. {{ number_format($prestamo->monto, 2) }}
-                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                      <div class="text-success fw-bold">
+                        <i class="fas fa-dollar-sign me-1"></i>
+                        S/. {{ number_format($prestamo->monto, 2) }}
                       </div>
-                      <div class="col-md-3 col-6 text-end text-md-start">
-                        <small class="text-muted">
-                          <i class="fas fa-calendar me-1"></i>
-                          {{ $prestamo->created_at->format('d/m/Y') }}
-                        </small>
+                    </div>
+                    <div class="col-md-3 col-6 text-end text-md-start">
+                      <small class="text-muted">
+                        <i class="fas fa-calendar me-1"></i>
+                        {{ $prestamo->created_at->format('d/m/Y') }}
+                      </small>
+                    </div>
+                  </div>
+                </div>
+              </button>
+            </h2>
+            
+            <div id="collapse{{ $prestamo->id }}" class="accordion-collapse collapse"
+                 aria-labelledby="heading{{ $prestamo->id }}" data-bs-parent="#accordionPrestamos">
+              <div class="accordion-body p-4">
+                
+                <!-- Información del préstamo -->
+                <div class="row mb-4">
+                  <div class="col-12">
+                    <h6 class="text-primary border-bottom pb-2 mb-3">
+                      <i class="fas fa-info-circle me-2"></i>Detalles del Préstamo
+                    </h6>
+                    <div class="row">
+                      <div class="col-md-4 col-6 mb-2">
+                        <small class="text-muted d-block">Cliente</small>
+                        <strong>{{ $prestamo->user->name }}</strong>
+                      </div>
+                      <div class="col-md-4 col-6 mb-2">
+                        <small class="text-muted d-block">Monto Solicitado</small>
+                        <strong class="text-success">S/. {{ number_format($prestamo->monto, 2) }}</strong>
+                      </div>
+                      <div class="col-md-4 col-12 mb-2">
+                        <small class="text-muted d-block">Fecha de Solicitud</small>
+                        <strong>{{ $prestamo->created_at->format('d/m/Y H:i') }}</strong>
                       </div>
                     </div>
                   </div>
-                </button>
-              </h2>
-              
-              <div id="collapse{{ $prestamo->id }}" class="accordion-collapse collapse"
-                   aria-labelledby="heading{{ $prestamo->id }}" data-bs-parent="#accordionPrestamos">
-                <div class="accordion-body p-4">
-                  
-                  <!-- Información del préstamo -->
-                  <div class="row mb-4">
-                    <div class="col-12">
-                      <h6 class="text-primary border-bottom pb-2 mb-3">
-                        <i class="fas fa-info-circle me-2"></i>Detalles del Préstamo
-                      </h6>
-                      <div class="row">
-                        <div class="col-md-4 col-6 mb-2">
-                          <small class="text-muted d-block">Cliente</small>
-                          <strong>{{ $prestamo->user->name }}</strong>
-                        </div>
-                        <div class="col-md-4 col-6 mb-2">
-                          <small class="text-muted d-block">Monto Solicitado</small>
-                          <strong class="text-success">S/. {{ number_format($prestamo->monto, 2) }}</strong>
-                        </div>
-                        <div class="col-md-4 col-12 mb-2">
-                          <small class="text-muted d-block">Fecha de Solicitud</small>
-                          <strong>{{ $prestamo->created_at->format('d/m/Y H:i') }}</strong>
-                        </div>
+                </div>
+
+                <!-- Formularios en cards separadas -->
+                <div class="row">
+                  <!-- Formulario de Aprobación -->
+                  <div class="col-lg-8 col-12 mb-3">
+                    <div class="card border-success">
+                      <div class="card-header bg-success bg-opacity-10 border-success">
+                        <h6 class="card-title mb-0 text-success">
+                          <i class="fas fa-check-circle me-2"></i>Aprobar Préstamo
+                        </h6>
                       </div>
-                    </div>
-                  </div>
-
-                  <!-- Formularios en cards separadas -->
-                  <div class="row">
-                    <!-- Formulario de Aprobación -->
-                    <div class="col-lg-8 col-12 mb-3">
-                      <div class="card border-success">
-                        <div class="card-header bg-success bg-opacity-10 border-success">
-                          <h6 class="card-title mb-0 text-success">
-                            <i class="fas fa-check-circle me-2"></i>Aprobar Préstamo
-                          </h6>
-                        </div>
-                        <div class="card-body">
-                          <form action="{{ route('prestamo.aprobar', $prestamo->id) }}" method="POST">
-                            @csrf
-                            @method('PUT')
-
-                            <!-- Fechas -->
-                            <div class="row mb-3">
-                              <div class="col-md-6 mb-3">
-                                <label for="fecha_inicio_{{ $prestamo->id }}" class="form-label fw-semibold">
-                                  <i class="fas fa-play-circle text-success me-1"></i>Fecha de inicio
-                                </label>
-                                <input type="date" name="fecha_inicio" id="fecha_inicio_{{ $prestamo->id }}" 
-                                       class="form-control" required>
-                              </div>
-                              <div class="col-md-6 mb-3">
-                                <label for="fecha_fin_{{ $prestamo->id }}" class="form-label fw-semibold">
-                                  <i class="fas fa-stop-circle text-danger me-1"></i>Fecha de fin
-                                </label>
-                                <input type="date" name="fecha_fin" id="fecha_fin_{{ $prestamo->id }}" 
-                                       class="form-control" required>
-                              </div>
-                            </div>
-
-                            <!-- Interés y Penalidad -->
-                            <div class="row mb-3">
-                              <div class="col-md-6 mb-3">
-                                <label for="interes_{{ $prestamo->id }}" class="form-label fw-semibold">
-                                  <i class="fas fa-percentage text-info me-1"></i>Interés
-                                </label>
-                                <select name="interes" id="interes_{{ $prestamo->id }}" class="form-select" required>
-                                  @foreach ($configuraciones as $config)
-                                    <option value="{{ $config->interes }}">{{ $config->interes }}%</option>
-                                  @endforeach
-                                </select>
-                              </div>
-                              <div class="col-md-6 mb-3">
-                                <label for="penalidad_{{ $prestamo->id }}" class="form-label fw-semibold">
-                                  <i class="fas fa-exclamation-triangle text-warning me-1"></i>Penalidad
-                                </label>
-                                <select name="penalidad" id="penalidad_{{ $prestamo->id }}" class="form-select" required>
-                                  @foreach ($configuraciones as $config)
-                                    <option value="{{ $config->penalidad }}">{{ $config->penalidad }}%</option>
-                                  @endforeach
-                                </select>
-                              </div>
-                            </div>
-
-                            <!-- Checkbox Junta -->
-                            <div class="mb-3">
-                              <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" name="es_junta" 
-                                       id="es_junta_{{ $prestamo->id }}" value="1"
-                                       onchange="toggleJuntaSelect({{ $prestamo->id }})">
-                                <label class="form-check-label fw-semibold" for="es_junta_{{ $prestamo->id }}">
-                                  <i class="fas fa-users text-primary me-1"></i>¿Es junta?
-                                </label>
-                              </div>
-                            </div>
-
-                            <!-- Tipo de origen (oculto inicialmente) -->
-                            <div id="tipo_origen_container_{{ $prestamo->id }}" class="mb-3" style="display: none;">
-                              <label for="tipo_origen_{{ $prestamo->id }}" class="form-label fw-semibold">
-                                <i class="fas fa-tag text-secondary me-1"></i>Tipo de origen
+                      <div class="card-body">
+                        <form action="{{ route('prestamo.aprobar', $prestamo->id) }}" method="POST" id="form_{{ $prestamo->id }}">
+                          @csrf
+                          @method('PUT')
+                          <!-- Fechas -->
+                          <div class="row mb-3">
+                            <div class="col-md-6 mb-3">
+                              <label for="fecha_inicio_{{ $prestamo->id }}" class="form-label fw-semibold">
+                                <i class="fas fa-play-circle text-success me-1"></i>Fecha de inicio
                               </label>
-                              <select name="tipo_origen" id="tipo_origen_{{ $prestamo->id }}" class="form-select">
-                                @foreach($configuraciones as $config)
-                                  @if($config->tipo_origen)
-                                    <option value="{{ $config->tipo_origen }}">{{ $config->tipo_origen }}</option>
-                                  @endif
+                              <input type="date" name="fecha_inicio" id="fecha_inicio_{{ $prestamo->id }}"
+                                      class="form-control" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                              <label for="fecha_fin_{{ $prestamo->id }}" class="form-label fw-semibold">
+                                <i class="fas fa-stop-circle text-danger me-1"></i>Fecha de fin
+                              </label>
+                              <input type="date" name="fecha_fin" id="fecha_fin_{{ $prestamo->id }}"
+                                      class="form-control" required>
+                            </div>
+                          </div>
+                          <!-- Interés y Penalidad -->
+                          <div class="row mb-3">
+                            <div class="col-md-6 mb-3">
+                              <label for="interes_{{ $prestamo->id }}" class="form-label fw-semibold">
+                                <i class="fas fa-percentage text-info me-1"></i>Interés
+                              </label>
+                              <select name="interes" id="interes_{{ $prestamo->id }}" class="form-select" required>
+                                @foreach ($configuraciones as $config)
+                                  <option value="{{ $config->interes }}">{{ $config->interes }}%</option>
                                 @endforeach
                               </select>
                             </div>
-
-                            <button type="submit" class="btn btn-success">
-                              <i class="fas fa-check-circle me-2"></i>Aprobar Préstamo
-                            </button>
-                          </form>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Formulario de Rechazo -->
-                    <div class="col-lg-4 col-12 mb-3">
-                      <div class="card border-danger h-100">
-                        <div class="card-header bg-danger bg-opacity-10 border-danger">
-                          <h6 class="card-title mb-0 text-danger">
-                            <i class="fas fa-times-circle me-2"></i>Rechazar Préstamo
-                          </h6>
-                        </div>
-                        <div class="card-body d-flex flex-column justify-content-center text-center">
-                          <div class="mb-3">
-                            <i class="fas fa-ban text-danger" style="font-size: 2rem;"></i>
-                            <p class="text-muted mt-2 mb-3">
-                              Esta acción no se puede deshacer. El préstamo será rechazado permanentemente.
-                            </p>
+                            <div class="col-md-6 mb-3">
+                              <label for="penalidad_{{ $prestamo->id }}" class="form-label fw-semibold">
+                                <i class="fas fa-exclamation-triangle text-warning me-1"></i>Penalidad
+                              </label>
+                              <select name="penalidad" id="penalidad_{{ $prestamo->id }}" class="form-select" required>
+                                @foreach ($configuraciones as $config)
+                                  <option value="{{ $config->penalidad }}">{{ $config->penalidad }}%</option>
+                                @endforeach
+                              </select>
+                            </div>
                           </div>
-                          <form action="{{ route('prestamo.rechazar', $prestamo->id) }}" method="POST">
-                            @csrf
-                            <button type="submit" class="btn btn-danger w-100" 
-                                    onclick="return confirm('¿Está seguro que desea rechazar este préstamo?')">
-                              <i class="fas fa-times-circle me-2"></i>Rechazar Préstamo
+                          <!-- Checkbox Junta -->
+                          <div class="mb-3">
+                            <div class="form-check form-switch">
+                              <input class="form-check-input" type="checkbox" name="es_junta"
+                                      id="es_junta_{{ $prestamo->id }}" value="1"
+                                     onchange="toggleJuntaSelect({{ $prestamo->id }})">
+                              <label class="form-check-label fw-semibold" for="es_junta_{{ $prestamo->id }}">
+                                <i class="fas fa-users text-primary me-1"></i>¿Es junta?
+                              </label>
+                            </div>
+                          </div>
+                          <!-- Tipo de origen (oculto inicialmente) -->
+                          <div id="tipo_origen_container_{{ $prestamo->id }}" class="mb-3" style="display: none;">
+                            <label for="tipo_origen_{{ $prestamo->id }}" class="form-label fw-semibold">
+                              <i class="fas fa-tag text-secondary me-1"></i>Tipo de origen
+                            </label>
+                            <select name="tipo_origen" id="tipo_origen_{{ $prestamo->id }}" class="form-select">
+                              @foreach($configuraciones as $config)
+                                @if($config->tipo_origen)
+                                  <option value="{{ $config->tipo_origen }}">{{ $config->tipo_origen }}</option>
+                                @endif
+                              @endforeach
+                            </select>
+                          </div>
+                          
+                          <!-- Botones de acción -->
+                          <div class="d-flex gap-2 flex-wrap">
+                            <button type="submit" class="btn btn-success"
+        onclick="return confirm('¿Está seguro que desea aprobar este préstamo?')">
+  <i class="fas fa-check-circle me-2"></i>Aprobar Préstamo
+</button>
+                            <button type="button" class="btn btn-outline-info" onclick="generarContrato({{ $prestamo->id }})">
+                              <i class="fas fa-file-contract me-2"></i>Descargar Contrato
                             </button>
-                          </form>
-                        </div>
+                          </div>
+                        </form>
                       </div>
                     </div>
                   </div>
-
+                  <!-- Formulario de Rechazo -->
+                  <div class="col-lg-4 col-12 mb-3">
+                    <div class="card border-danger h-100">
+                      <div class="card-header bg-danger bg-opacity-10 border-danger">
+                        <h6 class="card-title mb-0 text-danger">
+                          <i class="fas fa-times-circle me-2"></i>Rechazar Préstamo
+                        </h6>
+                      </div>
+                      <div class="card-body d-flex flex-column justify-content-center text-center">
+                        <div class="mb-3">
+                          <i class="fas fa-ban text-danger" style="font-size: 2rem;"></i>
+                          <p class="text-muted mt-2 mb-3">
+                            Esta acción no se puede deshacer. El préstamo será rechazado permanentemente.
+                          </p>
+                        </div>
+                        <form action="{{ route('prestamo.rechazar', $prestamo->id) }}" method="POST">
+                          @csrf
+                          <button type="submit" class="btn btn-danger w-100"
+                                   onclick="return confirm('¿Está seguro que desea rechazar este préstamo?')">
+                            <i class="fas fa-times-circle me-2"></i>Rechazar Préstamo
+                          </button>
+                        </form>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-          @endforeach
-        </div>
-      @endif
-    </div>
+          </div>
+        @endforeach
+      </div>
+    @endif
   </div>
 </div>
 
@@ -1559,6 +1558,297 @@ document.addEventListener('DOMContentLoaded', function() {
         container.classList.remove('fade-in');
       }
     }
+  }
+
+  // Función para convertir número a texto
+  function numeroATexto(numero) {
+    const unidades = ['', 'uno', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve'];
+    const decenas = ['', '', 'veinte', 'treinta', 'cuarenta', 'cincuenta', 'sesenta', 'setenta', 'ochenta', 'noventa'];
+    const centenas = ['', 'ciento', 'doscientos', 'trescientos', 'cuatrocientos', 'quinientos', 'seiscientos', 'setecientos', 'ochocientos', 'novecientos'];
+    const especiales = ['diez', 'once', 'doce', 'trece', 'catorce', 'quince', 'dieciséis', 'diecisiete', 'dieciocho', 'diecinueve'];
+    
+    if (numero === 0) return 'cero';
+    if (numero === 100) return 'cien';
+    if (numero === 1000) return 'mil';
+    
+    let resultado = '';
+    
+    // Miles
+    if (numero >= 1000) {
+      const miles = Math.floor(numero / 1000);
+      if (miles === 1) {
+        resultado += 'mil ';
+      } else {
+        resultado += numeroATexto(miles) + ' mil ';
+      }
+      numero %= 1000;
+    }
+    
+    // Centenas
+    if (numero >= 100) {
+      const cent = Math.floor(numero / 100);
+      resultado += centenas[cent] + ' ';
+      numero %= 100;
+    }
+    
+    // Decenas y unidades
+    if (numero >= 20) {
+      const dec = Math.floor(numero / 10);
+      const uni = numero % 10;
+      resultado += decenas[dec];
+      if (uni > 0) {
+        resultado += ' y ' + unidades[uni];
+      }
+    } else if (numero >= 10) {
+      resultado += especiales[numero - 10];
+    } else if (numero > 0) {
+      resultado += unidades[numero];
+    }
+    
+    return resultado.trim();
+  }
+
+  // Función para generar el contrato
+  function generarContrato(prestamoId) {
+    // Obtener datos del formulario
+    const fechaInicio = document.getElementById(`fecha_inicio_${prestamoId}`).value;
+    const fechaFin = document.getElementById(`fecha_fin_${prestamoId}`).value;
+    const interes = document.getElementById(`interes_${prestamoId}`).value;
+    const penalidad = document.getElementById(`penalidad_${prestamoId}`).value;
+    
+    // Validar que todos los campos estén llenos
+    if (!fechaInicio || !fechaFin || !interes || !penalidad) {
+      alert('Por favor, complete todos los campos antes de generar el contrato.');
+      return;
+    }
+
+    // Obtener datos del préstamo (estos deberían venir del backend)
+    const prestamo = @json($prestamosPendientes->keyBy('id'));
+    const prestamoData = prestamo[prestamoId];
+    
+    if (!prestamoData) {
+      alert('Error: No se encontraron los datos del préstamo.');
+      return;
+    }
+
+    // Calcular valores
+    const monto = parseFloat(prestamoData.monto);
+    const tasaInteres = parseFloat(interes) / 100;
+    const montoInteres = monto * tasaInteres;
+    const montoTotal = monto + montoInteres;
+    
+    // Convertir monto a texto
+    const montoTexto = numeroATexto(Math.floor(monto));
+    
+    // Formatear fechas
+    const fechaInicioFormateada = new Date(fechaInicio).toLocaleDateString('es-PE', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+    
+    const fechaFinFormateada = new Date(fechaFin).toLocaleDateString('es-PE', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+    
+    const fechaHoy = new Date().toLocaleDateString('es-PE', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+
+    // Calcular duración en días
+    const inicio = new Date(fechaInicio);
+    const fin = new Date(fechaFin);
+    const duracionDias = Math.ceil((fin - inicio) / (1000 * 60 * 60 * 24));
+    const duracionSemanas = Math.ceil(duracionDias / 7);
+
+    // Generar HTML del contrato
+    const contratoHTML = `
+      <!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contrato de Préstamo</title>
+  <style>
+    @media print {
+      body { margin: 0; padding: 20px; font-family: Arial, sans-serif; }
+      .no-print { display: none !important; }
+    }
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      color: #333;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      border-bottom: 2px solid #333;
+      padding-bottom: 20px;
+    }
+    .title {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+    .date {
+      text-align: right;
+      margin-bottom: 20px;
+      font-weight: bold;
+    }
+    .section {
+      margin-bottom: 20px;
+    }
+    .section-title {
+      font-weight: bold;
+      text-decoration: underline;
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
+    .partes-box {
+      display: flex;
+      justify-content: space-between;
+      gap: 30px;
+      margin-bottom: 20px;
+    }
+    .parte {
+      width: 50%;
+    }
+    .parte-title {
+      font-weight: bold;
+      margin-bottom: 5px;
+      text-decoration: underline;
+    }
+    .clause {
+      margin-bottom: 15px;
+      text-align: justify;
+    }
+    .clause-number {
+      font-weight: bold;
+    }
+    .signatures {
+      margin-top: 50px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .signature-box {
+      text-align: center;
+      width: 45%;
+    }
+    .signature-line {
+      border-top: 1px solid #333;
+      margin-top: 60px;
+      padding-top: 5px;
+    }
+    .important-note {
+      background-color: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 5px;
+      padding: 15px;
+      margin: 20px 0;
+      font-weight: bold;
+    }
+    .amount {
+      font-weight: bold;
+      color: #2c5aa0;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="title">Contrato de Préstamo</div>
+  </div>
+
+  <div class="date">
+    Fecha: ${fechaHoy}
+  </div>
+
+  <div class="section">
+    <div class="section-title">LAS PARTES:</div>
+    <div class="partes-box">
+      <div class="parte">
+        <div class="parte-title">PRESTAMISTA</div>
+        <p>Banquito</p>
+      </div>
+      <div class="parte">
+        <div class="parte-title">PRESTATARIO</div>
+        <p>${prestamoData.user.name} ${prestamoData.user.apellido_paterno || ''} ${prestamoData.user.apellido_materno || ''}</p>
+        <p>DNI: ${prestamoData.user.dni || 'No especificado'}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">CLÁUSULAS:</div>
+
+    <div class="clause">
+      <span class="clause-number">1. MONTO:</span> 
+      El Prestamista otorga al Prestatario la suma de <span class="amount">S/ ${monto.toFixed(2)} (${montoTexto} soles)</span> (en adelante, el "Principal").
+    </div>
+
+    <div class="clause">
+      <span class="clause-number">2. PLAZO:</span> 
+      Duración: ${duracionSemanas} ${duracionSemanas === 1 ? 'semana' : 'semanas'} (${duracionDias} días naturales), desde ${fechaInicioFormateada} hasta ${fechaFinFormateada}.
+    </div>
+
+    <div class="clause">
+      <span class="clause-number">3. INTERÉS:</span> 
+      Tasa fija del ${interes}% sobre el Principal. Interés total: <span class="amount">S/ ${montoInteres.toFixed(2)}</span> (Principal × ${tasaInteres}).
+    </div>
+
+    <div class="clause">
+      <span class="clause-number">4. PAGO TOTAL AL VENCIMIENTO:</span><br>
+      - Principal: <span class="amount">S/ ${monto.toFixed(2)}</span><br>
+      - Interés: <span class="amount">S/ ${montoInteres.toFixed(2)}</span><br>
+      - <strong>Total: <span class="amount">S/ ${montoTotal.toFixed(2)}</span></strong>
+    </div>
+
+    <div class="clause">
+      <span class="clause-number">5. FECHA LÍMITE:</span> 
+      Pago máximo hasta: <strong>${fechaFinFormateada}</strong> (inclusive).
+    </div>
+  </div>
+
+  <div class="important-note">
+    <strong>NOTA IMPORTANTE:</strong> En caso de mora, se aplicará una penalidad del ${penalidad}% que se calcula exclusivamente sobre el interés. El vencimiento es de ${duracionDias} días naturales a partir de la fecha de firma del presente contrato.
+  </div>
+
+  <div class="signatures">
+    <div class="signature-box">
+      <div class="signature-line">
+        <strong>PRESTAMISTA</strong><br>
+        Banquito
+      </div>
+    </div>
+    <div class="signature-box">
+      <div class="signature-line">
+        <strong>PRESTATARIO</strong><br>
+        ${prestamoData.user.name} ${prestamoData.user.apellido_paterno || ''} ${prestamoData.user.apellido_materno || ''}
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+    `;
+
+    // Crear nueva ventana e imprimir
+    const ventanaImpresion = window.open('', '_blank');
+    ventanaImpresion.document.write(contratoHTML);
+    ventanaImpresion.document.close();
+    
+    // Esperar a que se cargue y luego imprimir
+    ventanaImpresion.onload = function() {
+      setTimeout(() => {
+        ventanaImpresion.print();
+      }, 500);
+    };
   }
 
   // Mejorar la experiencia de fechas
@@ -1899,11 +2189,11 @@ document.addEventListener('DOMContentLoaded', function() {
         let filteredPrestamos = [...prestamosOriginales];
         
         if (searchName) {
-            filteredPrestamos = filteredPrestamos.filter(p => 
-                p.user.name.toLowerCase().includes(searchName) ||
-                (p.user.apellido_paterno && p.user.apellido_paterno.toLowerCase().includes(searchName))
-            );
-        }
+    filteredPrestamos = filteredPrestamos.filter(p => {
+        const nombreCompleto = `${p.user.name || ''} ${p.user.apellido_paterno || ''} ${p.user.apellido_materno || ''}`.toLowerCase();
+        return nombreCompleto.includes(searchName);
+    });
+}
         
         if (searchLoanNumber) {
             filteredPrestamos = filteredPrestamos.filter(p => 

@@ -10,6 +10,7 @@ use App\Models\PagoReporte;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 class PagoReporteController extends Controller
 {
 
@@ -81,70 +82,51 @@ class PagoReporteController extends Controller
 public function pagar(Request $request)
 {
     $request->validate([
-        'monto'  => 'required|numeric|min:0.01',
-        'pagos'  => 'required|array',
-        'pagos.*'=> 'exists:pago_reportes,id',
+        'monto'   => 'required|numeric|min:0.01',   // ↓ quítala si cada pago ya trae su propio monto
+        'pagos'   => 'required|array',
+        'pagos.*' => 'exists:pago_reportes,id',
     ]);
 
     $filasActualizadas = 0;
 
     DB::transaction(function () use ($request, &$filasActualizadas) {
 
-        /* 1) Cambiar estado a PAGADO */
-        $filasActualizadas = PagoReporte::whereIn('id', $request->pagos)
+        /* 1) Traer sólo los pagos aún pendientes, bloqueándolos
+              para evitar dobles cobros en concurrencia */
+        $pagosPendientes = PagoReporte::whereIn('id', $request->pagos)
             ->where('estado', '!=', 'PAGADO')
-            ->update([
-                // ⚠️ Si cada pago tiene su propio monto,
-                // quita la línea de abajo y no sobrescribas.
+            ->lockForUpdate()
+            ->get();
+
+        if ($pagosPendientes->isEmpty()) {
+            throw ValidationException::withMessages([
+                'pagos' => 'Los pagos seleccionados ya estaban en estado PAGADO.',
+            ]);
+        }
+
+        foreach ($pagosPendientes as $pago) {
+
+            // 2) Actualizar el pago individual
+            $pago->update([
+                // si cada pago ya tiene monto propio, omite la siguiente línea
                 'monto'      => $request->monto,
                 'estado'     => 'PAGADO',
                 'updated_at' => now(),
             ]);
 
-        if ($filasActualizadas === 0) {
-            // dentro de la transacción lanza excepción
-            throw \Illuminate\Validation\ValidationException::withMessages([
-                'pagos' => 'Los pagos seleccionados ya estaban en estado PAGADO.',
-            ]);
-        }
+            // 3) Incrementar el saldo del periodo
+            $periodo = $pago->cajaPeriodo;          // relación belongsTo
+            $periodo->increment('saldo_actual', $pago->monto);
 
-        /* 2) Agrupar los IDs recién actualizados
-              por periodo y fecha_pago */
-        $grupos = PagoReporte::whereIn('id', $request->pagos)
-            ->select('caja_periodo_id', 'fecha_pago')
-            ->get()
-            ->groupBy(fn ($p) => $p->caja_periodo_id . '|' . $p->fecha_pago);
-
-        foreach ($grupos as $clave => $coleccion) {
-            [$periodoId, $fecha] = explode('|', $clave);
-
-            // 3) ¿Queda algo de esa fecha sin pagar?
-            $pendiente = PagoReporte::where('caja_periodo_id', $periodoId)
-                ->whereDate('fecha_pago', $fecha)
-                ->where('estado', '!=', 'PAGADO')
-                ->exists();
-
-            if ($pendiente) {
-                continue; // aún no se completa la semana; no sumes nada
-            }
-
-            // 4) Todo pagado ➜ suma e incrementa saldo_actual
-            $totalDia = PagoReporte::where('caja_periodo_id', $periodoId)
-                ->whereDate('fecha_pago', $fecha)
-                ->sum('monto');
-
-            CajaPeriodo::where('id', $periodoId)
-                ->increment('saldo_actual', $totalDia);
-
-            /* (Opcional) registra el movimiento solo una vez */
+            // 4) Registrar movimiento
             CajaMovimiento::create([
-                'caja_periodo_id'  => $periodoId,
-                'monto'            => $totalDia,
-                'descripcion'         => "aporteingresado",
-
-                // saldo_resultante después del incremento
-                'saldo_resultante' => CajaPeriodo::find($periodoId)->saldo_actual,
+                'caja_periodo_id'  => $periodo->id,
+                'monto'            => $pago->monto,
+                'descripcion'      => 'aporteingresado', // pon la que gustes
+                'saldo_resultante' => $periodo->saldo_actual, // ya trae el nuevo saldo
             ]);
+
+            ++$filasActualizadas;
         }
     });
 

@@ -200,10 +200,20 @@ $prestamosSinIniciar = Prestamo::joinSub($maxItemPorPrestamo, 'maxi', function (
 
 
      // ─── ÚLTIMO “aporteingresado” ────────────────────────────────────────────────
+  $ultimo = CajaMovimiento::where('descripcion', 'aporteingresado')
+            ->latest()          // ORDER BY created_at DESC
+            ->first();
+
+$ultimoAporteMonto = 0;
+
+if ($ultimo) {
+    // 2) Misma fecha (YYYY‑MM‑DD) y misma descripción → sumar montos
+    $fecha = $ultimo->created_at->toDateString();   // Carbon → '2025-07-04'
+
     $ultimoAporteMonto = CajaMovimiento::where('descripcion', 'aporteingresado')
-        ->latest()          // ordena por created_at DESC
-        ->value('monto');   // trae solo el valor del campo 'monto'
-                           // → devuelve null si no existe ningún registro
+                        ->whereDate('created_at', $fecha)
+                        ->sum('monto');
+}
 
 
     // Mostrar modal de cumpleaños si hay usuarios con cumpleaños en los próximos 10 días

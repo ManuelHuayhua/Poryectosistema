@@ -75,8 +75,9 @@ public function index(Request $request)
 $hastaDT = Carbon::parse($hasta)->endOfDay();
 
 $saldoFinal = CajaMovimiento::whereBetween('created_at', [$desdeDT, $hastaDT])
-             ->latest('created_at')          // ORDER BY created_at DESC LIMIT 1
-             ->value('saldo_resultante');    // null si no hay movimientos
+    ->orderByDesc('created_at')
+    ->orderByDesc('id') // 🔒 garantiza el más reciente cuando hay empate
+    ->value('saldo_resultante');
 
 $montoTotalMov = CajaMovimiento::whereBetween('created_at', [$desdeDT, $hastaDT])
                  ->sum('monto');
