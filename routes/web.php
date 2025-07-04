@@ -181,9 +181,14 @@ Route::post('/admin/pago-reportes/pagar', [PagoReporteController::class, 'pagar'
 })->name('aportes.exportarPeriodo');
 
 
+
+
+
 //
 Route::get('/reporte-general', [ReporteGeneralController::class, 'index'])
      ->name('reporte.general');
+
+
 
 });
 

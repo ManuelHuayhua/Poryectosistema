@@ -10,6 +10,7 @@ use App\Models\Aporte;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;use App\Exports\PagosHistorialExport;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\DB;
 class AporteController extends Controller
 
 {
@@ -81,25 +82,29 @@ public function index(Request $request)
 // Buscar usuario por DNI y devolver datos
 public function buscarUsuario(Request $request)
 {
-    $dni = $request->dni;
-
+    $dni     = $request->dni;
     $usuario = User::where('dni', $dni)->first();
 
-    $numeroCliente = Aporte::max('numero_cliente') + 1;
+    // Si ya tiene aporte, muéstralo para no crear duplicados
+    $codigoExistente = optional($usuario->aporte)->numero_cliente ?? null;
 
-    if ($usuario) {
-        return response()->json([
-            'nombre' => $usuario->name,
-            'apellido' => $usuario->apellido_paterno . ' ' . $usuario->apellido_materno,
-            'numero_cliente' => $numeroCliente,
-        ]);
-    } else {
-        return response()->json([
-            'nombre' => null,
-            'apellido' => null,
-            'numero_cliente' => $numeroCliente,
-        ]);
+    if (! $codigoExistente) {
+        // Mismo algoritmo que en store()
+        $ultimo = Aporte::where('numero_cliente', 'LIKE', 'CLT-%')
+            ->selectRaw('CAST(SUBSTRING(numero_cliente, 5) AS UNSIGNED) as num')
+            ->orderByDesc('num')
+            ->value('num');
+
+        $codigoExistente = 'CLT-' . str_pad(($ultimo ?? 0) + 1, 4, '0', STR_PAD_LEFT);
     }
+
+    return response()->json([
+        'nombre'         => $usuario->name              ?? null,
+        'apellido'       => $usuario
+                             ? $usuario->apellido_paterno . ' ' . $usuario->apellido_materno
+                             : null,
+        'numero_cliente' => $codigoExistente,   // ← el que mostrarás en el input
+    ]);
 }
 
 public function filtrarUsuariosPorDni(Request $request)
@@ -128,15 +133,25 @@ public function store(Request $request)
         'apellido' => 'required|string|max:100',
     ]);
 
-    $nuevoNumeroCliente = Aporte::max('numero_cliente') + 1;
+   DB::transaction(function () use ($request) {
+    $ultimoCodigo = Aporte::lockForUpdate()
+        ->where('numero_cliente', 'LIKE', 'CLT-%')
+        ->selectRaw("CAST(SUBSTRING(numero_cliente, 5) AS UNSIGNED) as num")
+        ->orderByDesc('num')
+        ->value('num');
+
+    $nuevoCodigo = 'CLT-' . str_pad(($ultimoCodigo ?? 0) + 1, 4, '0', STR_PAD_LEFT);
 
     Aporte::create([
-        'numero_cliente' => $nuevoNumeroCliente,
+        'numero_cliente' => $nuevoCodigo,
         'nombre'         => $request->nombre,
         'apellido'       => $request->apellido,
     ]);
+});
 
-    return redirect()->route('aportes.index')->with('success', 'Cliente agregado correctamente.');
+    return redirect()
+        ->route('aportes.index')
+        ->with('success', 'Cliente agregado correctamente.');
 }
 
 // Eliminar un cliente

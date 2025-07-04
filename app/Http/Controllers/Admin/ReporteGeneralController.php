@@ -5,12 +5,15 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Prestamo;
+use Illuminate\Support\Facades\Auth;
 use App\Models\CajaPeriodo;
 use Illuminate\Support\Carbon;
 class ReporteGeneralController extends Controller
 {
  public function index(Request $request)
 {
+     
+
     // 1)  Si viene ?periodo_id=…
     if ($request->filled('periodo_id')) {
         $periodo = CajaPeriodo::findOrFail($request->input('periodo_id'));
