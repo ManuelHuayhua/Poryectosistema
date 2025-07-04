@@ -572,9 +572,10 @@
                             Usuarios registrados
                         </h4>
                     </div>
-                    <a href="{{ route('exportar.usuarios') }}" class="btn btn-success float-end">
-    <i class="fas fa-file-excel me-2"></i> Exportar Excel
-</a>
+                     <a href="{{ route('exportar.usuarios') }}" class="btn btn-success">
+                    <i class="fas fa-file-excel me-2"></i> Desacargar Usuarios
+                </a>
+            </div>
 
                     <div class="card-body p-4">
                         @if(session('success_password'))

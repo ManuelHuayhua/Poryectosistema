@@ -8,7 +8,7 @@ use App\Models\PagoReporte;
 use App\Models\CajaPeriodo;
 use App\Models\Aporte;
 use Illuminate\Support\Facades\Auth;
-use App\Exports\PagosHistorialExport;
+use App\Models\User;use App\Exports\PagosHistorialExport;
 use Maatwebsite\Excel\Facades\Excel;
 class AporteController extends Controller
 
@@ -78,34 +78,68 @@ public function index(Request $request)
 
 
 
+// Buscar usuario por DNI y devolver datos
+public function buscarUsuario(Request $request)
+{
+    $dni = $request->dni;
+
+    $usuario = User::where('dni', $dni)->first();
+
+    $numeroCliente = Aporte::max('numero_cliente') + 1;
+
+    if ($usuario) {
+        return response()->json([
+            'nombre' => $usuario->name,
+            'apellido' => $usuario->apellido_paterno . ' ' . $usuario->apellido_materno,
+            'numero_cliente' => $numeroCliente,
+        ]);
+    } else {
+        return response()->json([
+            'nombre' => null,
+            'apellido' => null,
+            'numero_cliente' => $numeroCliente,
+        ]);
+    }
+}
+
+public function filtrarUsuariosPorDni(Request $request)
+{
+    $query = $request->get('q');
+
+    $usuarios = User::where('dni', 'LIKE', "%{$query}%")
+        ->limit(5)
+        ->get();
+
+    return response()->json($usuarios->map(function($usuario) {
+        return [
+            'dni' => $usuario->dni,
+            'nombre' => $usuario->name,
+            'apellido' => $usuario->apellido_paterno . ' ' . $usuario->apellido_materno,
+        ];
+    }));
+}
 
 
-// Mostrar el formulario para crear un nuevo aporte
+// Mostrar el formulario para crear cliente
 public function store(Request $request)
 {
     $request->validate([
-        'numero_cliente' => 'required|unique:aportes,numero_cliente',
-        'nombre'         => 'required|string|max:100',
-        'apellido'       => 'required|string|max:100',
+        'nombre'   => 'required|string|max:100',
+        'apellido' => 'required|string|max:100',
     ]);
 
-    Aporte::create($request->only(['numero_cliente', 'nombre', 'apellido']));
+    $nuevoNumeroCliente = Aporte::max('numero_cliente') + 1;
+
+    Aporte::create([
+        'numero_cliente' => $nuevoNumeroCliente,
+        'nombre'         => $request->nombre,
+        'apellido'       => $request->apellido,
+    ]);
 
     return redirect()->route('aportes.index')->with('success', 'Cliente agregado correctamente.');
 }
 
-public function update(Request $request, Aporte $aporte)
-{
-    $request->validate([
-        'numero_cliente' => 'required|unique:aportes,numero_cliente,' . $aporte->id,
-        'nombre'         => 'required|string|max:100',
-        'apellido'       => 'required|string|max:100',
-    ]);
-
-    $aporte->update($request->only(['numero_cliente', 'nombre', 'apellido']));
-
-    return back()->with('success', 'Cliente actualizado correctamente.');
-}
+// Eliminar un cliente
 
 public function destroy(Aporte $aporte)
 {

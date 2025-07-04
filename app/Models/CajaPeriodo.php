@@ -5,6 +5,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Collection;
 class CajaPeriodo extends Model
 {
     protected $table = 'caja_periodo';
@@ -64,6 +65,43 @@ class CajaPeriodo extends Model
         return $query
             ->whereDate('periodo_inicio', '<=', $hoy)
             ->whereDate('periodo_fin',    '>=', $hoy);
+    }
+
+
+public static function reporteGeneral(Carbon $inicio, Carbon $fin): Collection
+    {
+        // Aseguramos tiempos inclusivos
+        $inicio = $inicio->copy()->startOfDay();
+        $fin    = $fin->copy()->endOfDay();
+
+        // Primer domingo a partir de la fecha de inicio
+        $currentStart = $inicio->copy()->startOfWeek(Carbon::SUNDAY);
+
+        $semanas = collect();
+        $n = 1;
+
+        while ($currentStart->lte($fin)) {
+            $currentEnd = $currentStart->copy()->addDays(6)->endOfDay();   // sábado
+            if ($currentEnd->gt($fin)) {
+                $currentEnd = $fin;
+            }
+
+            $prestamos = Prestamo::with('user')
+                ->whereBetween('fecha_inicio', [$currentStart, $currentEnd])
+                ->get();
+
+            $semanas->push([
+                'semana'    => $n++,
+                'desde'     => $currentStart->toDateString(),
+                'hasta'     => $currentEnd->toDateString(),
+                'prestamos' => $prestamos,
+            ]);
+
+            // Siguiente domingo
+            $currentStart->addWeek();
+        }
+
+        return $semanas;
     }
 
 }

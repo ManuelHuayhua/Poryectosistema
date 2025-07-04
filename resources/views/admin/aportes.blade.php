@@ -632,23 +632,34 @@
 <div class="main-content">
     
     {{-- Sección de Clientes --}}
-    <div class="content-card">
-        <div class="section-header">
-            <i class="fas fa-users"></i>
-            <h2>Gestión de Clientes</h2>
-        </div>
-        
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 gap-3">
-            <p class="text-muted mb-0">
-                <i class="fas fa-info-circle me-2"></i>
-                Administra la información de los clientes registrados
-            </p>
+    {{-- Sección de Clientes --}}
+<div class="content-card">
+    <div class="section-header">
+        <i class="fas fa-users"></i>
+        <h2>Gestión de Clientes</h2>
+    </div>
+    
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 gap-3">
+        <p class="text-muted mb-0">
+            <i class="fas fa-info-circle me-2"></i>
+            Administra la información de los clientes registrados
+        </p>
+        <div class="d-flex gap-2">
+            <!-- Botón para mostrar/ocultar tabla -->
+            <button class="btn btn-outline-primary btn-enhanced" data-bs-toggle="collapse" data-bs-target="#tablaClientes" aria-expanded="false" aria-controls="tablaClientes">
+                <i class="fas fa-eye me-2"></i>Ver Tabla de Clientes
+            </button>
+
+            <!-- Botón para agregar nuevo cliente -->
             <button class="btn btn-primary-enhanced btn-enhanced" data-bs-toggle="modal" data-bs-target="#modalAgregarCliente">
                 <i class="fas fa-plus me-2"></i>Agregar Cliente
             </button>
         </div>
+    </div>
 
-        <div class="table-container">
+    <!-- Tabla colapsable -->
+    <div class="collapse" id="tablaClientes">
+        <div class="table-container mt-3">
             <table class="table enhanced-table">
                 <thead>
                     <tr>
@@ -670,12 +681,6 @@
                             <td>{{ $cliente->apellido }}</td>
                             <td class="text-center">
                                 <div class="btn-group" role="group">
-                                    <button class="btn btn-warning-enhanced btn-sm" 
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#modalEditar{{ $cliente->id }}"
-                                            title="Editar cliente">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
                                     <button class="btn btn-danger-enhanced btn-sm"
                                             data-bs-toggle="modal"
                                             data-bs-target="#modalEliminar{{ $cliente->id }}"
@@ -697,6 +702,8 @@
             </table>
         </div>
     </div>
+</div>
+
 
     {{-- Sección de Crear Aportes --}}
     <div class="content-card">
@@ -1035,6 +1042,7 @@
 
 <!-- Modales mejorados -->
 <!-- Modal Agregar Cliente -->
+<!-- Modal Agregar Cliente -->
 <div class="modal fade" id="modalAgregarCliente" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <form method="POST" action="{{ route('aportes.store') }}">
@@ -1046,26 +1054,36 @@
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body p-4">
-                    <div class="mb-3">
-                        <label for="numero_cliente" class="form-label fw-bold">
-                            <i class="fas fa-id-card me-2"></i>Número de Cliente
-                        </label>
-                        <input type="text" name="numero_cliente" id="numero_cliente" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="nombre" class="form-label fw-bold">
-                            <i class="fas fa-user me-2"></i>Nombre
-                        </label>
-                        <input type="text" name="nombre" id="nombre" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="apellido" class="form-label fw-bold">
-                            <i class="fas fa-user me-2"></i>Apellido
-                        </label>
-                        <input type="text" name="apellido" id="apellido" class="form-control" required>
+                
+                <div class="modal-body">
+                    <div class="row">
+                        <!-- DNI -->
+                        <div class="col-md-6 mb-3">
+                            <label for="dni" class="form-label">DNI</label>
+                            <input type="text" id="dni" name="dni" class="form-control" list="lista-dnis" autocomplete="off">
+                            <datalist id="lista-dnis"></datalist>
+                        </div>
+
+                        <!-- Número de Cliente -->
+                        <div class="col-md-6 mb-3">
+                            <label for="numero_cliente" class="form-label">Número de Cliente</label>
+                            <input type="text" id="numero_cliente" name="numero_cliente" class="form-control" readonly>
+                        </div>
+
+                        <!-- Nombre -->
+                        <div class="col-md-6 mb-3">
+                            <label for="nombre" class="form-label">Nombre</label>
+                            <input type="text" id="nombre" name="nombre" class="form-control">
+                        </div>
+
+                        <!-- Apellido -->
+                        <div class="col-md-6 mb-3">
+                            <label for="apellido" class="form-label">Apellido</label>
+                            <input type="text" id="apellido" name="apellido" class="form-control">
+                        </div>
                     </div>
                 </div>
+
                 <div class="modal-footer">
                     <button type="submit" class="btn btn-success-enhanced btn-enhanced">
                         <i class="fas fa-save me-2"></i>Guardar
@@ -1079,51 +1097,61 @@
     </div>
 </div>
 
-<!-- Modales de Editar -->
-@foreach ($aportes as $cliente)
-<div class="modal fade" id="modalEditar{{ $cliente->id }}" tabindex="-1" aria-labelledby="lblEditar{{ $cliente->id }}" aria-hidden="true">
-    <div class="modal-dialog">
-        <form class="modal-content modal-content-enhanced" action="{{ route('aportes.update', $cliente->id) }}" method="POST">
-            @csrf
-            @method('PUT')
-            <div class="modal-header modal-header-enhanced">
-                <h5 class="modal-title" id="lblEditar{{ $cliente->id }}">
-                    <i class="fas fa-edit me-2"></i>Editar Cliente
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body p-4">
-                <div class="mb-3">
-                    <label class="form-label fw-bold">
-                        <i class="fas fa-id-card me-2"></i>Número Cliente
-                    </label>
-                    <input type="text" name="numero_cliente" class="form-control" value="{{ $cliente->numero_cliente }}" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label fw-bold">
-                        <i class="fas fa-user me-2"></i>Nombre
-                    </label>
-                    <input type="text" name="nombre" class="form-control" value="{{ $cliente->nombre }}" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label fw-bold">
-                        <i class="fas fa-user me-2"></i>Apellido
-                    </label>
-                    <input type="text" name="apellido" class="form-control" value="{{ $cliente->apellido }}" required>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="submit" class="btn btn-primary-enhanced btn-enhanced">
-                    <i class="fas fa-save me-2"></i>Guardar Cambios
-                </button>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times me-2"></i>Cancelar
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-@endforeach
+<script>
+const dniInput   = document.getElementById('dni');
+const datalist   = document.getElementById('lista-dnis');
+const nombreInp  = document.getElementById('nombre');
+const apellidoInp= document.getElementById('apellido');
+const numeroInp  = document.getElementById('numero_cliente');
+
+// Pequeño debounce para no saturar el servidor
+let debounce;
+dniInput.addEventListener('input', (e) => {
+    clearTimeout(debounce);
+    const query = e.target.value.trim();
+
+    if (query.length >= 3) {
+        debounce = setTimeout(() => buscarSugerencias(query), 250);
+    } else {
+        datalist.innerHTML = '';
+    }
+});
+
+dniInput.addEventListener('change', () => cargarDatosPorDni(dniInput.value));
+
+function buscarSugerencias(q) {
+    fetch(`{{ route('usuarios.filtrar') }}?q=${encodeURIComponent(q)}`)
+        .then(r => r.json())
+        .then(usuarios => {
+            datalist.innerHTML = '';
+            usuarios.forEach(u => {
+                const op     = document.createElement('option');
+                op.value     = u.dni;
+                op.textContent = `${u.dni} – ${u.nombre} ${u.apellido}`;
+                datalist.appendChild(op);
+            });
+        })
+        .catch(console.error);
+}
+
+function cargarDatosPorDni(dni) {
+    if (dni.length < 8) return;           // evita peticiones innecesarias
+
+    fetch(`{{ route('buscar.usuario') }}?dni=${encodeURIComponent(dni)}`)
+        .then(r => r.json())
+        .then(data => {
+            nombreInp.value   = data.nombre   ?? '';
+            apellidoInp.value = data.apellido ?? '';
+            numeroInp.value   = data.numero_cliente ?? '';
+        })
+        .catch(console.error);
+}
+</script>
+
+
+
+
+
 
 <!-- Modales de Eliminar -->
 @foreach ($aportes as $cliente)

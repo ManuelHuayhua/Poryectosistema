@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\PagoReporteController;
 use App\Exports\UsersExport;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\PagosHistorialExport;
+use App\Http\Controllers\Admin\ReporteGeneralController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -150,10 +151,15 @@ Route::get('/admin/graficos', [GraficoAdminController::class, 'index'])
 
 
 
-     // reportes de pagos
+     // aporte de pagos
 Route::get('/admin/aportes', [AporteController::class, 'index'])
      ->name('aportes.index');
 Route::post('/admin/aportes', [AporteController::class, 'store'])->name('aportes.store');
+Route::get('/buscar-usuario', [AporteController::class, 'buscarUsuario'])->name('buscar.usuario');
+Route::get('/buscar-usuarios-por-dni', [AporteController::class, 'filtrarUsuariosPorDni'])->name('usuarios.filtrar');
+
+
+
 
 /* Guardar pago desde el mismo blade */
 Route::post('/pago-reportes/generar-por-periodo',
@@ -173,6 +179,11 @@ Route::post('/admin/pago-reportes/pagar', [PagoReporteController::class, 'pagar'
         "historial_periodo_{$periodo}.xlsx"
     );
 })->name('aportes.exportarPeriodo');
+
+
+//
+Route::get('/reporte-general', [ReporteGeneralController::class, 'index'])
+     ->name('reporte.general');
 
 });
 
