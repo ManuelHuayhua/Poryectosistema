@@ -938,6 +938,15 @@
                     ->groupBy(fn ($p) => \Carbon\Carbon::parse($p->fecha_pago)->toDateString());
             @endphp
 
+{{-- BOTÓN DE EXPORTAR --}}
+    <div class="d-flex justify-content-end my-2">
+        <a href="{{ route('aportes.exportarPeriodo', $periodoHist->id) }}"
+           class="btn btn-success">
+            <i class="fas fa-file-excel me-2"></i>
+            Exportar período a Excel
+        </a>
+    </div>
+    
             <div class="mt-3">
                 <div class="period-badge">
                     <i class="fas fa-calendar-check"></i>

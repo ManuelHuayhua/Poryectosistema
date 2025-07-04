@@ -14,7 +14,9 @@ use App\Http\Controllers\Admin\ConfiguracionController;
 use App\Http\Controllers\Admin\GraficoAdminController;
 use App\Http\Controllers\Admin\AporteController;
 use App\Http\Controllers\Admin\PagoReporteController;
-
+use App\Exports\UsersExport;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\PagosHistorialExport;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -136,6 +138,12 @@ Route::post(
 Route::get('/admin/prestamos/crear', [PrestamoController::class, 'crearDesdeAdmin'])->name('admin.prestamos.crear');
 Route::post('/admin/prestamos', [PrestamoController::class, 'storeDesdeAdmin'])->name('admin.prestamos.store');
 
+// Exportar usuarios a Excel
+Route::get('/exportar-usuarios', function () {
+    return Excel::download(new UsersExport, 'usuarios.xlsx');
+})->name('exportar.usuarios');
+
+
 //grafico-admin
 Route::get('/admin/graficos', [GraficoAdminController::class, 'index'])
      ->name('admin.graficos');
@@ -157,6 +165,15 @@ Route::resource('aportes', AporteController::class);
 //pagar aportes
 Route::post('/admin/pago-reportes/pagar', [PagoReporteController::class, 'pagar'])
      ->name('pago-reportes.pagar');
+
+// Exportar historial de pagos por período
+     Route::get('/aportes/exportar-periodo/{periodo}', function ($periodo) {
+    return Excel::download(
+        new PagosHistorialExport($periodo),
+        "historial_periodo_{$periodo}.xlsx"
+    );
+})->name('aportes.exportarPeriodo');
+
 });
 
 

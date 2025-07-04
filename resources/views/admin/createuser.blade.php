@@ -572,6 +572,10 @@
                             Usuarios registrados
                         </h4>
                     </div>
+                    <a href="{{ route('exportar.usuarios') }}" class="btn btn-success float-end">
+    <i class="fas fa-file-excel me-2"></i> Exportar Excel
+</a>
+
                     <div class="card-body p-4">
                         @if(session('success_password'))
                             <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -605,6 +609,7 @@
                                 <table class="table table-hover" id="usersTable">
                                     <thead>
                                         <tr>
+                                             <th><i class="fas fa-user me-2"></i>N°</th>
                                             <th><i class="fas fa-user me-2"></i>Usuario</th>
                                             <th><i class="fas fa-id-card me-2"></i>DNI</th>
                                             <th><i class="fas fa-envelope me-2"></i>Correo</th>
@@ -614,6 +619,9 @@
                                     <tbody id="usersTableBody">
                                         @foreach($usuarios as $usuario)
                                             <tr>
+                                                <td>
+                                                    {{ $usuario->id }}  
+                                                </td>
                                                 <td>
                                                     <div class="d-flex align-items-center">
                                                         <div class="user-avatar-small me-3">

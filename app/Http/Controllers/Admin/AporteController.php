@@ -8,6 +8,8 @@ use App\Models\PagoReporte;
 use App\Models\CajaPeriodo;
 use App\Models\Aporte;
 use Illuminate\Support\Facades\Auth;
+use App\Exports\PagosHistorialExport;
+use Maatwebsite\Excel\Facades\Excel;
 class AporteController extends Controller
 
 {
@@ -72,6 +74,10 @@ public function index(Request $request)
         'pagosHist'
     ));
 }
+
+
+
+
 
 
 // Mostrar el formulario para crear un nuevo aporte

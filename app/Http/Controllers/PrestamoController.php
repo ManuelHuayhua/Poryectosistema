@@ -797,7 +797,11 @@ public function crearDesdeAdmin()
         abort(403, 'Acceso no autorizado.');
     }
 
-    $usuarios = User::where('is_admin', 0)->get();
+    // Obtenemos a todos los usuarios, ordenando primero a los admins
+    $usuarios = User::select('id', 'name', 'apellido_paterno', 'dni', 'is_admin')
+                    ->orderByDesc('is_admin')
+                    ->orderBy('name')
+                    ->get();
 
     return view('admin.generar_prestamo', compact('usuarios'));
 }
