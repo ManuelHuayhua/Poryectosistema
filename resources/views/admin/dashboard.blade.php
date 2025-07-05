@@ -1646,17 +1646,20 @@ document.addEventListener('DOMContentLoaded', function() {
     const montoTexto = numeroATexto(Math.floor(monto));
     
     // Formatear fechas
-    const fechaInicioFormateada = new Date(fechaInicio).toLocaleDateString('es-PE', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    });
-    
-    const fechaFinFormateada = new Date(fechaFin).toLocaleDateString('es-PE', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    });
+   function formatearFecha(fechaString) {
+  const meses = [
+    'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+    'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
+  ];
+  
+  const [año, mes, dia] = fechaString.split('-');
+  const mesNombre = meses[parseInt(mes) - 1];
+  return `${parseInt(dia)} de ${mesNombre} de ${año}`;
+}
+
+// Usar la función personalizada
+const fechaInicioFormateada = formatearFecha(fechaInicio);
+const fechaFinFormateada = formatearFecha(fechaFin);
     
     const fechaHoy = new Date().toLocaleDateString('es-PE', {
       day: 'numeric',
@@ -1665,8 +1668,10 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Calcular duración en días
-    const inicio = new Date(fechaInicio);
-    const fin = new Date(fechaFin);
+   const [añoInicio, mesInicio, diaInicio] = fechaInicio.split('-').map(Number);
+const [añoFin, mesFin, diaFin] = fechaFin.split('-').map(Number);
+const inicio = new Date(añoInicio, mesInicio - 1, diaInicio);
+const fin = new Date(añoFin, mesFin - 1, diaFin);
     const duracionDias = Math.ceil((fin - inicio) / (1000 * 60 * 60 * 24));
     const duracionSemanas = Math.ceil(duracionDias / 7);
 

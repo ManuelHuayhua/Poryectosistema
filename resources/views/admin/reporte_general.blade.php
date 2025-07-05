@@ -10,6 +10,10 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
+    <!-- jsPDF para generar PDFs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
     <style>
         :root {
             --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -108,6 +112,31 @@
             padding: 2rem;
             transition: margin-left 0.3s ease;
             min-height: 100vh;
+        }
+
+        /* Botones de acción */
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-print {
+            background: var(--success-gradient);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            font-weight: 600;
+            color: white;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(17, 153, 142, 0.3);
+        }
+
+        .btn-print:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(17, 153, 142, 0.4);
+            color: white;
         }
 
         /* Selector de período mejorado */
@@ -216,6 +245,27 @@
             font-weight: 600;
         }
 
+        .week-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .btn-week-action {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-week-action:hover {
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+        }
+
         /* Tabla mejorada */
         .table-container {
             padding: 0;
@@ -245,6 +295,23 @@
 
         .table tbody tr:hover {
             background-color: #f8f9fa;
+        }
+
+        /* Total de semana */
+        .week-total {
+            background: #f8f9fa;
+            padding: 1rem 2rem;
+            border-top: 2px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .total-amount {
+            color: #28a745;
+            font-size: 1.1rem;
         }
 
         /* Badges mejorados */
@@ -284,6 +351,50 @@
             box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
         }
 
+        /* Estilos para impresión */
+        @media print {
+            .sidebar,
+            .mobile-menu-toggle,
+            .action-buttons,
+            .week-actions,
+            .btn,
+            .period-selector-card {
+                display: none !important;
+            }
+
+            .main-content {
+                margin-left: 0 !important;
+                padding: 0 !important;
+            }
+
+            .week-card {
+                box-shadow: none !important;
+                border: 1px solid #ddd !important;
+                margin-bottom: 1rem !important;
+                page-break-inside: avoid;
+            }
+
+            .week-header {
+                background: #f8f9fa !important;
+                color: #000 !important;
+                -webkit-print-color-adjust: exact;
+            }
+
+            .table {
+                font-size: 0.8rem !important;
+            }
+
+            .status-badge {
+                border: 1px solid #ddd !important;
+                background: #f8f9fa !important;
+                color: #000 !important;
+            }
+
+            body {
+                background: white !important;
+            }
+        }
+
         /* Responsive mejorado */
         @media (max-width: 768px) {
             .sidebar {
@@ -315,6 +426,14 @@
                 box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
             }
 
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .week-actions {
+                flex-direction: column;
+            }
+
             .period-selector-card {
                 padding: 1.5rem;
             }
@@ -340,6 +459,13 @@
             .table thead th,
             .table tbody td {
                 padding: 0.75rem 0.5rem;
+            }
+
+            .week-total {
+                padding: 1rem;
+                flex-direction: column;
+                gap: 0.5rem;
+                text-align: center;
             }
         }
 
@@ -402,8 +528,8 @@
         }
     </style>
 </head>
-<body>
 
+<body>
 <!-- Botón para móviles -->
 <button class="mobile-menu-toggle" onclick="toggleSidebar()">
     <i class="fas fa-bars"></i>
@@ -456,11 +582,10 @@
             </a>
         </div>
         
-
-         <div class="nav-item">
+        <div class="nav-item">
             <a href="{{ route('reporte.general') }}" class="nav-link">
                 <i class="fas fa-chart-line"></i><span>Reporte General</span>
-        </a>
+            </a>
         </div>
         
         <div class="nav-item mt-auto">
@@ -524,7 +649,27 @@
                 </button>
             </div>
         </form>
+
+        @if(request()->filled('periodo_id'))
+            <form method="GET" action="{{ route('reporte.general.export') }}">
+                <input type="hidden" name="periodo_id" value="{{ request('periodo_id') }}">
+                <button type="submit" class="btn btn-success mt-3">
+                    <i class="fas fa-file-excel me-2"></i>
+                    Exportar a Excel
+                </button>
+            </form>
+        @endif
     </div>
+
+    <!-- Botones de acción general -->
+    @if(request()->filled('periodo_id') && !$reporteSemanal->isEmpty())
+        <div class="action-buttons">
+    <button onclick="printReport()" class="btn btn-print">
+        <i class="fas fa-print me-2"></i>
+        Imprimir Reporte Completo (Ctrl+P)
+    </button>
+</div>
+    @endif
 
     <!-- Contenido del reporte -->
     @if ($reporteSemanal->isEmpty() && request()->filled('periodo_id'))
@@ -535,17 +680,25 @@
     @endif
 
     @foreach ($reporteSemanal as $semana)
-        <div class="card week-card">
+        <div class="card week-card" id="week-{{ $semana['semana'] }}">
             <div class="week-header">
-                <h5 class="week-title">
-                    <i class="fas fa-calendar-week"></i>
-                    Semana {{ $semana['semana'] }}
-                    <small class="d-block d-md-inline ms-md-2 mt-1 mt-md-0">
-                        {{ \Carbon\Carbon::parse($semana['desde'])->format('d/m/Y') }} 
-                        — 
-                        {{ \Carbon\Carbon::parse($semana['hasta'])->format('d/m/Y') }}
-                    </small>
-                </h5>
+                <div>
+                    <h5 class="week-title">
+                        <i class="fas fa-calendar-week"></i>
+                        Semana {{ $semana['semana'] }}
+                        <small class="d-block d-md-inline ms-md-2 mt-1 mt-md-0">
+                            {{ \Carbon\Carbon::parse($semana['desde'])->format('d/m/Y') }} 
+                            — 
+                            {{ \Carbon\Carbon::parse($semana['hasta'])->format('d/m/Y') }}
+                        </small>
+                    </h5>
+                   <div class="week-actions">
+    <button onclick="printWeek({{ $semana['semana'] }})" class="btn btn-week-action">
+        <i class="fas fa-print me-1"></i>
+        Imprimir Semana
+    </button>
+</div>
+                </div>
                 <div class="week-count">
                     <i class="fas fa-file-contract me-1"></i>
                     {{ $semana['prestamos']->count() }} préstamo(s)
@@ -569,7 +722,13 @@
                             </tr>
                         </thead>
                         <tbody>
+                            @php
+                                $totalInteresPagar = 0;
+                            @endphp
                             @forelse ($semana['prestamos'] as $prestamo)
+                                @php
+                                    $totalInteresPagar += $prestamo->interes_pagar;
+                                @endphp
                                 <tr>
                                     <td><strong>{{ $loop->iteration }}</strong></td>
                                     <td>
@@ -631,6 +790,18 @@
                     </table>
                 </div>
             </div>
+
+            @if($semana['prestamos']->count() > 0)
+                <div class="week-total">
+                    <span>
+                        <i class="fas fa-calculator me-2"></i>
+                        Total Interés a Pagar - Semana {{ $semana['semana'] }}:
+                    </span>
+                    <span class="total-amount">
+                        ${{ number_format($totalInteresPagar, 2) }}
+                    </span>
+                </div>
+            @endif
         </div>
     @endforeach
 </div>
@@ -657,6 +828,47 @@
         const sidebar = document.getElementById('sidebar');
         if (window.innerWidth > 768) {
             sidebar.classList.remove('show');
+        }
+    });
+
+    // Función para imprimir reporte completo
+    function printReport() {
+        window.print();
+    }
+
+    // Función para imprimir una semana específica
+    function printWeek(weekNumber) {
+        // Ocultar todas las semanas excepto la seleccionada
+        const allWeeks = document.querySelectorAll('.week-card');
+        const targetWeek = document.getElementById(`week-${weekNumber}`);
+        
+        allWeeks.forEach(week => {
+            if (week !== targetWeek) {
+                week.style.display = 'none';
+            }
+        });
+
+        // Imprimir
+        window.print();
+
+        // Restaurar todas las semanas
+        setTimeout(() => {
+            allWeeks.forEach(week => {
+                week.style.display = 'block';
+            });
+        }, 1000);
+    }
+
+    // Función para descargar PDF completo
+   
+
+   
+
+    // Atajo de teclado Ctrl+P
+    document.addEventListener('keydown', function(event) {
+        if (event.ctrlKey && event.key === 'p') {
+            event.preventDefault();
+            printReport();
         }
     });
 </script>

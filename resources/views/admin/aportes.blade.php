@@ -754,9 +754,13 @@
                         </select>
                     </div>
                     <div class="col-12 col-md-4 d-flex align-items-end">
-                        <button type="submit" class="btn btn-success-enhanced btn-enhanced w-100">
-                            <i class="fas fa-plus-circle me-2"></i>Generar Pagos
-                        </button>
+                        <button
+    type="submit"
+    class="btn btn-success-enhanced btn-enhanced w-100"
+    onclick="return confirm('¿Estás seguro de generar los pagos?\nVerifica que la tabla esté completa antes de continuar.');"
+>
+    <i class="fas fa-plus-circle me-2"></i>Generar Pagos
+</button>
                     </div>
                 </div>
             </form>
@@ -782,6 +786,7 @@
                 $cajaPeriodo = $grupo->first()->cajaPeriodo;
                 $inicioPeriodo = \Carbon\Carbon::parse($cajaPeriodo->periodo_inicio)->startOfWeek(\Carbon\Carbon::SUNDAY);
                 $semana = $inicioPeriodo->diffInWeeks($fechaCarbon) + 1;
+                $totalSemana = $grupo->sum('monto');
             @endphp
 
             <div class="mb-4">
@@ -870,6 +875,11 @@
                                         </td>
                                     </tr>
                                 @endforeach
+                                <tr class="table-secondary fw-bold">
+                            <td colspan="4" class="text-end">Total semana</td>
+                            <td>S/ {{ number_format($totalSemana, 2) }}</td>
+                            <td colspan="3"></td>
+                        </tr>
                             </tbody>
                         </table>
                     </div>

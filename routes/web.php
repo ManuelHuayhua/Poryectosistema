@@ -18,6 +18,9 @@ use App\Exports\UsersExport;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\PagosHistorialExport;
 use App\Http\Controllers\Admin\ReporteGeneralController;
+use App\Exports\ReporteSemanalExport;
+use Illuminate\Http\Request; 
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -189,6 +192,20 @@ Route::get('/reporte-general', [ReporteGeneralController::class, 'index'])
      ->name('reporte.general');
 
 
+// Exportar reporte semanal a Excel del reporte general
+Route::get('/reporte-general/export', function (Request $request) {
+    if ($request->filled('periodo_id')) {
+        $periodo = \App\Models\CajaPeriodo::findOrFail($request->periodo_id);
+        $reporteSemanal = \App\Models\CajaPeriodo::reporteGeneral(
+            \Carbon\Carbon::parse($periodo->periodo_inicio),
+            \Carbon\Carbon::parse($periodo->periodo_fin)
+        );
+
+        return Excel::download(new ReporteSemanalExport($reporteSemanal), 'reporte_general.xlsx');
+    }
+
+    return redirect()->back()->with('error', 'Debe seleccionar un período');
+})->name('reporte.general.export');
 
 });
 
