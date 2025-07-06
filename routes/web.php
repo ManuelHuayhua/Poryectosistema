@@ -33,7 +33,13 @@ use Illuminate\Http\Request;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    if (Auth::check()) {                       // sesion iniciada
+        return Auth::user()->is_admin
+            ? redirect('/admin')               // is_admin = 1
+            : redirect('/home');               // is_admin = 0
+    }
+
+    return redirect()->route('login');         // invitado
 });
 
 

@@ -626,9 +626,23 @@
                                     <tbody id="usersTableBody">
                                         @foreach($usuarios as $usuario)
                                             <tr>
-                                                <td>
-                                                    {{ $usuario->id }}  
-                                                </td>
+                                                <td class="user-index"></td>
+<script>
+    function actualizarNumeracionUsuarios() {
+        const filas = document.querySelectorAll('#usersTable tbody tr');
+        filas.forEach((fila, index) => {
+            const celdaIndice = fila.querySelector('.user-index');
+            if (celdaIndice) {
+                celdaIndice.textContent = index + 1;
+            }
+        });
+    }
+
+    // Llamamos la función al cargar la página
+    document.addEventListener('DOMContentLoaded', actualizarNumeracionUsuarios);
+</script>
+
+
                                                 <td>
                                                     <div class="d-flex align-items-center">
                                                         <div class="user-avatar-small me-3">

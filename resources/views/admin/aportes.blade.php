@@ -841,7 +841,30 @@
                                                    name="pagos[]" value="{{ $pago->id }}"
                                                    {{ $pago->estado === 'pagado' ? 'disabled' : '' }}>
                                         </td>
-                                        <td><strong>{{ $i + 1 }}</strong></td>
+                                        {{-- antes --}}
+{{-- <td><strong>{{ $i + 1 }}</strong></td> --}}
+
+{{-- ahora --}}
+<td class="pago-index fw-bold"></td>
+<script>
+function actualizarNumeracionPagos() {
+    // Recorre cada tabla de pagos
+    document.querySelectorAll('.enhanced-table').forEach(tabla => {
+        // Selecciona solo las filas “reales” del cuerpo de la tabla
+        const filas = tabla.querySelectorAll('tbody tr:not(.table-secondary)');
+        filas.forEach((fila, idx) => {
+            const celda = fila.querySelector('.pago-index');
+            if (celda) celda.textContent = idx + 1; // 1, 2, 3…
+        });
+    });
+}
+
+// Numerar al cargar la página
+document.addEventListener('DOMContentLoaded', actualizarNumeracionPagos);
+
+// Si luego añades, quitas o filtras filas, vuelve a llamar a la función:
+/// actualizarNumeracionPagos();
+</script>
                                         <td>
                                             <div class="client-info">
                                                 <span class="badge bg-primary client-number">{{ $pago->aporte->numero_cliente ?? '—' }}</span>

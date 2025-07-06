@@ -552,25 +552,14 @@
                                 </div>
                             </div>
                             
-                            <div class="d-flex justify-content-end mb-3">
-                                <a href="#" class="forgot-link">¿Olvidó su contraseña?</a>
-                            </div>
+                         
                             
                             <button type="submit" class="btn-primary-custom">
                                 <i class="fas fa-sign-in-alt me-2"></i>
                                 Iniciar Sesión
                             </button>
                             
-                            <div class="divider">
-                                <div class="divider-line"></div>
-                                <span class="divider-text">¿No tiene cuenta?</span>
-                                <div class="divider-line"></div>
-                            </div>
-                            
-                            <a href="{{ route('register') }}" class="btn-outline-custom">
-                                <i class="fas fa-user-plus me-2"></i>
-                                Crear Cuenta Nueva
-                            </a>
+                           
                         </form>
                     </div>
                 </div>
