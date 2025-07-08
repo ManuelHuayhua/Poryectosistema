@@ -557,6 +557,33 @@
                 display: none;
             }
         }
+
+/* Estilos para los checkboxes */
+        .form-check-input {
+    width: 1.2em !important;
+    height: 1.2em !important;
+    transform: scale(1.2);
+}
+
+/* Para tablets */
+@media (max-width: 768px) {
+    .form-check-input {
+        width: 1.8em !important;
+        height: 1.8em !important;
+        transform: scale(1.6);
+        margin: 0.3em;
+    }
+}
+
+/* Para móviles */
+@media (max-width: 576px) {
+    .form-check-input {
+        width: 1.3em !important;
+        height: 1.3em !important;
+        transform: scale(1.8);
+        margin: 0.4em;
+    }
+}
     </style>
 </head>
 <body>
@@ -791,14 +818,19 @@
 
             <div class="mb-4">
                 <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center mb-3 gap-2">
-                    <h4 class="text-primary mb-0">
-                        <i class="fas fa-calendar-week me-2"></i>
-                        Semana {{ $semana }}
-                    </h4>
-                    <span class="badge bg-info">{{ $fechaCarbon->format('d/m/Y') }}</span>
-                </div>
+    <h4 class="text-primary mb-0">
+        <i class="fas fa-calendar-week me-2"></i>
+        Semana {{ $semana }}
+    </h4>
+    <span class="badge bg-info">{{ $fechaCarbon->format('d/m/Y') }}</span>
+    <button class="btn btn-outline-primary btn-sm" type="button" data-bs-toggle="collapse" 
+            data-bs-target="#detalle-semana-{{ $loop->index }}" aria-expanded="false">
+        <i class="fas fa-eye me-1"></i>Ver detalle
+    </button>
+</div>
 
-                <form action="{{ route('pago-reportes.pagar') }}" method="POST" class="form-enhanced">
+                <div class="collapse" id="detalle-semana-{{ $loop->index }}">
+    <form action="{{ route('pago-reportes.pagar') }}" method="POST" class="form-enhanced">
                     @csrf
                     <input type="hidden" name="semana_desde" value="{{ $fechaCarbon->toDateString() }}">
 
@@ -907,6 +939,7 @@ document.addEventListener('DOMContentLoaded', actualizarNumeracionPagos);
                         </table>
                     </div>
                 </form>
+                </div> <!-- Cierre del collapse -->
             </div>
 
             @push('scripts')

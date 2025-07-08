@@ -712,6 +712,7 @@
                             <tr>
                                 <th>#</th>
                                 <th>N° Préstamo</th>
+                                <th>N° Junta</th>
                                 <th>Usuario</th>
                                 <th>Monto</th>
                                 <th>Interés</th>
@@ -733,6 +734,9 @@
                                     <td><strong>{{ $loop->iteration }}</strong></td>
                                     <td>
                                         <span class="fw-bold text-primary">{{ $prestamo->numero_prestamo }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold text-primary">{{ $prestamo->n_junta }}</span>
                                     </td>
                                     <td>
                                         <div class="d-flex align-items-center">

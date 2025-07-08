@@ -6,6 +6,7 @@
             <th>Hasta</th>
             <th>#</th>
             <th>N° Préstamo</th>
+            <th>N° Junta</th>
             <th>Usuario</th>
             <th>Monto</th>
             <th>Interés</th>
@@ -24,6 +25,7 @@
                     <td>{{ \Carbon\Carbon::parse($semana['hasta'])->format('d/m/Y') }}</td>
                     <td>{{ $index + 1 }}</td>
                     <td>{{ $prestamo->numero_prestamo }}</td>
+                    <td>{{ $prestamo->n_junta }}</td>
                     <td>{{ $prestamo->user->name ?? '—' }} {{ $prestamo->user->apellido_paterno ?? '' }}</td>
                     <td>{{ $prestamo->monto }}</td>
                     <td>{{ $prestamo->interes }}%</td>
