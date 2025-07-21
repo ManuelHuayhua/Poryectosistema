@@ -351,7 +351,7 @@ public function aprobar(Request $request, $id)
         }
 
         // 🔴 Comparamos contra el total
-        if ($totalSolicitado > $periodo->saldo_actual) {
+        if ($prestamo->monto > $periodo->saldo_actual) {
             throw ValidationException::withMessages([
                 'caja' => 'No hay suficiente saldo en caja. Disponible: S/ '
                           . number_format($periodo->saldo_actual, 2),
