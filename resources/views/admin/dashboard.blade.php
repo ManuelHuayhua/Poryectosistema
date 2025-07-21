@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>Panel de Usuario - Sidebar</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    
+    <link rel="icon" href="https://static.vecteezy.com/system/resources/previews/006/695/460/non_2x/money-dollar-bill-cartoon-illustration-free-vector.jpg" type="image/png">
     <!-- Bootstrap y FontAwesome -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -1869,7 +1869,7 @@ const fin = new Date(añoFin, mesFin - 1, diaFin);
     const fechaFinInputs = document.querySelectorAll('input[name="fecha_fin"]');
     
     fechaInicioInputs.forEach(input => {
-      input.min = today;
+      //input.min = today;
       input.addEventListener('change', function() {
         const prestamoId = this.id.split('_').pop();
         const fechaFinInput = document.getElementById(`fecha_fin_${prestamoId}`);
@@ -1878,7 +1878,7 @@ const fin = new Date(añoFin, mesFin - 1, diaFin);
     });
     
     fechaFinInputs.forEach(input => {
-      input.min = today;
+      //input.min = today;
     });
   });
 </script>
