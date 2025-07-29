@@ -58,7 +58,7 @@ public function indexAdmin()
     
     // Fechas para el filtro de vencimiento
     $hoy = Carbon::today();
-    $limite = $hoy->copy()->addDays(10);
+    $limite = $hoy->copy()->addDays(5);
 
    
 
@@ -89,6 +89,34 @@ public function indexAdmin()
 ->map(function ($grupo) {
     return $grupo->first(); // en caso hayan varias versiones por usuario, solo la última
 });
+
+
+// se agrego esto ahora -- beta funcionalidad en proceso
+if ($prestamosPorVencer->isNotEmpty()) {
+    $prestamosKeys = $prestamosPorVencer->map(function ($p) {
+        return ['numero_prestamo' => $p->numero_prestamo, 'user_id' => $p->user_id];
+    });
+
+    $versionesAnterioresPorVencer = Prestamo::where('estado', 'aprobado')
+    ->where(function ($q) use ($prestamosKeys) {
+        foreach ($prestamosKeys as $key) {
+            $q->orWhere(function ($sub) use ($key) {
+                $sub->where('numero_prestamo', $key['numero_prestamo'])
+                    ->where('user_id', $key['user_id']);
+            });
+        }
+    })
+    ->where(function ($q) {
+        $q->whereNull('descripcion')
+          ->orWhereNotIn('descripcion', ['cancelado', 'diferencia', 'renovar']);
+    })
+    ->with('user')
+    ->get();
+} else {
+    $versionesAnterioresPorVencer = collect(); // colección vacía
+}
+// se agrego esto ahora beta funcionalidad en proceso y en el blade se agreggo tambien punto2
+
 
     // Otros préstamos
     $prestamosPendientes = Prestamo::where('estado', 'pendiente')->with('user')->get();
@@ -232,6 +260,9 @@ if ($ultimo) {
        'prestamosSinIniciar',
        'periodoActual',
        'ultimoAporteMonto',
+         'versionesAnterioresPorVencer', // se agrego esto beta funcionalidad en proceso
+
+      
 
     ));
     

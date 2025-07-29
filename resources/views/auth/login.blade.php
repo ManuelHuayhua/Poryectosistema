@@ -545,13 +545,52 @@
                                 </div>
                             </div>
                             
-                            <div class="form-group">
-                                <label class="form-label">Contraseña</label>
-                                <div class="input-container">
-                                    <i class="fas fa-lock input-icon"></i>
-                                    <input type="password" name="password" class="form-control" placeholder="••••••••" required>
-                                </div>
-                            </div>
+                    <style>
+                    .form-control {
+        padding-left: 35px;
+        padding-right: 40px;
+    }
+
+    .toggle-password {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #aaa;
+    }
+
+                    </style>        
+
+                           <div class="form-group">
+    <label class="form-label">Contraseña</label>
+    <div class="input-container">
+        <i class="fas fa-lock input-icon"></i>
+        <input type="password" name="password" class="form-control" placeholder="••••••••" required id="password">
+        <button type="button" class="toggle-password" onclick="togglePassword()">
+            <i class="fas fa-eye" id="eyeIcon"></i>
+        </button>
+    </div>
+</div>
+
+<script>
+    function togglePassword() {
+        const passwordInput = document.getElementById("password");
+        const eyeIcon = document.getElementById("eyeIcon");
+
+        if (passwordInput.type === "password") {
+            passwordInput.type = "text";
+            eyeIcon.classList.remove("fa-eye");
+            eyeIcon.classList.add("fa-eye-slash");
+        } else {
+            passwordInput.type = "password";
+            eyeIcon.classList.remove("fa-eye-slash");
+            eyeIcon.classList.add("fa-eye");
+        }
+    }
+</script>
                             
                          
                             

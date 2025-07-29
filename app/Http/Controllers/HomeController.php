@@ -23,38 +23,59 @@ class HomeController extends Controller
      *
      * @return \Illuminate\Contracts\Support\Renderable
      */
-   public function index()
+
+    //se realizo modificacion para ver detalle de prestamo y en el blade tabien home.blade
+
+public function index()
 {
     $user = Auth::user();
 
-   /* === 1. Préstamos del más nuevo al más viejo ============== */
-        $prestamos = Prestamo::where('user_id', $user->id)
-            ->orderBy('fecha_inicio', 'desc')      // 1️⃣ orden principal
-            ->get()
-            ->groupBy('numero_prestamo')
-            ->map(function ($grupo) {              // 2️⃣ para cada número
-                // Toma el último registro del grupo (el más reciente)
-                return $grupo->sortByDesc('fecha_inicio')->first();
+    $todosPrestamos = Prestamo::where('user_id', $user->id)
+        ->orderBy('fecha_inicio', 'desc')
+        ->get();
+
+    // Últimos préstamos por numero_prestamo
+    $ultimosPrestamos = $todosPrestamos
+        ->groupBy('numero_prestamo')
+        ->map(fn($grupo) => $grupo->sortByDesc('item_prestamo')->first()) // 👈 ordena por ítem
+        ->sortByDesc('numero_prestamo')
+        ->values();
+
+    // Agrupa historial por numero_prestamo
+   $historialPorNumero = $todosPrestamos
+    ->groupBy('numero_prestamo')
+    ->map(function ($grupo) {
+        return $grupo
+            ->filter(function ($prestamo) {
+                return !in_array(strtolower($prestamo->descripcion), ['cancelado', 'diferencia', 'renovar']);
             })
-            ->sortByDesc('fecha_inicio');          // 3️⃣ vuelve a ordenar la colección
+            ->sortByDesc('item_prestamo');
+    });
 
-        /* === 2. ¿Es su cumpleaños hoy? ============================ */
-        $cumpleaniosHoy = false;
-        if ($user->fecha_nacimiento) {
-            $cumpleaniosHoy = Carbon::parse($user->fecha_nacimiento)
-                                    ->isSameDay(Carbon::today());
-        }
+    // Cumpleaños
+    $cumpleaniosHoy = $user->fecha_nacimiento
+        ? Carbon::parse($user->fecha_nacimiento)->isSameDay(Carbon::today())
+        : false;
 
-        /* === 3. Préstamos que vencen en <=10 días ================= */
-        $proximosVencer = Prestamo::where('user_id', $user->id)
-            ->whereBetween('fecha_fin', [Carbon::today(), Carbon::today()->addDays(10)])
-            ->orderBy('fecha_fin', 'asc')
-            ->get();
+    // Préstamos por vencer
+    $proximosVencer = $todosPrestamos->filter(function ($p) {
+        return $p->fecha_fin && Carbon::parse($p->fecha_fin)
+            ->between(Carbon::today(), Carbon::today()->addDays(10));
+    });
 
-        return view('home', compact(
-            'user', 'prestamos', 'cumpleaniosHoy', 'proximosVencer'
-        ));
-    }
+    return view('home', [
+        'user' => $user,
+        'prestamos' => $ultimosPrestamos,
+        'prestamosTodos' => $todosPrestamos,
+        'historialPorNumero' => $historialPorNumero, // 👈 importante
+        'cumpleaniosHoy' => $cumpleaniosHoy,
+        'proximosVencer' => $proximosVencer,
+    ]);
+}
+
+ //se realizo modificacion para ver detalle de prestamo arriba y el blade se modifco home.blade
+
+
 
 public function notificarPago($id)
 {

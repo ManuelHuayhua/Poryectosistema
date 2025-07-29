@@ -543,7 +543,7 @@
 
         .user-section {
             margin-bottom: 2rem;
-            border: 1px solid #e9ecef;
+            border: 2px solid #8e44ad;  /*PUNTO2 */
             border-radius: 12px;
             overflow: hidden;
             background: white;
@@ -1971,7 +1971,7 @@ const fin = new Date(añoFin, mesFin - 1, diaFin);
           </div>
           <p>
             <strong>{{ $prestamosPorVencer->count() }}</strong> préstamo{{ $prestamosPorVencer->count() > 1 ? 's' : '' }} 
-            vence{{ $prestamosPorVencer->count() > 1 ? 'n' : '' }} en los próximos 10 días:
+            vence{{ $prestamosPorVencer->count() > 1 ? 'n' : '' }} en los próximos 5 días:
           </p>
           <ul class="notification-list">
             @foreach($prestamosPorVencer as $prestamo)
@@ -2172,8 +2172,9 @@ const fin = new Date(añoFin, mesFin - 1, diaFin);
 
 {{-- Pasamos los datos como JSON desde Laravel --}}
 <script>
-    const prestamosFiltrados = @json($prestamosAprobados);
-    const prestamosTodos = @json($todosPrestamosAprobados);
+  {{--  const prestamosFiltrados = @json($prestamosAprobados);  --}}
+   const prestamosFiltrados = @json($versionesAnterioresPorVencer);// se agrego esto beta funcionalidad en proceso
+    const prestamosTodos = @json($todosPrestamosAprobados); 
     const csrfToken = "{{ csrf_token() }}";
     let prestamosOriginales = [];
     let prestamosActuales = [];

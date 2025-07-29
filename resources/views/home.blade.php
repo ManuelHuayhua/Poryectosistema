@@ -425,106 +425,150 @@
         </div>
     </div>
 
-    <!-- Tabla de préstamos -->
-   <div class="table-container fade-in">
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
-        <h4 class="mb-2 mb-md-0">
-            <i class="fas fa-list-alt text-primary me-2"></i>
-            Historial de Préstamos
-        </h4>
-        <div class="d-flex align-items-center gap-2">
-            <span class="badge bg-info">{{ $prestamosOrdenados->count() }} préstamos</span>
-            <button onclick="location.reload()" class="btn btn-sm btn-outline-primary" title="Actualizar página">
-                Actualizar <i class="fas fa-sync-alt"></i>
-            </button>
-        </div>
-   
+        <!-- Tabla de préstamos -->
+    <div class="table-container fade-in">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
+            <h4 class="mb-2 mb-md-0">
+                <i class="fas fa-list-alt text-primary me-2"></i>
+                Historial de Préstamos
+            </h4>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-info">{{ $prestamosOrdenados->count() }} préstamos</span>
+                <button onclick="location.reload()" class="btn btn-sm btn-outline-primary" title="Actualizar página">
+                    Actualizar <i class="fas fa-sync-alt"></i>
+                </button>
+            </div>
+    
 
 
+                
+            </div>
             
-        </div>
-        
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th><i class="fas fa-hashtag me-1"></i>N° Préstamo</th>
+                            <th><i class="fas fa-tag me-1"></i>Último Ítem</th>
+                            <th><i class="fas fa-money-bill me-1"></i>Monto</th>
+                            <th><i class="fas fa-percentage me-1"></i>Interés</th>
+                            <th><i class="fas fa-calculator me-1"></i>Interés a Pagar</th>
+                            <th><i class="fas fa-info-circle me-1"></i>Estado</th>
+                            <th><i class="fas fa-calendar-alt me-1"></i>Fecha Inicio</th>
+                            <th><i class="fas fa-calendar-times me-1"></i>Fecha Fin</th>
+                            <th><i class="fas fa-calendar-check me-1"></i>Fecha Pago</th>
+                            <th><i class="fas fa-bell me-1"></i>Notificar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                  @forelse($prestamos as $prestamo)
+<tr class="{{ $prestamo->estado === 'cancelado' ? 'table-light' : '' }}">
+    <td>
+        <strong class="text-primary">#{{ $prestamo->numero_prestamo }}</strong><br>
+        <button class="btn btn-sm btn-link text-decoration-underline" onclick="toggleDetalle('{{ $prestamo->numero_prestamo }}')">
+            Ver detalle
+        </button>
+    </td>
+    {{-- CAMBIO: usar item --}}
+    <td>{{ $prestamo->item_prestamo }}</td>
+    
+    <td><strong>S/ {{ number_format($prestamo->monto, 2) }}</strong></td>
+    <td>{{ $prestamo->interes }}%</td>
+    <td><strong class="text-danger">S/ {{ number_format($prestamo->interes_pagar, 2) }}</strong></td>
+    <td>
+        <span class="badge bg-{{ $prestamo->estado == 'pendiente' ? 'warning' : ($prestamo->estado == 'cancelado' ? 'danger' : 'success') }}">
+            {{ ucfirst($prestamo->estado) }}
+        </span>
+    </td>
+    <td><small>{{ optional($prestamo->fecha_inicio)->format('d/m/Y') ?? '-' }}</small></td>
+    <td><small>{{ optional($prestamo->fecha_fin)->format('d/m/Y') ?? '-' }}</small></td>
+    <td>
+        @if($prestamo->fecha_pago)
+            <small class="text-success">
+                <i class="fas fa-check me-1"></i>
+                {{ \Carbon\Carbon::parse($prestamo->fecha_pago)->format('d/m/Y') }}
+            </small>
+        @else
+            <small class="text-danger">
+                <i class="fas fa-times me-1"></i>
+                Sin pagar
+            </small>
+        @endif
+    </td>
+    <td>
+        @if(!$prestamo->notificacion_pago)
+            <form method="POST" action="{{ route('prestamos.notificar_pago', $prestamo->id) }}">
+                @csrf
+                <button type="submit" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-bell me-1"></i>
+                    Notificar
+                </button>
+            </form>
+        @else
+            <span class="badge bg-success">
+                <i class="fas fa-check me-1"></i>
+                Notificado
+            </span>
+        @endif
+    </td>
+</tr>
+                       {{-- Fila oculta con el historial --}}
+{{-- Fila oculta con historial --}}
+<tr id="detalle-{{ $prestamo->numero_prestamo }}" style="display: none;">
+    <td colspan="10">
         <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
+            <table class="table table-bordered table-hover mt-2">
+                <thead class="table-secondary">
                     <tr>
-                        <th><i class="fas fa-hashtag me-1"></i>N° Préstamo</th>
-                        <th><i class="fas fa-tag me-1"></i>Último Ítem</th>
-                        <th><i class="fas fa-money-bill me-1"></i>Monto</th>
-                        <th><i class="fas fa-percentage me-1"></i>Interés</th>
-                        <th><i class="fas fa-calculator me-1"></i>Interés a Pagar</th>
-                        <th><i class="fas fa-info-circle me-1"></i>Estado</th>
-                        <th><i class="fas fa-calendar-alt me-1"></i>Fecha Inicio</th>
-                        <th><i class="fas fa-calendar-times me-1"></i>Fecha Fin</th>
-                        <th><i class="fas fa-calendar-check me-1"></i>Fecha Pago</th>
-                        <th><i class="fas fa-bell me-1"></i>Notificar</th>
+                        <th>Ítem</th>
+                        <th>Monto</th>
+                        <th>Interés</th>
+                        <th>Interés a pagar</th>
+                        <th>Fecha inicio</th>
+                        <th>Fecha fin</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($prestamosOrdenados as $prestamo)
-                        <tr class="{{ $prestamo->estado === 'cancelado' ? 'table-light' : '' }}">
-                            <td>
-                                <strong class="text-primary">#{{ $prestamo->numero_prestamo }}</strong>
-                            </td>
-                            <td>{{ $prestamo->item_prestamo }}</td>
-                            <td><strong>S/ {{ number_format($prestamo->monto, 2) }}</strong></td>
-                            <td>{{ $prestamo->interes }}%</td>
-                            <td><strong class="text-danger">S/ {{ number_format($prestamo->interes_pagar, 2) }}</strong></td>
-                            <td>
-                                <span class="badge bg-{{ $prestamo->estado == 'pendiente' ? 'warning' : ($prestamo->estado == 'cancelado' ? 'danger' : 'success') }}">
-                                    {{ ucfirst($prestamo->estado) }}
-                                </span>
-                            </td>
-                            <td>
-                                <small>{{ optional($prestamo->fecha_inicio)->format('d/m/Y') ?? '-' }}</small>
-                            </td>
-                            <td>
-                                <small>{{ optional($prestamo->fecha_fin)->format('d/m/Y') ?? '-' }}</small>
-                            </td>
-                            <td>
-                                @if($prestamo->fecha_pago)
-                                    <small class="text-success">
-                                        <i class="fas fa-check me-1"></i>
-                                        {{ \Carbon\Carbon::parse($prestamo->fecha_pago)->format('d/m/Y') }}
-                                    </small>
-                                @else
-                                    <small class="text-danger">
-                                        <i class="fas fa-times me-1"></i>
-                                        Sin pagar
-                                    </small>
-                                @endif
-                            </td>
-                            <td>
-                                @if(!$prestamo->notificacion_pago)
-                                    <form method="POST" action="{{ route('prestamos.notificar_pago', $prestamo->id) }}">
-                                        @csrf
-                                        <button type="submit" class="btn btn-sm btn-outline-primary">
-                                            <i class="fas fa-bell me-1"></i>
-                                            Notificar
-                                        </button>
-                                    </form>
-                                @else
-                                    <span class="badge bg-success">
-                                        <i class="fas fa-check me-1"></i>
-                                        Notificado
-                                    </span>
-                                @endif
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="10" class="text-center py-5">
-                                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                                <p class="text-muted">No tienes préstamos registrados</p>
-                            </td>
-                        </tr>
-                    @endforelse
+                    @foreach($historialPorNumero[$prestamo->numero_prestamo] ?? [] as $detalle)
+                    <tr>
+                        {{-- CAMBIO: usar item y formatear fechas --}}
+                        <td>{{ $detalle->item_prestamo }}</td>
+                        <td>S/. {{ number_format($detalle->monto, 2) }}</td>
+                        <td>{{ $detalle->interes }}%</td>
+                        <td>S/. {{ number_format($detalle->interes_pagar, 2) }}</td>
+                        <td>{{ \Carbon\Carbon::parse($detalle->fecha_inicio)->format('d/m/Y') }}</td>
+                        <td>{{ $detalle->fecha_fin ? \Carbon\Carbon::parse($detalle->fecha_fin)->format('d/m/Y') : '-' }}</td>
+                    </tr>
+                    @endforeach
                 </tbody>
             </table>
         </div>
-    </div>
-</div>
+    </td>
+</tr>
+@empty
 
+
+
+                            <tr>
+                                <td colspan="10" class="text-center py-5">
+                                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                    <p class="text-muted">No tienes préstamos registrados</p>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+    function toggleDetalle(numero) {
+        const fila = document.getElementById('detalle-' + numero);
+        fila.style.display = fila.style.display === 'none' ? 'table-row' : 'none';
+    }
+</script>
 <!-- Modal de confirmación -->
 <div class="modal fade" id="confirmarPrestamoModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
