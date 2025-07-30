@@ -681,6 +681,9 @@
     @endif
 
     @foreach ($reporteSemanal as $semana)
+    
+
+
         <div class="card week-card" id="week-{{ $semana['semana'] }}">
             <div class="week-header">
                 <div>
@@ -727,7 +730,12 @@
                             @php
                                 $totalInteresPagar = 0;
                             @endphp
-                            @forelse ($semana['prestamos'] as $prestamo)
+
+                             
+@forelse ($semana['prestamos'] as $prestamo)
+
+
+
                                 @php
                                     $totalInteresPagar += $prestamo->interes_pagar;
                                 @endphp
@@ -808,6 +816,7 @@
                 </div>
             @endif
         </div>
+    
     @endforeach
 </div>
 
