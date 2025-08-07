@@ -118,6 +118,27 @@ if ($prestamosPorVencer->isNotEmpty()) {
 // se agrego esto ahora beta funcionalidad en proceso y en el blade se agreggo tambien punto2
 
 
+// Se agrego para indentificar los prestamos vencidos para el la ventana modal
+$prestamosVencidos = Prestamo::joinSub($subquery, 'ultimos', function ($join) {
+        $join->on('prestamos.numero_prestamo', '=', 'ultimos.numero_prestamo')
+             ->on('prestamos.item_prestamo', '=', 'ultimos.max_item')
+             ->on('prestamos.user_id', '=', 'ultimos.user_id');
+    })
+    ->where('prestamos.estado', 'aprobado')
+    ->where(function ($q) {
+        $q->whereNull('prestamos.descripcion')
+          ->orWhereNotIn('prestamos.descripcion', ['cancelado', 'diferencia', 'renovar']);
+    })
+    ->whereDate('prestamos.fecha_fin', '<', Carbon::today()) // <<< YA VENCIDOS
+    ->with('user')
+    ->get();
+
+    $hayPrestamosVencidos = $prestamosVencidos->isNotEmpty();
+    // Se agrego para indentificar los prestamos vencidos
+
+
+
+
     // Otros préstamos
     $prestamosPendientes = Prestamo::where('estado', 'pendiente')->with('user')->get();
     $prestamosRechazados = Prestamo::where('estado', 'rechazado')->with('user')->get();
@@ -261,6 +282,9 @@ if ($ultimo) {
        'periodoActual',
        'ultimoAporteMonto',
          'versionesAnterioresPorVencer', // se agrego esto beta funcionalidad en proceso
+         'prestamosVencidos',
+  'hayPrestamosVencidos',
+         
 
       
 

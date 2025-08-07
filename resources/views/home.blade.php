@@ -526,6 +526,7 @@
                         <th>Interés a pagar</th>
                         <th>Fecha inicio</th>
                         <th>Fecha fin</th>
+                        <th>Por pagar</th> <!-- NUEVA COLUMNA -->
                     </tr>
                 </thead>
                 <tbody>
@@ -538,6 +539,7 @@
                         <td>S/. {{ number_format($detalle->interes_pagar, 2) }}</td>
                         <td>{{ \Carbon\Carbon::parse($detalle->fecha_inicio)->format('d/m/Y') }}</td>
                         <td>{{ $detalle->fecha_fin ? \Carbon\Carbon::parse($detalle->fecha_fin)->format('d/m/Y') : '-' }}</td>
+                        <td style="color: red; font-weight: bold;">Falta pagar</td> <!-- NUEVA COLUMNA -->
                     </tr>
                     @endforeach
                 </tbody>

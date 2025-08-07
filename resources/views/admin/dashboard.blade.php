@@ -326,6 +326,7 @@
             bottom: 0;
             opacity: 0.05;
             background: linear-gradient(45deg, transparent 30%, currentColor 30%, currentColor 70%, transparent 70%);
+             pointer-events: none; /* 👈 Esto permite hacer clic a través del fondo decorativo */
         }
 
         .notification-section.pending {
@@ -1930,7 +1931,10 @@ const fin = new Date(añoFin, mesFin - 1, diaFin);
  {{--termino la seccion de prestamos pendientes --}}
 
   {{-- MODAL PERSONALIZADO MEJORADO --}}
- @if($hayNuevosPrestamos || $hayPrestamosPorVencer || $usuariosConCumpleanos->isNotEmpty())
+ @if($hayNuevosPrestamos || $hayPrestamosPorVencer || $usuariosConCumpleanos->isNotEmpty() ||
+    $hayQuierenPagar || 
+    $hayPrestamosVencidos // ← agrega esto si implementaste la sección de vencidos
+    )
 <!-- Modal personalizado mejorado -->
 <div class="custom-modal" id="notificacionesModal">
   <div class="custom-modal-content">
@@ -1985,6 +1989,31 @@ const fin = new Date(añoFin, mesFin - 1, diaFin);
           </ul>
         </div>
       @endif
+
+
+@if($hayPrestamosVencidos)
+  <div class="notification-section danger">
+    <div class="notification-title">
+      <i class="fas fa-skull-crossbones"></i>
+      Préstamos Vencidos
+    </div>
+    <p>
+      Tienes <strong>{{ $prestamosVencidos->count() }}</strong> préstamo{{ $prestamosVencidos->count() > 1 ? 's' : '' }} vencido{{ $prestamosVencidos->count() > 1 ? 's' : '' }}:
+    </p>
+    <ul class="notification-list">
+      @foreach($prestamosVencidos as $prestamo)
+        <li class="notification-item">
+          <div class="notification-item-content">
+            <strong>Préstamo N° {{ $prestamo->numero_prestamo }}</strong><br>
+            <small>{{ $prestamo->user->name }} - Venció el {{ \Carbon\Carbon::parse($prestamo->fecha_fin)->format('d/m/Y') }}</small>
+          </div>
+        </li>
+      @endforeach
+    </ul>
+  </div>
+@endif
+
+
 
       @if($usuariosConCumpleanos->isNotEmpty())
         <div class="notification-section success">
@@ -2173,7 +2202,7 @@ const fin = new Date(añoFin, mesFin - 1, diaFin);
 {{-- Pasamos los datos como JSON desde Laravel --}}
 <script>
   {{--  const prestamosFiltrados = @json($prestamosAprobados);  --}}
-   const prestamosFiltrados = @json($versionesAnterioresPorVencer);// se agrego esto beta funcionalidad en proceso
+   const prestamosFiltrados = @json($versionesAnterioresPorVencer);// se agrego esto beta funcionalidad en proceso punto2
     const prestamosTodos = @json($todosPrestamosAprobados); 
     const csrfToken = "{{ csrf_token() }}";
     let prestamosOriginales = [];
