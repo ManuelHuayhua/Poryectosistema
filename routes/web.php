@@ -20,7 +20,7 @@ use App\Exports\PagosHistorialExport;
 use App\Http\Controllers\Admin\ReporteGeneralController;
 use App\Exports\ReporteSemanalExport;
 use Illuminate\Http\Request; 
-
+use App\Http\Controllers\Admin\CuadraCajaController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -212,6 +212,13 @@ Route::get('/reporte-general/export', function (Request $request) {
 
     return redirect()->back()->with('error', 'Debe seleccionar un período');
 })->name('reporte.general.export');
+
+
+
+//cuadra caja
+Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('cuadracaja', [CuadraCajaController::class, 'index'])->name('cuadracaja.index');
+});
 
 });
 
