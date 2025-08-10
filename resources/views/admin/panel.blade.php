@@ -106,7 +106,7 @@
 
 /* Opción 2: fija el header y desplaza solo los enlaces */
 .sidebar-nav {
-    max-height: calc(100vh - 160px); /* ajusta 160 px al alto real del header */
+    max-height: calc(100vh - 190px); /* ajusta 160 px al alto real del header */
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
 }

@@ -10,16 +10,25 @@ class CuadraCajaController extends Controller
 {
   public function index(Request $request)
     {
-        // Obtener periodos para el select
-        $periodos = CajaPeriodo::orderBy('periodo_inicio','desc')->get();
+       // Obtener periodos para el select
+    $periodos = CajaPeriodo::orderBy('periodo_inicio', 'desc')->get();
 
-        // periodo seleccionado (por querystring ?periodo_id=16) o el primero por defecto
-        $periodoId = $request->get('periodo_id', optional($periodos->first())->id);
+    // Si no se envía periodo_id, buscar el que contenga la fecha actual
+    if ($request->filled('periodo_id')) {
+        $periodoId = $request->get('periodo_id');
+    } else {
+        $hoy = now()->toDateString();
+        $periodoActual = CajaPeriodo::where('periodo_inicio', '<=', $hoy)
+            ->where('periodo_fin', '>=', $hoy)
+            ->first();
 
-        if (! $periodoId) {
-            return view('admin.cuadracaja', compact('periodos'))
-                ->with('mensaje', 'No hay periodos creados.');
-        }
+        $periodoId = $periodoActual ? $periodoActual->id : optional($periodos->first())->id;
+    }
+
+    if (!$periodoId) {
+        return view('admin.cuadracaja', compact('periodos'))
+            ->with('mensaje', 'No hay periodos creados.');
+    }
 
         // 1) Cantidad de socios (distinct aporte_id) en ese periodo (independiente de estado)
         $cantidadSocios = DB::table('pago_reportes')
@@ -53,12 +62,20 @@ class CuadraCajaController extends Controller
         // pasar el periodo seleccionado para mostrar fechas
         $periodo = CajaPeriodo::find($periodoId);
 
+
+        // 4) Interés ganado en el periodo
+$interesGanado = DB::table('prestamos')
+    ->whereBetween('fecha_inicio', [$periodo->periodo_inicio, $periodo->periodo_fin])
+    ->sum('interes_pagar');
+
+
         return view('admin.cuadracaja', compact(
             'periodos',
             'periodo',
             'cantidadSocios',
             'aportesPorSocio',
-            'totalAportes'
+            'totalAportes',
+            'interesGanado'
         ));
     }
 }

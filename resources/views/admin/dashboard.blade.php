@@ -1268,27 +1268,68 @@
                     </h5>
 
                    <div class="flex-grow-1">
-    @if(!is_null($ultimoAporteMonto))
-        <p class="fs-5 fw-bold text-success mb-1">
-            S/ {{ number_format($ultimoAporteMonto, 2) }}
-        </p>
-    @else
-        <p class="text-muted mb-1">
-            Aún no hay movimientos en "APORTES”.
-        </p>
-    @endif
+                    @if(!is_null($ultimoAporteMonto))
+                        <p class="fs-5 fw-bold text-success mb-1">
+                            S/ {{ number_format($ultimoAporteMonto, 2) }}
+                        </p>
+                    @else
+                        <p class="text-muted mb-1">
+                            Aún no hay movimientos en "APORTES”.
+                        </p>
+                    @endif
 
-    <div class="d-flex justify-content-between align-items-center mt-2">
-    <small class="text-muted">Datos actualizados</small>
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                    <small class="text-muted">Datos actualizados</small>
 
-    <a href="{{ route('aportes.index') }}" class="btn btn-sm btn-outline-primary mb-0">
-        <i class="fas fa-eye me-1"></i> Ver Aportes
-    </a>
+                    <a href="{{ route('aportes.index') }}" class="btn btn-sm btn-outline-primary mb-0">
+                        <i class="fas fa-eye me-1"></i> Ver Aportes
+                    </a>
+          </div>
+
+
+
 </div>
-</div>
+
+
+
+
+
+
+
+                </div>
+              
+                
+            </div>
+     
+
+        </div>
+
+
+        {{-- ⬇ Aquí agregamos la nueva tarjeta Cuadre de Caja --}}
+        <div class="col-12 col-sm-6 col-lg-4">
+            <div class="card shadow-sm mb-4 h-100">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title mb-3">
+                        <i class="fas fa-balance-scale me-2 text-warning"></i>
+                        Cuadre de Caja
+                    </h5>
+
+                    <div class="flex-grow-1 d-flex align-items-center justify-content-center">
+                        <p class="fs-5 fw-bold text-secondary mb-0">
+                            Información del cuadre de caja
+                        </p>
+                    </div>
+
+                    <div class="mt-auto text-end">
+                        <a href="{{ route('admin.cuadracaja.index') }}" class="btn btn-sm btn-outline-warning">
+                            <i class="fas fa-eye me-1"></i> Ver Cuadre
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
+        {{-- ⬆ Hasta aquí la nueva tarjeta --}}
+
     @else
         {{-- Si no hay periodo activo --}}
         <div class="col-12 col-sm-6 col-lg-4">
