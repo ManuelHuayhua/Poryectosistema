@@ -60,6 +60,7 @@ Route::post('/solicitar-prestamo', [PrestamoController::class, 'store'])->name('
 Route::post('/prestamos/{id}/notificar-pago', [App\Http\Controllers\HomeController::class, 'notificarPago'])->name('prestamos.notificar_pago');
 Route::post('/prestamo/{id}/marcar-leido', [HomeController::class, 'marcarLeido'])->name('admin.marcar_leido');
 Route::get('/reporteusuarios', [ReporteUserController::class, 'index'])->name('reporteusuarios.index');
+//
 
 
 });
@@ -83,7 +84,10 @@ Route::get('/admin', [PrestamoController::class, 'indexAdmin'])->middleware('aut
  
 Route::middleware('auth')->group(function () {
     Route::post('/prestamos/aprobar', [PrestamoController::class, 'aprobar']);
-    
+    //
+Route::get('/reporte-general', [ReporteGeneralController::class, 'index'])
+     ->name('reporte.general');
+
   
 });
 
@@ -193,10 +197,8 @@ Route::post('/admin/pago-reportes/pagar', [PagoReporteController::class, 'pagar'
 
 
 
-//
-Route::get('/reporte-general', [ReporteGeneralController::class, 'index'])
-     ->name('reporte.general');
 
+    
 
 // Exportar reporte semanal a Excel del reporte general
 Route::get('/reporte-general/export', function (Request $request) {
@@ -219,6 +221,10 @@ Route::get('/reporte-general/export', function (Request $request) {
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('cuadracaja', [CuadraCajaController::class, 'index'])->name('cuadracaja.index');
 });
+
+
+
+
 
 });
 
