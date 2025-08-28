@@ -402,7 +402,7 @@
            <a href="{{ route('reporteusuarios.index') }}" class="nav-link"><i class="fas fa-download"></i><span>Reporte</span></a>
         </div>
          <div class="nav-item">
-            <a href="{{ route('reporte.general') }}" class="nav-link">
+            <a href="{{ route('reporte.cliente') }}" class="nav-link">
                 <i class="fas fa-chart-line"></i><span>Reporte General</span>
         </a>
         </div>

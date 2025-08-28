@@ -21,6 +21,7 @@ use App\Http\Controllers\Admin\ReporteGeneralController;
 use App\Exports\ReporteSemanalExport;
 use Illuminate\Http\Request; 
 use App\Http\Controllers\Admin\CuadraCajaController;
+use App\Http\Controllers\ReporteGeneralClienteController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -85,10 +86,27 @@ Route::get('/admin', [PrestamoController::class, 'indexAdmin'])->middleware('aut
 Route::middleware('auth')->group(function () {
     Route::post('/prestamos/aprobar', [PrestamoController::class, 'aprobar']);
     //
-Route::get('/reporte-general', [ReporteGeneralController::class, 'index'])
-     ->name('reporte.general');
 
+Route::get('/reporte-cliente', [ReporteGeneralClienteController::class, 'index'])
+    ->name('reporte.cliente');
   
+
+// 📌 Exportar reporte semanal a Excel (versión cliente)
+Route::get('/reporte-cliente/export', function (Request $request) {
+    if ($request->filled('periodo_id')) {
+        $periodo = \App\Models\CajaPeriodo::findOrFail($request->periodo_id);
+        $reporteSemanal = \App\Models\CajaPeriodo::reporteGeneral(
+            \Carbon\Carbon::parse($periodo->periodo_inicio),
+            \Carbon\Carbon::parse($periodo->periodo_fin)
+        );
+
+        return Excel::download(new \App\Exports\ReporteSemanalExport($reporteSemanal), 'reporte_cliente.xlsx');
+    }
+
+    return redirect()->back()->with('error', 'Debe seleccionar un período');
+})->name('reporte.cliente.export');
+
+
 });
 
 Route::middleware(['auth', 'is_admin'])->group(function () {
@@ -193,7 +211,8 @@ Route::post('/admin/pago-reportes/pagar', [PagoReporteController::class, 'pagar'
     );
 })->name('aportes.exportarPeriodo');
 
-
+Route::get('/reporte-general', [ReporteGeneralController::class, 'index'])
+     ->name('reporte.general');
 
 
 
